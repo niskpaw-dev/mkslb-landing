@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Masjid Kampung Sungai Lang Baru</title>
+
+<link rel="icon" type="image/png" href="logomkslb.png">
+
+<meta name="title" content="Masjid Kampung Sungai Lang Baru">
+<meta name="description" content="Portal rasmi Masjid Kampung Sungai Lang Baru, Banting, Selangor. Pusat ibadah, ukhuwah, dakwah, ilmu dan ekonomi ummah. Semak waktu solat dan berinfaq dalam talian.">
+
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://masjidkslb.com/">
+<meta property="og:title" content="Masjid Kampung Sungai Lang Baru">
+<meta property="og:description" content="Pusat ibadah, ukhuwah, dakwah, ilmu dan ekonomi ummah. Banting, Selangor.">
+<meta property="og:image" content="https://masjidkslb.com/hero_mkslb.jpg">
+
+<meta property="twitter:card" content="summary_large_image">
+<meta property="twitter:url" content="https://masjidkslb.com/">
+<meta property="twitter:title" content="Masjid Kampung Sungai Lang Baru">
+<meta property="twitter:description" content="Pusat ibadah, ukhuwah, dakwah, ilmu dan ekonomi ummah. Banting, Selangor.">
+<meta property="twitter:image" content="https://masjidkslb.com/hero_mkslb.jpg">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --green-900:#03251b;
+    --green-800:#042f24;
+    --green-700:#0a4233;
+    --green-600:#13573f;
+    --gold:#d4af37;
+    --gold-bright:#f4cf5a;
+    --gold-soft:#e9c96a;
+    --cream:#f4ecd8;
+    --cream-dim:#e6dabf;
+    --red:#bf3b2b;
+    --ink-cream:#f0e9d6;
+    --ink-muted:#9fb1a4;
+    --ink-dark:#1a2620;
+    --ink-soft:#48564d;
+
+    --display:"Cormorant Garamond", Georgia, serif;
+    --body:"Plus Jakarta Sans", system-ui, sans-serif;
+    --arabic:"Amiri", serif;
+
+    --maxw:1080px;
+    --ease:cubic-bezier(0.16,1,0.3,1);
+  }
+
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:var(--body);
+    background:var(--green-800);
+    color:var(--ink-cream);
+    line-height:1.65;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+
+  /* Geometric tessellation — subtle illuminated texture behind everything */
+  .geo-bg{
+    position:fixed;
+    inset:0;
+    z-index:0;
+    pointer-events:none;
+    opacity:.5;
+    background-image:url("data:image/svg+xml,%3Csvg width='90' height='90' viewBox='0 0 90 90' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%23d4af37' stroke-width='0.8' opacity='0.10'%3E%3Crect x='25' y='25' width='40' height='40'/%3E%3Crect x='25' y='25' width='40' height='40' transform='rotate(45 45 45)'/%3E%3C/g%3E%3C/svg%3E");
+    background-size:90px 90px;
+  }
+
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 24px;position:relative;z-index:1}
+
+  /* ---------- HEADER ---------- */
+  header{
+    position:sticky;top:0;z-index:50;
+    backdrop-filter:saturate(140%) blur(8px);
+    -webkit-backdrop-filter:saturate(140%) blur(8px);
+    background:rgba(4,47,36,0);
+    transition:background .4s var(--ease), box-shadow .4s var(--ease);
+  }
+  header.scrolled{
+    background:rgba(3,37,27,.86);
+    box-shadow:0 1px 0 rgba(212,175,55,.18);
+  }
+  .nav{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;max-width:var(--maxw);margin:0 auto}
+  .brand{display:flex;align-items:center;gap:11px;text-decoration:none}
+  .brand img{width:40px;height:40px;object-fit:contain;flex-shrink:0}
+  .brand .bn{display:flex;flex-direction:column;line-height:1.15}
+  .brand .bn b{font-weight:700;font-size:.82rem;letter-spacing:.04em;color:var(--ink-cream)}
+  .brand .bn span{font-size:.62rem;letter-spacing:.22em;text-transform:uppercase;color:var(--gold-soft)}
+  .nav-cta{
+    display:none;font-size:.78rem;font-weight:600;letter-spacing:.02em;
+    color:var(--green-900);background:var(--gold-bright);
+    padding:9px 18px;border-radius:999px;text-decoration:none;
+    transition:transform .3s var(--ease),background .3s var(--ease);
+  }
+  .nav-cta:hover{transform:translateY(-1px);background:var(--gold)}
+  @media(min-width:720px){.nav-cta{display:inline-block}}
+
+  /* ---------- HERO ---------- */
+  .hero{position:relative;min-height:92vh;display:flex;align-items:flex-end;overflow:hidden;margin-top:-72px;padding-top:72px}
+  .hero-photo{position:absolute;inset:0;z-index:0}
+  .hero-photo img{width:100%;height:100%;object-fit:cover;object-position:center 38%}
+  .hero-scrim{position:absolute;inset:0;z-index:1;
+    background:
+      linear-gradient(180deg, rgba(3,37,27,.55) 0%, rgba(3,37,27,.15) 32%, rgba(3,37,27,.72) 72%, var(--green-800) 100%),
+      radial-gradient(120% 80% at 50% 110%, rgba(3,37,27,.85), transparent 60%);
+  }
+  .hero-inner{position:relative;z-index:2;width:100%;max-width:var(--maxw);margin:0 auto;padding:0 24px 64px;text-align:center}
+  .bismillah{font-family:var(--arabic);font-size:1.9rem;color:var(--gold-soft);margin-bottom:18px;line-height:1;direction:rtl;opacity:0}
+  .hero h1{
+    font-family:var(--display);font-weight:600;
+    font-size:clamp(2.6rem,8vw,5rem);line-height:1.02;letter-spacing:-.01em;
+    color:#fff;margin-bottom:6px;text-shadow:0 2px 30px rgba(0,0,0,.4);
+  }
+  .hero h1 .light{display:block;color:var(--gold-soft);font-style:italic;font-weight:500;font-size:.62em}
+  .hero-tag{font-size:.95rem;color:var(--ink-cream);max-width:30ch;margin:14px auto 0;opacity:.92}
+  .hero-loc{display:inline-flex;align-items:center;gap:8px;margin-top:20px;font-size:.7rem;letter-spacing:.24em;text-transform:uppercase;color:var(--gold-soft)}
+  .hero-loc::before,.hero-loc::after{content:"";width:26px;height:1px;background:linear-gradient(90deg,transparent,var(--gold))}
+  .hero-loc::before{background:linear-gradient(90deg,var(--gold),transparent)}
+
+  .reveal{opacity:0;transform:translateY(22px)}
+  .reveal.in{opacity:1;transform:none;transition:opacity .9s var(--ease),transform .9s var(--ease)}
+
+  /* ---------- PRAYER STRIP ---------- */
+  .solat{position:relative;z-index:2;margin-top:-34px}
+  .solat-card{
+    background:linear-gradient(155deg,var(--green-700),var(--green-900));
+    border:1px solid rgba(212,175,55,.28);
+    border-radius:20px;padding:24px 22px 18px;
+    box-shadow:0 24px 60px -28px rgba(0,0,0,.7);
+  }
+  .solat-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:6px 16px;margin-bottom:18px}
+  .solat-head .d-mas{font-family:var(--display);font-size:1.5rem;font-weight:600;color:#fff}
+  .solat-head .d-hij{font-size:.78rem;letter-spacing:.04em;color:var(--gold-soft)}
+  .solat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}
+  @media(min-width:480px){.solat-grid{grid-template-columns:repeat(4,1fr)}}
+  @media(min-width:760px){.solat-grid{grid-template-columns:repeat(8,1fr)}}
+  .pcell{text-align:center;padding:12px 5px;border-radius:12px;background:rgba(255,255,255,.03);border:1px solid transparent;transition:.4s var(--ease)}
+  .pcell .pl{font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-muted);margin-bottom:5px}
+  .pcell .pt{font-family:var(--display);font-size:1.26rem;font-weight:600;color:var(--ink-cream);font-variant-numeric:tabular-nums}
+  .pcell.next{background:rgba(212,175,55,.14);border-color:rgba(212,175,55,.5)}
+  .pcell.next .pl{color:var(--gold-bright)}
+  .pcell.next .pt{color:var(--gold-bright)}
+  .solat-foot{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;margin-top:16px;padding-top:14px;border-top:1px solid rgba(212,175,55,.16)}
+  .solat-foot .nx{font-size:.78rem;color:var(--ink-muted)}
+  .solat-foot .nx b{color:var(--gold-soft);font-weight:600}
+  .solat-foot a{font-size:.76rem;font-weight:600;color:var(--gold-soft);text-decoration:none;display:inline-flex;align-items:center;gap:6px;transition:gap .3s var(--ease)}
+  .solat-foot a:hover{gap:11px}
+
+  /* ---------- SECTION SHELL ---------- */
+  section.blk{padding:74px 0}
+  .eyebrow{display:flex;align-items:center;gap:12px;font-size:.68rem;letter-spacing:.26em;text-transform:uppercase;color:var(--gold-soft);margin-bottom:14px}
+  .eyebrow::before{content:"";width:30px;height:1px;background:var(--gold)}
+  .h-sec{font-family:var(--display);font-weight:600;font-size:clamp(2rem,5.5vw,3.1rem);line-height:1.08;color:#fff;letter-spacing:-.01em}
+
+  /* ---------- QUICK ACTIONS ---------- */
+  .acts{display:grid;gap:18px}
+  @media(min-width:760px){.acts{grid-template-columns:1fr 1fr}}
+  .act{
+    position:relative;display:block;text-decoration:none;overflow:hidden;
+    border-radius:20px;padding:30px 28px 26px;
+    border:1px solid rgba(212,175,55,.3);
+    background:linear-gradient(150deg,var(--green-700),var(--green-900));
+    transition:transform .5s var(--ease),border-color .5s var(--ease),box-shadow .5s var(--ease);
+  }
+  .act:hover{transform:translateY(-4px);border-color:rgba(212,175,55,.65);box-shadow:0 26px 50px -30px rgba(0,0,0,.8)}
+  .act .ac-ico{width:46px;height:46px;border-radius:13px;display:flex;align-items:center;justify-content:center;background:rgba(212,175,55,.14);border:1px solid rgba(212,175,55,.32);margin-bottom:18px}
+  .act .ac-ico svg{width:23px;height:23px;stroke:var(--gold-bright)}
+  .act h3{font-family:var(--display);font-size:1.7rem;font-weight:600;color:#fff;margin-bottom:5px}
+  .act p{font-size:.86rem;color:var(--ink-muted);max-width:32ch}
+  .act .go{margin-top:18px;display:inline-flex;align-items:center;gap:8px;font-size:.78rem;font-weight:600;letter-spacing:.03em;color:var(--gold-soft);transition:gap .3s var(--ease)}
+  .act:hover .go{gap:13px}
+  .act .ac-glow{position:absolute;right:-40px;top:-40px;width:160px;height:160px;border-radius:50%;background:radial-gradient(circle,rgba(212,175,55,.16),transparent 70%);opacity:0;transition:opacity .6s var(--ease)}
+  .act:hover .ac-glow{opacity:1}
+
+  /* ---------- TENTANG (cream kitab panel) ---------- */
+  .kitab{background:var(--cream);color:var(--ink-dark);border-radius:24px;padding:clamp(30px,5vw,56px);box-shadow:0 30px 70px -40px rgba(0,0,0,.6);position:relative}
+  .kitab .eyebrow{color:#9a7d1e}
+  .kitab .eyebrow::before{background:#caa53a}
+  .kitab .h-sec{color:var(--green-800)}
+  .visi{font-family:var(--display);font-style:italic;font-size:clamp(1.4rem,3.2vw,1.95rem);line-height:1.4;color:var(--green-700);margin:22px 0 8px;max-width:34ch}
+  .obj{font-size:.92rem;color:var(--ink-soft);max-width:62ch;border-left:0;margin-bottom:30px}
+  .rule-gold{height:1px;background:linear-gradient(90deg,var(--gold),transparent);margin:30px 0}
+  .sjr h4{font-family:var(--body);font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;color:#9a7d1e;margin-bottom:16px}
+  .sjr p{font-size:.95rem;color:var(--ink-soft);max-width:64ch;margin-bottom:16px}
+  .sjr p:first-of-type::first-letter{font-family:var(--display);font-weight:700;font-size:3.4rem;line-height:.8;float:left;margin:6px 12px 0 0;color:var(--green-700)}
+  .naung{margin-top:26px;padding:18px 22px;border-radius:14px;background:var(--cream-dim);font-size:.84rem;color:var(--ink-soft)}
+  .naung b{color:var(--green-700)}
+
+  /* ---------- AJK ---------- */
+  .ajk-groups{display:grid;gap:30px;margin-top:34px}
+  @media(min-width:780px){.ajk-groups{grid-template-columns:1fr 1fr}}
+  .ajk-group h4{font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;color:var(--gold-soft);margin-bottom:4px}
+  .ajk-group .gd{height:1px;background:linear-gradient(90deg,rgba(212,175,55,.5),transparent);margin-bottom:8px}
+  .ajk-row{display:flex;justify-content:space-between;gap:16px;align-items:baseline;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.06)}
+  .ajk-row:last-child{border-bottom:0}
+  .ajk-row .role{font-size:.74rem;color:var(--ink-muted);flex-shrink:0;letter-spacing:.02em;min-width:36%}
+  .ajk-row .name{font-size:.9rem;color:var(--ink-cream);text-align:right;font-weight:500}
+  .ajk-span{grid-column:1/-1}
+
+  /* ---------- HUBUNGI ---------- */
+  .contact-grid{display:grid;gap:18px;margin-top:34px}
+  @media(min-width:780px){.contact-grid{grid-template-columns:1.1fr .9fr}}
+  .cinfo{display:flex;flex-direction:column;gap:4px}
+  .cline{display:flex;gap:14px;align-items:flex-start;padding:16px 0;border-bottom:1px solid rgba(212,175,55,.14)}
+  .cline:last-child{border-bottom:0}
+  .cline svg{width:20px;height:20px;stroke:var(--gold-soft);flex-shrink:0;margin-top:3px}
+  .cline .ct{font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-muted);margin-bottom:3px}
+  .cline a,.cline span{color:var(--ink-cream);text-decoration:none;font-size:.95rem;line-height:1.5}
+  .cline a:hover{color:var(--gold-soft)}
+  .cmap{border-radius:20px;overflow:hidden;border:1px solid rgba(212,175,55,.28);min-height:230px;position:relative;display:flex;align-items:flex-end;background:linear-gradient(150deg,var(--green-700),var(--green-900))}
+  .cmap a{display:block;width:100%;text-decoration:none}
+  .cmap .mpad{padding:22px;width:100%}
+  .cmap .mpad .ml{font-size:.7rem;letter-spacing:.18em;text-transform:uppercase;color:var(--gold-soft);margin-bottom:6px}
+  .cmap .mpad .mt{font-family:var(--display);font-size:1.4rem;color:#fff}
+  .cmap .mpad .go{margin-top:10px;display:inline-flex;align-items:center;gap:8px;font-size:.78rem;font-weight:600;color:var(--gold-soft);transition:gap .3s var(--ease)}
+  .cmap:hover .mpad .go{gap:13px}
+  .cmap .mgeo{position:absolute;inset:0;opacity:.16;background-image:url("data:image/svg+xml,%3Csvg width='70' height='70' viewBox='0 0 70 70' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%23f4cf5a' stroke-width='1'%3E%3Crect x='19' y='19' width='32' height='32'/%3E%3Crect x='19' y='19' width='32' height='32' transform='rotate(45 35 35)'/%3E%3C/g%3E%3C/svg%3E");background-size:70px}
+
+  /* ---------- FOOTER ---------- */
+  footer{border-top:1px solid rgba(212,175,55,.18);background:var(--green-900);position:relative;z-index:1}
+  .foot{max-width:var(--maxw);margin:0 auto;padding:46px 24px 38px;text-align:center}
+  .foot img{width:58px;height:58px;object-fit:contain;margin-bottom:14px}
+  .foot .fn{font-family:var(--display);font-size:1.5rem;color:#fff;font-weight:600}
+  .foot .fl{font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;color:var(--gold-soft);margin-top:4px}
+  .foot-links{display:flex;flex-wrap:wrap;justify-content:center;gap:8px 26px;margin:24px 0 22px}
+  .foot-links a{color:var(--ink-muted);text-decoration:none;font-size:.82rem;transition:color .3s var(--ease)}
+  .foot-links a:hover{color:var(--gold-soft)}
+  .foot .cr{font-size:.74rem;color:var(--ink-muted);line-height:1.7}
+  .foot .cr a{color:var(--gold-soft);text-decoration:none}
+
+  @media(prefers-reduced-motion:reduce){
+    .reveal,.reveal.in{opacity:1;transform:none;transition:none}
+    html{scroll-behavior:auto}
+  }
+</style>
+</head>
+<body>
+<div class="geo-bg" aria-hidden="true"></div>
+
+<header id="hdr">
+  <nav class="nav">
+    <a href="#" class="brand" aria-label="Masjid Kampung Sungai Lang Baru">
+      <img src="logomkslb.png" alt="Logo MKSLB">
+      <span class="bn"><b>Masjid Kg. Sungai Lang Baru</b><span>Banting · Selangor</span></span>
+    </a>
+    <a href="https://infaq.masjidkslb.com/" class="nav-cta">Infaq Sekarang</a>
+  </nav>
+</header>
+
+<main>
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-photo"><img src="hero_mkslb.jpg" alt="Pemandangan Masjid Kampung Sungai Lang Baru" fetchpriority="high"></div>
+    <div class="hero-scrim" aria-hidden="true"></div>
+    <div class="hero-inner">
+      <div class="bismillah reveal" id="bism">بِسْمِ ٱللّٰهِ ٱلرَّحْمٰنِ ٱلرَّحِيمِ</div>
+      <h1 class="reveal" style="transition-delay:.08s">Masjid Kampung<br>Sungai Lang Baru</h1>
+      <p class="hero-tag reveal" style="transition-delay:.16s">Pusat ibadah, ukhuwah, dakwah, ilmu dan ekonomi ummah.</p>
+      <div class="hero-loc reveal" style="transition-delay:.24s">Kampung Sungai Lang Baru</div>
+    </div>
+  </section>
+
+  <!-- PRAYER TIMES -->
+  <div class="wrap solat">
+    <div class="solat-card reveal" aria-live="polite">
+      <div class="solat-head">
+        <div class="d-mas" id="dateMas">Waktu Solat Hari Ini</div>
+        <div class="d-hij" id="dateHij">Zon SGR03 · Kuala Langat, Sepang, Hulu Langat</div>
+      </div>
+      <div class="solat-grid" id="solatGrid">
+        <div class="pcell"><div class="pl">Imsak</div><div class="pt">·· : ··</div></div>
+        <div class="pcell"><div class="pl">Subuh</div><div class="pt">·· : ··</div></div>
+        <div class="pcell"><div class="pl">Syuruk</div><div class="pt">·· : ··</div></div>
+        <div class="pcell"><div class="pl">Dhuha</div><div class="pt">·· : ··</div></div>
+        <div class="pcell"><div class="pl">Zohor</div><div class="pt">·· : ··</div></div>
+        <div class="pcell"><div class="pl">Asar</div><div class="pt">·· : ··</div></div>
+        <div class="pcell"><div class="pl">Maghrib</div><div class="pt">·· : ··</div></div>
+        <div class="pcell"><div class="pl">Isyak</div><div class="pt">·· : ··</div></div>
+      </div>
+      <div class="solat-foot">
+        <div class="nx" id="nextInfo">Memuatkan waktu solat…</div>
+        <a href="https://waktusolat.masjidkslb.com/">Waktu solat penuh
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUICK ACTIONS -->
+  <section class="blk wrap">
+    <div class="eyebrow reveal">Khidmat Dalam Talian</div>
+    <h2 class="h-sec reveal" style="transition-delay:.06s">Mudah, telus, di hujung jari</h2>
+    <div class="acts" style="margin-top:34px">
+      <a class="act reveal" style="transition-delay:.1s" href="https://infaq.masjidkslb.com/">
+        <span class="ac-glow" aria-hidden="true"></span>
+        <span class="ac-ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg></span>
+        <h3>Infaq &amp; Sumbangan</h3>
+        <p>Sumbangan ikhlas terus ke akaun masjid. Pembangunan, kebajikan, anak yatim, khairat &amp; sedekah Jumaat.</p>
+        <span class="go">Mula berinfaq
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </span>
+      </a>
+      <a class="act reveal" style="transition-delay:.18s" href="https://waktusolat.masjidkslb.com/">
+        <span class="ac-glow" aria-hidden="true"></span>
+        <span class="ac-ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
+        <h3>Waktu Solat</h3>
+        <p>Jadual waktu solat harian untuk zon Kuala Langat (SGR03), dikemas kini automatik setiap hari.</p>
+        <span class="go">Lihat jadual penuh
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </span>
+      </a>
+    </div>
+  </section>
+
+  <!-- TENTANG -->
+  <section class="blk wrap" id="tentang">
+    <div class="kitab reveal">
+      <div class="eyebrow">Tentang Kami</div>
+      <h2 class="h-sec">Sebuah amanah, sejak 1975</h2>
+      <p class="visi">"Pusat setempat bagi ibadah, ukhuwwah, dakwah, kekuatan, ilmu dan ekonomi."</p>
+      <p class="obj">Objektif kami: menjadikan Masjid Kampung Sungai Lang Baru sebuah masjid berasaskan disiplin yang tinggi ke arah taqwa, mengembalikan fungsi sebenar masjid dan menjadi mercu syiar keagungan Islam.</p>
+
+      <div class="rule-gold"></div>
+
+      <div class="sjr">
+        <h4>Sejarah Ringkas</h4>
+        <p>Pada asalnya, masjid ini dinamakan Masjid Ar-Rohmaniah, bersempena nama Allahyarham Tuan Haji Abdul Rahman dan ahli keluarga beliau yang merupakan penduduk tempatan. Sekitar tahun 1975, beliau membeli tanah seluas lebih kurang 2 ekar di atas Lot 2949, Jalan Besar, Kampung Sungai Lang Baru, dan mewakafkannya untuk membina sebuah masjid bagi keperluan ibadah dan kegiatan kemasyarakatan penduduk kampung.</p>
+        <p>Pada tahun 1985, nama masjid dipersetujui sebulat suara oleh Ahli Jawatankuasa Masjid dan diluluskan oleh Jabatan Agama Islam Selangor. Nama "Ar-Rohmaniah" berasal daripada salah satu nama Allah S.W.T., iaitu Ar-Rahman, daripada suku kata "ra ha ma" yang bermaksud penyayang. Nama ini diabadikan untuk menerapkan nilai kasih sayang sesama ahli kariah dan menambah rasa syukur kepada-Nya.</p>
+        <p>Masjid ini turut menjadi landasan membina ukhuwah Islamiyah, terletak tidak jauh dari Pekan Banting yang menjadi tumpuan penduduk setempat.</p>
+        <div class="naung">
+          <b>Di bawah naungan kariah:</b> Surau Imam Haji Hanafiah, Surau Haji Abdul Hamid, Surau Darul Ulum, serta Sekolah Rendah Agama Sungai Lang Baru yang bersebelahan masjid.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- AJK -->
+  <section class="blk wrap" id="ajk">
+    <div class="eyebrow reveal">Barisan Kepimpinan</div>
+    <h2 class="h-sec reveal" style="transition-delay:.06s">Ahli Jawatankuasa Masjid</h2>
+    <div class="ajk-groups">
+      <div class="ajk-group reveal" style="transition-delay:.1s">
+        <h4>Pegawai Masjid</h4><div class="gd"></div>
+        <div class="ajk-row"><span class="role">Nazir</span><span class="name">Fauzi bin Din</span></div>
+        <div class="ajk-row"><span class="role">Timbalan Nazir</span><span class="name">Hashim bin Mohamed</span></div>
+        <div class="ajk-row"><span class="role">Imam 1</span><span class="name">Azahari bin Redzuan</span></div>
+        <div class="ajk-row"><span class="role">Imam 2</span><span class="name">Mohd Naudi Haqqi bin Ahmad</span></div>
+        <div class="ajk-row"><span class="role">Imam 3</span><span class="name">Muhammad Aiman bin Rafee</span></div>
+        <div class="ajk-row"><span class="role">Imam 4</span><span class="name">Muhammad Faiz bin Mufasir</span></div>
+        <div class="ajk-row"><span class="role">Bilal 1</span><span class="name">Mohamad Norfaizal bin Mohamed</span></div>
+        <div class="ajk-row"><span class="role">Bilal 2</span><span class="name">Muhammad Syamim Fikri bin Abu Samah</span></div>
+        <div class="ajk-row"><span class="role">Bilal 3</span><span class="name">Muhammad Fauzi bin Ruslan</span></div>
+        <div class="ajk-row"><span class="role">Bilal 4</span><span class="name">Mohamad Maksom bin Hj. Abdul Rahman</span></div>
+        <div class="ajk-row"><span class="role">Siak 1</span><span class="name">Mohamad Maksom bin Hj. Abdul Rahman</span></div>
+        <div class="ajk-row"><span class="role">Siak 2</span><span class="name">Mohd Suhaimi bin Adnan</span></div>
+      </div>
+      <div class="ajk-group reveal" style="transition-delay:.16s">
+        <h4>Jawatankuasa Pengurusan</h4><div class="gd"></div>
+        <div class="ajk-row"><span class="role">Setiausaha</span><span class="name">Muhamad Zaidi bin Abdul Rahman</span></div>
+        <div class="ajk-row"><span class="role">Pen. Setiausaha</span><span class="name">Nazammudin bin Mahaudin</span></div>
+        <div class="ajk-row"><span class="role">Bendahari</span><span class="name">Mohd Darha bin Kasan</span></div>
+        <div class="ajk-row"><span class="role">Pen. Bendahari</span><span class="name">Abu Samah bin Mohd Ran</span></div>
+        <div class="ajk-row"><span class="role">Wakil Pemuda</span><span class="name">Mohammad Nu'aim bin Mohd Darha</span></div>
+        <div class="ajk-row"><span class="role">Wakil Muslimat</span><span class="name">Saliah binti Towel</span></div>
+        <div class="ajk-row"><span class="role">Pengurus Jenazah Muslimat</span><span class="name">Minah binti Dini</span></div>
+        <div class="ajk-row"><span class="role">AJK</span><span class="name">Norhisam bin Ngdari</span></div>
+        <div class="ajk-row"><span class="role">AJK</span><span class="name">Ramlan bin Johari</span></div>
+        <div class="ajk-row"><span class="role">AJK</span><span class="name">Misteri binti Dikun</span></div>
+        <div class="ajk-row"><span class="role">AJK</span><span class="name">Md Din bin Ahmad</span></div>
+        <div class="ajk-row"><span class="role">AJK</span><span class="name">Mohamad Razemi bin Samingon</span></div>
+        <div class="ajk-row"><span class="role">AJK</span><span class="name">Mohd Salim bin Sanuri</span></div>
+      </div>
+      <div class="ajk-group ajk-span reveal">
+        <h4>Pemeriksa Kira-Kira</h4><div class="gd"></div>
+        <div class="ajk-row"><span class="role">Pemeriksa Kira-Kira 1</span><span class="name">Dzulkafli bin Sharif</span></div>
+        <div class="ajk-row"><span class="role">Pemeriksa Kira-Kira 2</span><span class="name">Kamaruslan bin Che Teh</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HUBUNGI -->
+  <section class="blk wrap" id="hubungi">
+    <div class="eyebrow reveal">Hubungi Kami</div>
+    <h2 class="h-sec reveal" style="transition-delay:.06s">Ziarah &amp; pertanyaan</h2>
+    <div class="contact-grid">
+      <div class="cinfo reveal" style="transition-delay:.1s">
+        <div class="cline">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          <div><div class="ct">Alamat</div><span>Masjid Kampung Sungai Lang Baru, Jalan Utama, Kampung Sungai Lang Baru, 42700 Banting, Selangor Darul Ehsan.</span></div>
+        </div>
+        <div class="cline">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3-8.6A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.2a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg>
+          <div><div class="ct">Telefon</div><a href="tel:+60331811994">03-3181 1994</a></div>
+        </div>
+        <div class="cline">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg>
+          <div><div class="ct">Emel</div><a href="mailto:office@masjidkslb.com">office@masjidkslb.com</a></div>
+        </div>
+        <div class="cline">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+          <div><div class="ct">Facebook</div><a href="https://www.facebook.com/mkslbpro.official" target="_blank" rel="noopener">facebook.com/mkslbpro.official</a></div>
+        </div>
+      </div>
+      <div class="cmap reveal" style="transition-delay:.16s">
+        <div class="mgeo" aria-hidden="true"></div>
+        <a href="https://maps.app.goo.gl/LzWmNwVD3EVx3vM39" target="_blank" rel="noopener">
+          <div class="mpad">
+            <div class="ml">Lokasi</div>
+            <div class="mt">Buka di Google Maps</div>
+            <span class="go">Dapatkan arah
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </span>
+          </div>
+        </a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="foot">
+    <img src="logomkslb.png" alt="Logo MKSLB">
+    <div class="fn">Masjid Kampung Sungai Lang Baru</div>
+    <div class="fl">Banting · Selangor</div>
+    <nav class="foot-links">
+      <a href="#tentang">Tentang</a>
+      <a href="#ajk">AJK</a>
+      <a href="#hubungi">Hubungi</a>
+      <a href="https://infaq.masjidkslb.com/">Infaq</a>
+      <a href="https://waktusolat.masjidkslb.com/">Waktu Solat</a>
+    </nav>
+    <p class="cr">&copy; <span id="yr"></span> Masjid Kampung Sungai Lang Baru. Hak cipta terpelihara.<br>Portal digital diuruskan oleh AJK Masjid.</p>
+  </div>
+</footer>
+
+<script>
+  // Year
+  document.getElementById('yr').textContent = new Date().getFullYear();
+
+  // Header scroll state
+  const hdr = document.getElementById('hdr');
+  const onScroll = () => hdr.classList.toggle('scrolled', window.scrollY > 40);
+  onScroll(); window.addEventListener('scroll', onScroll, {passive:true});
+
+  // Reveal on view
+  const io = new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target);} });
+  },{threshold:.12, rootMargin:'0px 0px -8% 0px'});
+  document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+  // Hero reveals immediately on load
+  window.addEventListener('load', ()=>{
+    document.querySelectorAll('.hero .reveal').forEach(el=>el.classList.add('in'));
+  });
+
+  // ---------- WAKTU SOLAT ----------
+  const ZONE_URL = 'https://api.waktusolat.app/v2/solat/SGR03';
+  const HIJRI_MONTHS = ['Muharram','Safar','Rabiulawal','Rabiulakhir','Jamadilawal','Jamadilakhir','Rejab','Syaaban','Ramadan','Syawal','Zulkaedah','Zulhijjah'];
+
+  function fmt(ts){
+    return new Date(ts*1000).toLocaleTimeString('ms-MY',{timeZone:'Asia/Kuala_Lumpur',hour:'2-digit',minute:'2-digit',hour12:false});
+  }
+  function klDay(){
+    return parseInt(new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Kuala_Lumpur',day:'numeric'}).format(new Date()),10);
+  }
+  function masihi(){
+    return new Intl.DateTimeFormat('ms-MY',{timeZone:'Asia/Kuala_Lumpur',weekday:'long',day:'numeric',month:'long',year:'numeric'}).format(new Date());
+  }
+  function hijriFmt(s){
+    try{ const [y,m,d]=s.split('-').map(Number); return `${d} ${HIJRI_MONTHS[m-1]} ${y}H`; }
+    catch(e){ return ''; }
+  }
+
+  // Imsak = Subuh - 10 minit ; Dhuha = Syuruk + 30 minit (by calculation)
+  function buildTimes(t){
+    return [
+      {label:'Imsak',   ts: t.fajr - 600},
+      {label:'Subuh',   ts: t.fajr},
+      {label:'Syuruk',  ts: t.syuruk},
+      {label:'Dhuha',   ts: t.syuruk + 1800},
+      {label:'Zohor',   ts: t.dhuhr},
+      {label:'Asar',    ts: t.asr},
+      {label:'Maghrib', ts: t.maghrib},
+      {label:'Isyak',   ts: t.isha}
+    ];
+  }
+
+  async function loadSolat(){
+    const grid = document.getElementById('solatGrid');
+    const nextInfo = document.getElementById('nextInfo');
+    try{
+      const res = await fetch(ZONE_URL);
+      if(!res.ok) throw new Error('http');
+      const data = await res.json();
+      const day = klDay();
+      const today = (data.prayers||[]).find(p=>p.day===day) || data.prayers[0];
+      if(!today) throw new Error('noday');
+
+      const times = buildTimes(today);
+
+      document.getElementById('dateMas').textContent = masihi();
+      document.getElementById('dateHij').textContent = hijriFmt(today.hijri) + ' · Zon SGR03';
+
+      grid.innerHTML = '';
+      times.forEach(p=>{
+        const cell = document.createElement('div');
+        cell.className = 'pcell';
+        cell.innerHTML = `<div class="pl">${p.label}</div><div class="pt">${fmt(p.ts)}</div>`;
+        grid.appendChild(cell);
+      });
+
+      function renderNote(){
+        const n = Date.now()/1000;
+        let idx = times.findIndex(p=>p.ts > n);
+        [...grid.children].forEach((c,i)=>c.classList.toggle('next', i===idx));
+        if(idx === -1){
+          nextInfo.innerHTML = 'Semua waktu hari ini telah berlalu. <b>Imsak esok</b> menanti.';
+          return;
+        }
+        const diff = times[idx].ts - n;
+        const h = Math.floor(diff/3600), m = Math.floor((diff%3600)/60);
+        const t = h>0 ? `${h} jam ${m} minit` : `${m} minit`;
+        nextInfo.innerHTML = `Seterusnya: <b>${times[idx].label}</b> · menjelang ${t}`;
+      }
+      renderNote();
+      setInterval(renderNote, 30000);
+
+    }catch(err){
+      nextInfo.innerHTML = 'Waktu solat tidak dapat dimuatkan. <a href="https://waktusolat.masjidkslb.com/" style="color:var(--gold-soft)">Buka jadual penuh</a>.';
+    }
+  }
+  loadSolat();
+</script>
+</body>
+</html>
