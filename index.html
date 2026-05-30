@@ -214,14 +214,12 @@
   .cline .ct{font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-muted);margin-bottom:3px}
   .cline a,.cline span{color:var(--ink-cream);text-decoration:none;font-size:.95rem;line-height:1.5}
   .cline a:hover{color:var(--gold-soft)}
-  .cmap{border-radius:20px;overflow:hidden;border:1px solid rgba(212,175,55,.28);min-height:230px;position:relative;display:flex;align-items:flex-end;background:linear-gradient(150deg,var(--green-700),var(--green-900))}
-  .cmap a{display:block;width:100%;text-decoration:none}
-  .cmap .mpad{padding:22px;width:100%}
-  .cmap .mpad .ml{font-size:.7rem;letter-spacing:.18em;text-transform:uppercase;color:var(--gold-soft);margin-bottom:6px}
-  .cmap .mpad .mt{font-family:var(--display);font-size:1.4rem;color:#fff}
-  .cmap .mpad .go{margin-top:10px;display:inline-flex;align-items:center;gap:8px;font-size:.78rem;font-weight:600;color:var(--gold-soft);transition:gap .3s var(--ease)}
-  .cmap:hover .mpad .go{gap:13px}
-  .cmap .mgeo{position:absolute;inset:0;opacity:.16;background-image:url("data:image/svg+xml,%3Csvg width='70' height='70' viewBox='0 0 70 70' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%23f4cf5a' stroke-width='1'%3E%3Crect x='19' y='19' width='32' height='32'/%3E%3Crect x='19' y='19' width='32' height='32' transform='rotate(45 35 35)'/%3E%3C/g%3E%3C/svg%3E");background-size:70px}
+  .cmap{border-radius:20px;overflow:hidden;border:1px solid rgba(212,175,55,.28);display:flex;flex-direction:column;min-height:260px}
+  .cmap iframe{width:100%;flex:1;min-height:210px;border:0;display:block}
+  .cmap .mbar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 18px;background:linear-gradient(150deg,var(--green-700),var(--green-900))}
+  .cmap .mbar .ml{font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--gold-soft)}
+  .cmap .mbar a{display:inline-flex;align-items:center;gap:7px;font-size:.78rem;font-weight:600;color:var(--gold-soft);text-decoration:none;transition:gap .3s var(--ease)}
+  .cmap .mbar a:hover{gap:11px}
 
   /* ---------- FOOTER ---------- */
   footer{border-top:1px solid rgba(212,175,55,.18);background:var(--green-900);position:relative;z-index:1}
@@ -409,16 +407,13 @@
         </div>
       </div>
       <div class="cmap reveal" style="transition-delay:.16s">
-        <div class="mgeo" aria-hidden="true"></div>
-        <a href="https://maps.app.goo.gl/LzWmNwVD3EVx3vM39" target="_blank" rel="noopener">
-          <div class="mpad">
-            <div class="ml">Lokasi</div>
-            <div class="mt">Buka di Google Maps</div>
-            <span class="go">Dapatkan arah
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-            </span>
-          </div>
-        </a>
+        <iframe src="https://maps.google.com/maps?q=2.793873,101.5047508&z=16&output=embed" loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="Peta lokasi Masjid Kampung Sungai Lang Baru"></iframe>
+        <div class="mbar">
+          <span class="ml">Lokasi Masjid</span>
+          <a href="https://maps.app.goo.gl/LzWmNwVD3EVx3vM39" target="_blank" rel="noopener">Dapatkan arah
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </a>
+        </div>
       </div>
     </div>
   </section>
