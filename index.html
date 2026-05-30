@@ -472,13 +472,13 @@
     catch(e){ return ''; }
   }
 
-  // Imsak = Subuh - 10 minit ; Dhuha = Syuruk + 30 minit (by calculation)
+  // Imsak = Subuh - 10 minit ; Dhuha = Syuruk + 28 minit (by calculation)
   function buildTimes(t){
     return [
       {label:'Imsak',   ts: t.fajr - 600},
       {label:'Subuh',   ts: t.fajr},
       {label:'Syuruk',  ts: t.syuruk},
-      {label:'Dhuha',   ts: t.syuruk + 1800},
+      {label:'Dhuha',   ts: t.syuruk + 1680},
       {label:'Zohor',   ts: t.dhuhr},
       {label:'Asar',    ts: t.asr},
       {label:'Maghrib', ts: t.maghrib},
