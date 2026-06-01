@@ -455,7 +455,7 @@
   });
 
   // ---------- WAKTU SOLAT ----------
-  const ZONE_URL = 'https://api.waktusolat.app/v2/solat/SGR03';
+  const ZONE_URL = 'https://apiwaktusolatsgr03.vercel.app/api/waktu-solat?today';
   const HIJRI_MONTHS = ['Muharram','Safar','Rabiulawal','Rabiulakhir','Jamadilawal','Jamadilakhir','Rejab','Syaaban','Ramadan','Syawal','Zulkaedah','Zulhijjah'];
 
   function fmt(ts){
@@ -470,9 +470,15 @@
   function masihi(){
     return new Intl.DateTimeFormat('ms-MY',{timeZone:'Asia/Kuala_Lumpur',weekday:'long',day:'numeric',month:'long',year:'numeric'}).format(new Date());
   }
-  function hijriFmt(s){
-    try{ const [y,m,d]=s.split('-').map(Number); return `${d} ${HIJRI_MONTHS[m-1]} ${y}H`; }
-    catch(e){ return ''; }
+  // Format Hijri API baru: "15-Zhj-1447" -> "15 Zulhijjah 1447H"
+  function hijriFmtBaru(s){
+    try{
+      const [d, abbr, y] = s.split('-');
+      const map = {Muh:'Muharram',Saf:'Safar',Raw:'Rabiulawal',Rak:'Rabiulakhir',
+        Jaw:'Jamadilawal',Jak:'Jamadilakhir',Rej:'Rejab',Syb:'Syaaban',
+        Ram:'Ramadan',Syw:'Syawal',Zkh:'Zulkaedah',Zhj:'Zulhijjah'};
+      return `${parseInt(d)} ${map[abbr] || abbr} ${y}H`;
+    }catch(e){ return ''; }
   }
   function hijriPlusOne(s){
     try{
@@ -484,16 +490,25 @@
   }
 
   // Imsak = Subuh - 10 minit ; Dhuha = Syuruk + 30 minit (by calculation)
+  // Tukar "HH:MM" (waktu hari ini, zon KL) -> epoch detik
+  function hhmmToEpoch(hhmm){
+    const [h, m] = hhmm.split(':').map(Number);
+    const d = new Date();
+    d.setHours(h, m, 0, 0);
+    return Math.floor(d.getTime() / 1000);
+  }
+
+  // Semua 8 waktu terus dari API (termasuk Imsak & Dhuha), ditukar ke epoch
   function buildTimes(t){
     return [
-      {label:'Imsak',   ts: t.fajr - 600},
-      {label:'Subuh',   ts: t.fajr},
-      {label:'Syuruk',  ts: t.syuruk},
-      {label:'Dhuha',   ts: t.syuruk + 1800},
-      {label:'Zohor',   ts: t.dhuhr},
-      {label:'Asar',    ts: t.asr},
-      {label:'Maghrib', ts: t.maghrib},
-      {label:'Isyak',   ts: t.isha}
+      {label:'Imsak',   ts: hhmmToEpoch(t.imsak)},
+      {label:'Subuh',   ts: hhmmToEpoch(t.subuh)},
+      {label:'Syuruk',  ts: hhmmToEpoch(t.syuruk)},
+      {label:'Dhuha',   ts: hhmmToEpoch(t.dhuha)},
+      {label:'Zohor',   ts: hhmmToEpoch(t.zohor)},
+      {label:'Asar',    ts: hhmmToEpoch(t.asar)},
+      {label:'Maghrib', ts: hhmmToEpoch(t.maghrib)},
+      {label:'Isyak',   ts: hhmmToEpoch(t.isyak)}
     ];
   }
 
@@ -504,12 +519,10 @@
       const res = await fetch(ZONE_URL);
       if(!res.ok) throw new Error('http');
       const data = await res.json();
-      const day = klDay();
-      const monthOk = !data.month_number || Number(data.month_number) === klMonth();
-      const today = (data.prayers||[]).find(p=>p.day===day);
-      if(!today || !monthOk){
+      const today = data.times; // {imsak,subuh,...,isyak,hijri} format "HH:MM"
+      if(!today){
         document.getElementById('dateMas').textContent = masihi();
-        nextInfo.innerHTML = 'Jadual waktu solat sedang dikemas kini untuk bulan ini. <a href="https://waktusolat.masjidkslb.com/" style="color:var(--gold-soft)">Buka jadual penuh</a>.';
+        nextInfo.innerHTML = 'Jadual waktu solat sedang dikemas kini. <a href="https://waktusolat.masjidkslb.com/" style="color:var(--gold-soft)">Buka jadual penuh</a>.';
         return;
       }
 
@@ -528,13 +541,7 @@
       const hijEl = document.getElementById('dateHij');
       function renderNote(){
         const n = Date.now()/1000;
-        // Tarikh Hijri berubah selepas Maghrib (hari dalam Islam bermula waktu maghrib)
-        let hs = today.hijri;
-        if(n >= today.maghrib){
-          const tmr = (data.prayers||[]).find(p=>p.day === day+1);
-          hs = tmr ? tmr.hijri : hijriPlusOne(today.hijri);
-        }
-        hijEl.textContent = hijriFmt(hs) + ' · Zon SGR03';
+        hijEl.textContent = hijriFmtBaru(today.hijri) + ' · Zon SGR03';
         let idx = times.findIndex(p=>p.ts > n);
         [...grid.children].forEach((c,i)=>c.classList.toggle('next', i===idx));
         if(idx === -1){
