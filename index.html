@@ -480,6 +480,19 @@
       return `${parseInt(d)} ${map[abbr] || abbr} ${y}H`;
     }catch(e){ return ''; }
   }
+
+  // Fetch tarikh esok dari API, pulangkan rentetan Hijri ("16-Zhj-1447")
+  async function fetchHijriEsok(){
+    try{
+      const esok = new Date();
+      esok.setDate(esok.getDate() + 1);
+      const iso = esok.toLocaleDateString('en-CA', {timeZone:'Asia/Kuala_Lumpur'}); // YYYY-MM-DD
+      const r = await fetch(`https://apiwaktusolatsgr03.vercel.app/api/waktu-solat?date=${iso}`);
+      if(!r.ok) return null;
+      const d = await r.json();
+      return d.times.hijri;
+    }catch(e){ return null; }
+  }
   function hijriPlusOne(s){
     try{
       let [y,m,d]=s.split('-').map(Number);
@@ -539,9 +552,19 @@
       });
 
       const hijEl = document.getElementById('dateHij');
-      function renderNote(){
+      let hijriEsok = null; // cache Hijri esok (di-fetch sekali selepas Maghrib)
+
+      async function renderNote(){
         const n = Date.now()/1000;
-        hijEl.textContent = hijriFmtBaru(today.hijri) + ' · Zon SGR03';
+
+        // Tarikh Hijri berubah selepas Maghrib (hari Islam bermula waktu Maghrib)
+        let hs = today.hijri;
+        if(n >= times[6].ts){ // times[6] = Maghrib
+          if(!hijriEsok) hijriEsok = await fetchHijriEsok();
+          if(hijriEsok) hs = hijriEsok;
+        }
+        hijEl.textContent = hijriFmtBaru(hs) + ' · Zon SGR03';
+
         let idx = times.findIndex(p=>p.ts > n);
         [...grid.children].forEach((c,i)=>c.classList.toggle('next', i===idx));
         if(idx === -1){
