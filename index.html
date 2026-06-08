@@ -270,7 +270,7 @@
     <div class="solat-card reveal" aria-live="polite">
       <div class="solat-head">
         <div class="d-mas" id="dateMas">Waktu Solat Hari Ini</div>
-        <div class="d-hij" id="dateHij">Zon SGR03 · Kuala Langat, Sepang, Hulu Langat</div>
+        <div class="d-hij" id="dateHij">Memuatkan tarikh Hijri…</div>
       </div>
       <div class="solat-grid" id="solatGrid">
         <div class="pcell"><div class="pl">Imsak</div><div class="pt">·· : ··</div></div>
@@ -456,50 +456,12 @@
 
   // ---------- WAKTU SOLAT ----------
   const ZONE_URL = 'https://apiwaktusolatsgr03.vercel.app/api/waktu-solat?today';
-  const HIJRI_MONTHS = ['Muharram','Safar','Rabiulawal','Rabiulakhir','Jamadilawal','Jamadilakhir','Rejab','Syaaban','Ramadan','Syawal','Zulkaedah','Zulhijjah'];
 
   function fmt(ts){
     return new Date(ts*1000).toLocaleTimeString('ms-MY',{timeZone:'Asia/Kuala_Lumpur',hour:'2-digit',minute:'2-digit',hour12:false});
   }
-  function klDay(){
-    return parseInt(new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Kuala_Lumpur',day:'numeric'}).format(new Date()),10);
-  }
-  function klMonth(){
-    return parseInt(new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Kuala_Lumpur',month:'numeric'}).format(new Date()),10);
-  }
   function masihi(){
-    return new Intl.DateTimeFormat('ms-MY',{timeZone:'Asia/Kuala_Lumpur',weekday:'long',day:'numeric',month:'long',year:'numeric'}).format(new Date());
-  }
-  // Format Hijri API baru: "15-Zhj-1447" -> "15 Zulhijjah 1447H"
-  function hijriFmtBaru(s){
-    try{
-      const [d, abbr, y] = s.split('-');
-      const map = {Muh:'Muharram',Saf:'Safar',Raw:'Rabiulawal',Rak:'Rabiulakhir',
-        Jaw:'Jamadilawal',Jak:'Jamadilakhir',Rej:'Rejab',Syb:'Syaaban',
-        Ram:'Ramadan',Syw:'Syawal',Zkh:'Zulkaedah',Zhj:'Zulhijjah'};
-      return `${parseInt(d)} ${map[abbr] || abbr} ${y}H`;
-    }catch(e){ return ''; }
-  }
-
-  // Fetch tarikh esok dari API, pulangkan rentetan Hijri ("16-Zhj-1447")
-  async function fetchHijriEsok(){
-    try{
-      const esok = new Date();
-      esok.setDate(esok.getDate() + 1);
-      const iso = esok.toLocaleDateString('en-CA', {timeZone:'Asia/Kuala_Lumpur'}); // YYYY-MM-DD
-      const r = await fetch(`https://apiwaktusolatsgr03.vercel.app/api/waktu-solat?date=${iso}`);
-      if(!r.ok) return null;
-      const d = await r.json();
-      return d.times.hijri;
-    }catch(e){ return null; }
-  }
-  function hijriPlusOne(s){
-    try{
-      let [y,m,d]=s.split('-').map(Number);
-      d+=1;
-      if(d>30){ d=1; m+=1; if(m>12){ m=1; y+=1; } }
-      return `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    }catch(e){ return s; }
+    return new Intl.DateTimeFormat('ms-MY',{timeZone:'Asia/Kuala_Lumpur',weekday:'long',day:'2-digit',month:'long',year:'numeric'}).format(new Date());
   }
 
   // Imsak = Subuh - 10 minit ; Dhuha = Syuruk + 30 minit (by calculation)
@@ -552,18 +514,16 @@
       });
 
       const hijEl = document.getElementById('dateHij');
-      let hijriEsok = null; // cache Hijri esok (di-fetch sekali selepas Maghrib)
+      // Hijri rasmi terus dari API (satu response sahaja): pilih ikut Maghrib.
+      const hijToday   = (data.hijri_today   && data.hijri_today.formatted)   || '';
+      const hijMaghrib = (data.hijri_maghrib && data.hijri_maghrib.formatted) || hijToday;
 
-      async function renderNote(){
+      function renderNote(){
         const n = Date.now()/1000;
 
         // Tarikh Hijri berubah selepas Maghrib (hari Islam bermula waktu Maghrib)
-        let hs = today.hijri;
-        if(n >= times[6].ts){ // times[6] = Maghrib
-          if(!hijriEsok) hijriEsok = await fetchHijriEsok();
-          if(hijriEsok) hs = hijriEsok;
-        }
-        hijEl.textContent = hijriFmtBaru(hs) + ' · Zon SGR03';
+        const hs = (n >= times[6].ts) ? hijMaghrib : hijToday; // times[6] = Maghrib
+        hijEl.textContent = hs ? `${hs} · Zon SGR03` : 'Zon SGR03';
 
         let idx = times.findIndex(p=>p.ts > n);
         [...grid.children].forEach((c,i)=>c.classList.toggle('next', i===idx));
