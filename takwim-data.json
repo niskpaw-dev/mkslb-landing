@@ -1,0 +1,8 @@
+{
+ "v": 3,
+ "state": {
+  "perdana": { "sabtu": 3, "gelaran": "Ust", "ceramah": "Firdaus Atan", "photo": "firdaus" },
+  "dhuha": { "rabu": 3 },
+  "overrides": {}
+ }
+}
