@@ -662,9 +662,9 @@
     function renderPoster(){
       const box=document.getElementById('kulPoster'), img=document.getElementById('kulPosterImg'); if(!box||!img)return;
       const t=klToday(), file="takwim-"+BLN[t.m-1].toLowerCase()+"-"+t.y+".png";
+      img.onload=()=>{ if(img.naturalWidth>0) box.classList.remove('empty'); };
       img.onerror=()=>box.classList.add('empty');
-      img.onload=()=>box.classList.remove('empty');
-      img.src=file+"?v="+t.y+t.m;
+      img.src=file+"?t="+Date.now();   // cache-buster unik setiap muat — elak cache 404 lama
     }
 
     function refresh(){ renderReminder(); renderPoster(); }
