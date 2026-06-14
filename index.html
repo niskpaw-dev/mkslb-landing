@@ -237,6 +237,28 @@
     .reveal,.reveal.in{opacity:1;transform:none;transition:none}
     html{scroll-behavior:auto}
   }
+
+  /* ---------- TAKWIM KULIAH ---------- */
+  .kul-reminder{display:grid;gap:14px;margin-top:34px}
+  @media(min-width:740px){.kul-reminder{grid-template-columns:repeat(3,1fr)}}
+  .kcard{position:relative;overflow:hidden;background:linear-gradient(155deg,var(--green-700),var(--green-900));border:1px solid rgba(212,175,55,.22);border-radius:18px;padding:20px 20px 20px;min-height:150px}
+  .kcard.today{border-color:rgba(212,175,55,.6);box-shadow:0 22px 50px -30px rgba(0,0,0,.7)}
+  .kcard .ac-glow{position:absolute;right:-40px;top:-40px;width:150px;height:150px;border-radius:50%;background:radial-gradient(circle,rgba(212,175,55,.16),transparent 70%);opacity:0}
+  .kcard.today .ac-glow{opacity:1}
+  .kcard .kwhen{font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;color:var(--gold-soft);margin-bottom:3px}
+  .kcard.today .kwhen{color:var(--gold-bright)}
+  .kcard .kdate{font-family:var(--display);font-size:1.16rem;font-weight:600;color:#fff;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid rgba(212,175,55,.14)}
+  .kcard .ktitle{font-family:var(--display);font-size:1.4rem;font-weight:600;color:var(--ink-cream);line-height:1.14}
+  .kcard .kustaz{font-size:.86rem;color:var(--gold-soft);margin-top:3px}
+  .kcard .kwaktu{display:inline-block;margin-top:12px;font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-muted);border:1px solid rgba(255,255,255,.12);border-radius:999px;padding:4px 11px}
+  .kcard .kempty{font-size:.95rem;color:var(--ink-muted);font-style:italic;padding:8px 0 4px}
+  .kcard .ksplit{display:flex;flex-direction:column;gap:12px}
+  .kcard .ksplit .sline .ktitle{font-size:1.18rem}
+  .kul-postwrap{margin-top:24px;border-radius:20px;overflow:hidden;border:1px solid rgba(212,175,55,.24);box-shadow:0 24px 60px -34px rgba(0,0,0,.7);background:linear-gradient(155deg,var(--green-700),var(--green-900))}
+  .kul-postwrap.empty{display:none}
+  .kul-postwrap .kul-cap{display:flex;align-items:center;gap:12px;padding:14px 20px;font-size:.68rem;letter-spacing:.22em;text-transform:uppercase;color:var(--gold-soft);border-bottom:1px solid rgba(212,175,55,.14)}
+  .kul-postwrap .kul-cap::before{content:"";width:26px;height:1px;background:var(--gold)}
+  .kul-postwrap img{width:100%;height:auto;display:block}
 </style>
 </head>
 <body>
@@ -290,6 +312,17 @@
       </div>
     </div>
   </div>
+
+  <!-- TAKWIM KULIAH -->
+  <section class="blk wrap" id="kuliah">
+    <div class="eyebrow reveal">Takwim Pengimarahan</div>
+    <h2 class="h-sec reveal" style="transition-delay:.06s">Kuliah masjid, hari demi hari</h2>
+    <div class="kul-reminder reveal" id="kulReminder" style="transition-delay:.1s" aria-live="polite"></div>
+    <div class="kul-postwrap reveal empty" id="kulPoster" style="transition-delay:.14s">
+      <div class="kul-cap"><span>Takwim penuh bulan ini</span></div>
+      <img id="kulPosterImg" alt="Takwim Pengimarahan bulan ini" loading="lazy">
+    </div>
+  </section>
 
   <!-- QUICK ACTIONS -->
   <section class="blk wrap">
@@ -427,6 +460,7 @@
     <nav class="foot-links">
       <a href="#tentang">Tentang</a>
       <a href="#ajk">AJK</a>
+      <a href="#kuliah">Kuliah</a>
       <a href="#hubungi">Hubungi</a>
       <a href="https://infaq.masjidkslb.com/">Infaq</a>
       <a href="https://waktusolat.masjidkslb.com/">Waktu Solat</a>
@@ -544,6 +578,108 @@
     }
   }
   loadSolat();
+
+  /* ===== TAKWIM KULIAH — reminder harian (live) + poster bulanan (hybrid) ===== */
+  (function(){
+    const TK_U={naim:{g:"Ust",n:"Naim"},sharif:{g:"Ust",n:"Sharif",s:"K. Dhuha"},khair:{g:"Ust",n:"Khair"},ramli:{g:"Ust",n:"Ramli"},
+      naudi:{g:"Ust",n:"Naudi",s:"Tasawwur Islam"},rumaizi:{g:"Ust",n:"Rumaizi",s:"Ulum Al Hadis"},zainal:{g:"Ust",n:"Zainal",s:"Halal & Haram"},
+      wahidan:{g:"Ust",n:"Wahidan",s:"Fiqh Al Sirah"},redzuan:{g:"Ust",n:"Redzuan",s:"Faham Faraidh"},hazren:{g:"Ust",n:"Hazren",s:"Aqidah"},
+      aziz:{g:"Ust",n:"Abd Aziz",s:"Tasauf"},hafizin:{g:"Ust",n:"Hafizin",s:"Tauhid"},aiman:{g:"Ust",n:"Aiman",s:"Halaqah"}};
+    const TK_T={0:{j:"subuh",t:"Kuliah Subuh",p:{1:"naim",2:"sharif",3:"khair",4:"ramli"}},
+      1:{j:"maghrib",p:{1:"naudi",2:"rumaizi",3:"zainal",4:"rumaizi"}},
+      2:{j:"maghrib",p:{1:"wahidan",2:"redzuan",3:"wahidan",4:"hazren"}},
+      3:{j:"maghrib",p:{1:"aziz",2:"hafizin",3:"aziz",4:"hafizin"}},
+      4:{j:"kahfi"},5:{j:"halaqah",t:"Halaqah",p:{1:"aiman",2:"aiman",3:"aiman",4:"aiman"}},6:{j:"sabtu"}};
+    const HARI=["Ahad","Isnin","Selasa","Rabu","Khamis","Jumaat","Sabtu"];
+    const BLN=["Jan","Feb","Mac","Apr","Mei","Jun","Jul","Ogo","Sep","Okt","Nov","Dis"];
+    const WAKTU={subuh:"Selepas Subuh",maghrib:"Selepas Maghrib",halaqah:"Selepas Maghrib",kahfi:"Malam Jumaat",dhuha:"Waktu Dhuha",perdana:"Selepas Maghrib"};
+    const occ=d=>Math.floor((d-1)/7)+1;
+    let TK_S={perdana:{sabtu:3,gelaran:"Ust",ceramah:"",photo:""},dhuha:{rabu:3},overrides:{}};
+    const esc=t=>String(t==null?"":t).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+    const ovFor=(y,m)=>TK_S.overrides[y+"-"+m]||{};
+
+    function resolve(y,m,d){
+      const wd=new Date(Date.UTC(y,m-1,d)).getUTCDay(), o=occ(d), t=TK_T[wd];
+      const ov=ovFor(y,m)[d];
+      if(ov){
+        if(ov.type==="kosong")return{kind:"empty"};
+        if(ov.type==="khas")return{kind:"khas",text:ov.teks||""};
+        const jenis=(t&&t.p)?t.j:(wd===6?"perdana":"maghrib");
+        if(ov.type==="ustaz"){const u=TK_U[ov.key]; if(u)return{kind:"lec",jenis,title:(t&&t.t)||u.s||"",name:u.g+" "+u.n};}
+        if(ov.type==="custom")return{kind:"lec",jenis,title:ov.tajuk||"",name:((ov.gelaran||"Ust")+" "+(ov.nama||"")).trim()};
+      }
+      if(t.j==="kahfi")return{kind:"kahfi"};
+      if(wd===3 && TK_S.dhuha && TK_S.dhuha.rabu===o){
+        const sh=TK_U.sharif, mk=t.p[o], mm=mk?TK_U[mk]:null;
+        return{kind:"split",left:{title:"K. Dhuha",name:sh.g+" "+sh.n},right:mm?{title:mm.s,name:mm.g+" "+mm.n}:null};
+      }
+      if(wd===6){const p=TK_S.perdana;
+        if(p&&p.sabtu===o&&(p.ceramah||p.photo))return{kind:"lec",jenis:"perdana",title:"Kuliah Perdana",name:((p.gelaran||"Ust")+" "+(p.ceramah||"")).trim()};
+        return{kind:"empty"};}
+      if(t.p){const k=t.p[o]; if(!k)return{kind:"empty"}; const u=TK_U[k]; return{kind:"lec",jenis:t.j,title:t.t||u.s||"",name:u.g+" "+u.n};}
+      return{kind:"empty"};
+    }
+    const TK_API='https://apiwaktusolatsgr03.vercel.app/api/waktu-solat?today';
+    let TK_OVR=null; // {y,m,d} tarikh rasmi dari API (anchor utama)
+    function pickDate(o){
+      const cands=[o&&o.date, o&&o.today, o&&o.today&&o.today.date, o&&o.times&&o.times.date,
+                   o&&o.gregorian, o&&o.masihi, o&&o.data&&o.data.date];
+      for(const c of cands){ if(typeof c==='string'){ const m=c.match(/(\d{4})-(\d{2})-(\d{2})/); if(m) return {y:+m[1],m:+m[2],d:+m[3]}; } }
+      return null;
+    }
+    function klToday(){
+      if(TK_OVR) return TK_OVR;
+      const f=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Kuala_Lumpur',year:'numeric',month:'2-digit',day:'2-digit'});
+      const [y,m,d]=f.format(new Date()).split('-').map(Number); return {y,m,d};
+    }
+    function syncDate(cb){
+      fetch(TK_API,{cache:'no-cache'}).then(r=>r.ok?r.json():null).then(j=>{ const dt=pickDate(j); if(dt) TK_OVR=dt; if(cb)cb(); }).catch(()=>{ if(cb)cb(); });
+    }
+    function addDays(b,n){const dt=new Date(Date.UTC(b.y,b.m-1,b.d)); dt.setUTCDate(dt.getUTCDate()+n);
+      return {y:dt.getUTCFullYear(),m:dt.getUTCMonth()+1,d:dt.getUTCDate(),wd:dt.getUTCDay()};}
+
+    function cardHTML(when,info,dt,isToday){
+      const dateStr=HARI[dt.wd]+", "+dt.d+" "+BLN[dt.m-1];
+      let body;
+      if(info.kind==="empty") body='<div class="kempty">Tiada kuliah</div>';
+      else if(info.kind==="kahfi") body='<div class="ktitle">Bacaan Kahfi, Yasin &amp; Doa Selamat</div><span class="kwaktu">Malam Jumaat</span>';
+      else if(info.kind==="khas") body='<div class="ktitle">'+esc(info.text)+'</div>';
+      else if(info.kind==="split"){
+        body='<div class="ksplit"><div class="sline"><div class="ktitle">'+esc(info.left.title)+'</div><div class="kustaz">'+esc(info.left.name)+'</div></div>'+
+          (info.right?'<div class="sline"><div class="ktitle">'+esc(info.right.title)+'</div><div class="kustaz">'+esc(info.right.name)+'</div></div>':'')+'</div>';
+      } else {
+        body='<div class="ktitle">'+esc(info.title)+'</div><div class="kustaz">'+esc(info.name)+'</div><span class="kwaktu">'+esc(WAKTU[info.jenis]||"")+'</span>';
+      }
+      return '<div class="kcard'+(isToday?' today':'')+'"><span class="ac-glow" aria-hidden="true"></span>'+
+        '<div class="kwhen">'+when+'</div><div class="kdate">'+dateStr+'</div><div class="kbody">'+body+'</div></div>';
+    }
+    function renderReminder(){
+      const wrap=document.getElementById('kulReminder'); if(!wrap)return;
+      const t=klToday(), base={y:t.y,m:t.m,d:t.d,wd:new Date(Date.UTC(t.y,t.m-1,t.d)).getUTCDay()};
+      const days=[["Hari Ini",base],["Esok",addDays(base,1)],["Lusa",addDays(base,2)]];
+      wrap.innerHTML=days.map((x,i)=>cardHTML(x[0],resolve(x[1].y,x[1].m,x[1].d),x[1],i===0)).join("");
+    }
+    function renderPoster(){
+      const box=document.getElementById('kulPoster'), img=document.getElementById('kulPosterImg'); if(!box||!img)return;
+      const t=klToday(), file="takwim-"+BLN[t.m-1].toLowerCase()+"-"+t.y+".png";
+      img.onerror=()=>box.classList.add('empty');
+      img.onload=()=>box.classList.remove('empty');
+      img.src=file+"?v="+t.y+t.m;
+    }
+
+    function refresh(){ renderReminder(); renderPoster(); }
+
+    refresh();  // segera (Intl KL) supaya tak menunggu rangkaian
+    // tarik jadual (override/perdana/dhuha) bulan ini
+    fetch('takwim-data.json',{cache:'no-cache'}).then(r=>r.ok?r.json():null).then(j=>{
+      if(j&&j.state){ if(j.state.perdana)TK_S.perdana=j.state.perdana; if(j.state.dhuha)TK_S.dhuha=j.state.dhuha; TK_S.overrides=j.state.overrides||{}; renderReminder(); }
+    }).catch(()=>{});
+    // anchor tarikh rasmi dari API waktu solat (kebal jam peranti salah)
+    let _k=(()=>{const t=klToday();return t.y+"-"+t.m+"-"+t.d;})();
+    syncDate(()=>{ const t=klToday(),k=t.y+"-"+t.m+"-"+t.d; if(k!==_k){ _k=k; refresh(); } });
+    // segerak semula berkala → page yang dibuka lama tetap gulung selepas tengah malam
+    setInterval(()=>{ syncDate(()=>{ const t=klToday(),k=t.y+"-"+t.m+"-"+t.d; if(k!==_k){ _k=k; refresh(); } }); }, 600000);
+  })();
 </script>
 </body>
 </html>
