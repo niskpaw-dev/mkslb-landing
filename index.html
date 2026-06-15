@@ -254,6 +254,7 @@
   .kcard .kempty{font-size:.95rem;color:var(--ink-muted);font-style:italic;padding:8px 0 4px}
   .kcard .ksplit{display:flex;flex-direction:column;gap:12px}
   .kcard .ksplit .sline .ktitle{font-size:1.18rem}
+  .kcard .ksplit .sline .kwaktu{margin-top:8px}
   .kul-postwrap{margin-top:24px;border-radius:20px;overflow:hidden;border:1px solid rgba(212,175,55,.24);box-shadow:0 24px 60px -34px rgba(0,0,0,.7);background:linear-gradient(155deg,var(--green-700),var(--green-900))}
   .kul-postwrap.empty{display:none}
   .kul-postwrap .kul-cap{display:flex;align-items:center;gap:12px;padding:14px 20px;font-size:.68rem;letter-spacing:.22em;text-transform:uppercase;color:var(--gold-soft);border-bottom:1px solid rgba(212,175,55,.14)}
@@ -592,7 +593,7 @@
       4:{j:"kahfi"},5:{j:"halaqah",t:"Halaqah",p:{1:"aiman",2:"aiman",3:"aiman",4:"aiman"}},6:{j:"sabtu"}};
     const HARI=["Ahad","Isnin","Selasa","Rabu","Khamis","Jumaat","Sabtu"];
     const BLN=["Jan","Feb","Mac","Apr","Mei","Jun","Jul","Ogo","Sep","Okt","Nov","Dis"];
-    const WAKTU={subuh:"Selepas Subuh",maghrib:"Selepas Maghrib",halaqah:"Selepas Maghrib",kahfi:"Malam Jumaat",dhuha:"Waktu Dhuha",perdana:"Selepas Maghrib"};
+    const WAKTU={subuh:"Selepas Subuh",maghrib:"Selepas Maghrib",halaqah:"Selepas Maghrib",kahfi:"Malam Jumaat",dhuha:"9:00 Pagi",perdana:"Selepas Maghrib"};
     const occ=d=>Math.floor((d-1)/7)+1;
     let TK_S={perdana:{sabtu:3,gelaran:"Ust",ceramah:"",photo:""},dhuha:{rabu:3},overrides:{}};
     const esc=t=>String(t==null?"":t).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
@@ -611,7 +612,7 @@
       if(t.j==="kahfi")return{kind:"kahfi"};
       if(wd===3 && TK_S.dhuha && TK_S.dhuha.rabu===o){
         const sh=TK_U.sharif, mk=t.p[o], mm=mk?TK_U[mk]:null;
-        return{kind:"split",left:{title:"K. Dhuha",name:sh.g+" "+sh.n},right:mm?{title:mm.s,name:mm.g+" "+mm.n}:null};
+        return{kind:"split",left:{title:"K. Dhuha",name:sh.g+" "+sh.n,waktu:WAKTU.dhuha},right:mm?{title:mm.s,name:mm.g+" "+mm.n,waktu:WAKTU.maghrib}:null};
       }
       if(wd===6){const p=TK_S.perdana;
         if(p&&p.sabtu===o&&(p.ceramah||p.photo))return{kind:"lec",jenis:"perdana",title:"Kuliah Perdana",name:((p.gelaran||"Ust")+" "+(p.ceramah||"")).trim()};
@@ -645,8 +646,8 @@
       else if(info.kind==="kahfi") body='<div class="ktitle">Bacaan Kahfi, Yasin &amp; Doa Selamat</div><span class="kwaktu">Malam Jumaat</span>';
       else if(info.kind==="khas") body='<div class="ktitle">'+esc(info.text)+'</div>';
       else if(info.kind==="split"){
-        body='<div class="ksplit"><div class="sline"><div class="ktitle">'+esc(info.left.title)+'</div><div class="kustaz">'+esc(info.left.name)+'</div></div>'+
-          (info.right?'<div class="sline"><div class="ktitle">'+esc(info.right.title)+'</div><div class="kustaz">'+esc(info.right.name)+'</div></div>':'')+'</div>';
+        const sline=s=> s?'<div class="sline"><div class="ktitle">'+esc(s.title)+'</div><div class="kustaz">'+esc(s.name)+'</div>'+(s.waktu?'<span class="kwaktu">'+esc(s.waktu)+'</span>':'')+'</div>':'';
+        body='<div class="ksplit">'+sline(info.left)+sline(info.right)+'</div>';
       } else {
         body='<div class="ktitle">'+esc(info.title)+'</div><div class="kustaz">'+esc(info.name)+'</div><span class="kwaktu">'+esc(WAKTU[info.jenis]||"")+'</span>';
       }
