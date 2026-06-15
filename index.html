@@ -179,6 +179,37 @@
   .act .ac-glow{position:absolute;right:-40px;top:-40px;width:160px;height:160px;border-radius:50%;background:radial-gradient(circle,rgba(212,175,55,.16),transparent 70%);opacity:0;transition:opacity .6s var(--ease)}
   .act:hover .ac-glow{opacity:1}
 
+  /* ---- e-Khairat feature card (full-width, dua aksi) ---- */
+  .act-feature{
+    grid-column:1/-1;display:flex;flex-direction:column;gap:24px;padding:30px 28px;
+  }
+  .act-feature:hover{transform:none;box-shadow:none;border-color:rgba(212,175,55,.3)}
+  @media(min-width:760px){
+    .act-feature{flex-direction:row;align-items:center;justify-content:space-between;gap:36px;padding:32px 34px}
+  }
+  .act-feature .af-main{flex:1;min-width:0}
+  .act-feature .af-ext{
+    display:inline-flex;align-items:center;gap:6px;margin-top:14px;
+    font-size:.7rem;letter-spacing:.04em;color:var(--ink-muted);
+  }
+  .act-feature .af-ext svg{width:13px;height:13px}
+  .af-actions{display:flex;flex-direction:column;gap:11px;flex-shrink:0}
+  @media(min-width:480px){.af-actions{flex-direction:row}}
+  @media(min-width:760px){.af-actions{flex-direction:column}}
+  @media(min-width:980px){.af-actions{flex-direction:row}}
+  .af-btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:9px;
+    padding:14px 22px;border-radius:13px;white-space:nowrap;
+    font-family:var(--body);font-size:.84rem;font-weight:600;letter-spacing:.02em;
+    text-decoration:none;cursor:pointer;
+    transition:transform .3s var(--ease),background .3s var(--ease),border-color .3s var(--ease);
+  }
+  .af-btn svg{width:17px;height:17px;flex-shrink:0}
+  .af-btn.primary{background:var(--gold-bright);color:var(--green-900);border:1px solid var(--gold-bright)}
+  .af-btn.primary:hover{background:var(--gold);transform:translateY(-2px)}
+  .af-btn.ghost{background:rgba(212,175,55,.06);color:var(--gold-soft);border:1px solid rgba(212,175,55,.42)}
+  .af-btn.ghost:hover{border-color:var(--gold);background:rgba(212,175,55,.12);transform:translateY(-2px)}
+
   /* ---------- TENTANG (cream kitab panel) ---------- */
   .kitab{background:var(--cream);color:var(--ink-dark);border-radius:24px;padding:clamp(30px,5vw,56px);box-shadow:0 30px 70px -40px rgba(0,0,0,.6);position:relative}
   .kitab .eyebrow{color:#9a7d1e}
@@ -348,6 +379,25 @@
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
         </span>
       </a>
+
+      <div class="act act-feature reveal" style="transition-delay:.26s">
+        <div class="af-main">
+          <span class="ac-ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.6-3.1 7.8-7 9-3.9-1.2-7-4.4-7-9V6l7-3z"/><path d="M9 12l2 2 4-4"/></svg></span>
+          <h3>Khairat Kematian</h3>
+          <p>Keahlian khairat kematian kariah &mdash; daftar ahli baru atau semak &amp; jelaskan yuran tahunan melalui portal rasmi masjid.</p>
+          <span class="af-ext"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M9 7h8v8"/></svg>Portal e-Khairat &middot; e-khairat.com</span>
+        </div>
+        <div class="af-actions">
+          <a class="af-btn primary" href="https://www.e-khairat.com/mkslb/register">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>
+            Daftar Ahli Baru
+          </a>
+          <a class="af-btn ghost" href="https://www.e-khairat.com/mkslb/check">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            Semak &amp; Bayar Yuran
+          </a>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -464,6 +514,7 @@
       <a href="#kuliah">Kuliah</a>
       <a href="#hubungi">Hubungi</a>
       <a href="https://infaq.masjidkslb.com/">Infaq</a>
+      <a href="https://www.e-khairat.com/mkslb/home">Khairat</a>
       <a href="https://waktusolat.masjidkslb.com/">Waktu Solat</a>
     </nav>
     <p class="cr">&copy; <span id="yr"></span> Masjid Kampung Sungai Lang Baru. Hak cipta terpelihara.<br>Portal digital diuruskan oleh AJK Masjid.</p>
