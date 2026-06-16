@@ -236,15 +236,27 @@
   .naung b{color:var(--green-700)}
 
   /* ---------- AJK ---------- */
-  .ajk-groups{display:grid;gap:30px;margin-top:34px}
-  @media(min-width:780px){.ajk-groups{grid-template-columns:1fr 1fr}}
-  .ajk-group h4{font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;color:var(--gold-soft);margin-bottom:4px}
-  .ajk-group .gd{height:1px;background:linear-gradient(90deg,rgba(212,175,55,.5),transparent);margin-bottom:8px}
-  .ajk-row{display:flex;justify-content:space-between;gap:16px;align-items:baseline;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.06)}
-  .ajk-row:last-child{border-bottom:0}
-  .ajk-row .role{font-size:.74rem;color:var(--ink-muted);flex-shrink:0;letter-spacing:.02em;min-width:36%}
-  .ajk-row .name{font-size:.9rem;color:var(--ink-cream);text-align:right;font-weight:500}
-  .ajk-span{grid-column:1/-1}
+  /* AJK — grid foto */
+  .ajk-photo{margin-top:38px}
+  .ajk-lead{display:flex;justify-content:center;gap:clamp(30px,9vw,76px);flex-wrap:wrap;margin-bottom:6px}
+  .ajk-cat{margin-top:46px}
+  .ajk-cat-label{font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;color:var(--gold-soft);padding-bottom:11px;margin-bottom:28px;border-bottom:1px solid rgba(212,175,55,.16)}
+  .ajk-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(116px,1fr));gap:30px 16px}
+  .ajk-person{display:flex;flex-direction:column;align-items:center;text-align:center;margin:0}
+  .ajk-av{width:94px;height:94px;border-radius:50%;overflow:hidden;border:2px solid rgba(233,201,106,.5);box-shadow:0 0 0 1px rgba(212,175,55,.12);transition:transform .4s var(--ease),border-color .4s var(--ease),box-shadow .4s var(--ease)}
+  .ajk-av img{width:100%;height:100%;object-fit:cover;display:block}
+  .ajk-person--lead .ajk-av{width:124px;height:124px}
+  .ajk-person:hover .ajk-av{transform:translateY(-4px);border-color:var(--gold-bright);box-shadow:0 14px 30px -12px rgba(0,0,0,.6),0 0 0 4px rgba(212,175,55,.08)}
+  .ajk-nm{display:block;margin-top:13px;font-size:.8rem;font-weight:600;line-height:1.25;color:var(--ink-cream);max-width:15ch}
+  .ajk-rl{display:block;margin-top:5px;font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--gold-soft);font-weight:600}
+  .ajk-person--lead .ajk-nm{font-size:.92rem}
+  .ajk-person--lead .ajk-rl{color:var(--gold-bright)}
+  @media(prefers-reduced-motion:reduce){.ajk-person:hover .ajk-av{transform:none}}
+  @media(max-width:420px){
+    .ajk-grid{grid-template-columns:repeat(auto-fill,minmax(98px,1fr));gap:26px 10px}
+    .ajk-av{width:84px;height:84px}
+    .ajk-person--lead .ajk-av{width:106px;height:106px}
+  }
 
   /* ---------- HUBUNGI ---------- */
   .contact-grid{display:grid;gap:18px;margin-top:34px}
@@ -311,7 +323,7 @@
   <nav class="nav">
     <a href="#" class="brand" aria-label="Masjid Kampung Sungai Lang Baru">
       <img src="logomkslb.png" alt="Logo MKSLB">
-      <span class="bn"><b>Masjid Kampung Sungai Lang Baru</b><span>42700 Banting · Selangor Darul Ehsan</span></span>
+      <span class="bn"><b>Masjid Kg. Sungai Lang Baru</b><span>Banting · Selangor</span></span>
     </a>
     <a href="https://infaq.masjidkslb.com/" class="nav-cta">Infaq Sekarang</a>
   </nav>
@@ -459,42 +471,131 @@
   <section class="blk wrap" id="ajk">
     <div class="eyebrow reveal">Barisan Kepimpinan</div>
     <h2 class="h-sec reveal" style="transition-delay:.06s">Ahli Jawatankuasa Masjid</h2>
-    <div class="ajk-groups">
-      <div class="ajk-group reveal" style="transition-delay:.1s">
-        <h4>Pegawai Masjid</h4><div class="gd"></div>
-        <div class="ajk-row"><span class="role">Nazir</span><span class="name">Fauzi bin Din</span></div>
-        <div class="ajk-row"><span class="role">Timbalan Nazir</span><span class="name">Hashim bin Mohamed</span></div>
-        <div class="ajk-row"><span class="role">Imam 1</span><span class="name">Azahari bin Redzuan</span></div>
-        <div class="ajk-row"><span class="role">Imam 2</span><span class="name">Mohd Naudi Haqqi bin Ahmad</span></div>
-        <div class="ajk-row"><span class="role">Imam 3</span><span class="name">Muhammad Aiman bin Rafee</span></div>
-        <div class="ajk-row"><span class="role">Imam 4</span><span class="name">Muhammad Faiz bin Mufasir</span></div>
-        <div class="ajk-row"><span class="role">Bilal 1</span><span class="name">Mohamad Norfaizal bin Mohamed</span></div>
-        <div class="ajk-row"><span class="role">Bilal 2</span><span class="name">Muhammad Syamim Fikri bin Abu Samah</span></div>
-        <div class="ajk-row"><span class="role">Bilal 3</span><span class="name">Muhammad Fauzi bin Ruslan</span></div>
-        <div class="ajk-row"><span class="role">Bilal 4</span><span class="name">Mohamad Maksom bin Hj. Abdul Rahman</span></div>
-        <div class="ajk-row"><span class="role">Siak 1</span><span class="name">Mohamad Maksom bin Hj. Abdul Rahman</span></div>
-        <div class="ajk-row"><span class="role">Siak 2</span><span class="name">Mohd Suhaimi bin Adnan</span></div>
+    <div class="ajk-photo">
+      <div class="ajk-lead reveal">
+        <figure class="ajk-person ajk-person--lead">
+          <div class="ajk-av"><img src="ajk/nazir.webp" alt="Fauzi bin Din" loading="lazy" width="180" height="180"></div>
+          <figcaption><span class="ajk-nm">Fauzi bin Din</span><span class="ajk-rl">Nazir</span></figcaption>
+        </figure>
+        <figure class="ajk-person ajk-person--lead">
+          <div class="ajk-av"><img src="ajk/timbalan-nazir.webp" alt="Hashim bin Mohamed" loading="lazy" width="180" height="180"></div>
+          <figcaption><span class="ajk-nm">Hashim bin Mohamed</span><span class="ajk-rl">Timbalan Nazir</span></figcaption>
+        </figure>
       </div>
-      <div class="ajk-group reveal" style="transition-delay:.16s">
-        <h4>Jawatankuasa Pengurusan</h4><div class="gd"></div>
-        <div class="ajk-row"><span class="role">Setiausaha</span><span class="name">Muhamad Zaidi bin Abdul Rahman</span></div>
-        <div class="ajk-row"><span class="role">Pen. Setiausaha</span><span class="name">Nazammudin bin Mahaudin</span></div>
-        <div class="ajk-row"><span class="role">Bendahari</span><span class="name">Mohd Darha bin Kasan</span></div>
-        <div class="ajk-row"><span class="role">Pen. Bendahari</span><span class="name">Abu Samah bin Mohd Ran</span></div>
-        <div class="ajk-row"><span class="role">Wakil Pemuda</span><span class="name">Mohammad Nu'aim bin Mohd Darha</span></div>
-        <div class="ajk-row"><span class="role">Wakil Muslimat</span><span class="name">Saliah binti Towel</span></div>
-        <div class="ajk-row"><span class="role">Pengurus Jenazah Muslimat</span><span class="name">Minah binti Dini</span></div>
-        <div class="ajk-row"><span class="role">AJK</span><span class="name">Norhisam bin Ngdari</span></div>
-        <div class="ajk-row"><span class="role">AJK</span><span class="name">Ramlan bin Johari</span></div>
-        <div class="ajk-row"><span class="role">AJK</span><span class="name">Misteri binti Dikun</span></div>
-        <div class="ajk-row"><span class="role">AJK</span><span class="name">Md Din bin Ahmad</span></div>
-        <div class="ajk-row"><span class="role">AJK</span><span class="name">Mohamad Razemi bin Samingon</span></div>
-        <div class="ajk-row"><span class="role">AJK</span><span class="name">Mohd Salim bin Sanuri</span></div>
+      <div class="ajk-cat reveal" style="transition-delay:.06s">
+        <div class="ajk-cat-label">Pegawai Masjid</div>
+        <div class="ajk-grid">
+        <figure class="ajk-person">
+          <div class="ajk-av"><img src="ajk/imam-1.webp" alt="Azahari bin Redzuan" loading="lazy" width="180" height="180"></div>
+          <figcaption><span class="ajk-nm">Azahari bin Redzuan</span><span class="ajk-rl">Imam 1</span></figcaption>
+        </figure>
+        <figure class="ajk-person">
+          <div class="ajk-av"><img src="ajk/imam-2.webp" alt="Mohd Naudi Haqqi bin Ahmad" loading="lazy" width="180" height="180"></div>
+          <figcaption><span class="ajk-nm">Mohd Naudi Haqqi bin Ahmad</span><span class="ajk-rl">Imam 2</span></figcaption>
+        </figure>
+        <figure class="ajk-person">
+          <div class="ajk-av"><img src="ajk/imam-3.webp" alt="Muhammad Aiman bin Rafee" loading="lazy" width="180" height="180"></div>
+          <figcaption><span class="ajk-nm">Muhammad Aiman bin Rafee</span><span class="ajk-rl">Imam 3</span></figcaption>
+        </figure>
+        <figure class="ajk-person">
+          <div class="ajk-av"><img src="ajk/imam-4.webp" alt="Muhammad Faiz bin Mufasir" loading="lazy" width="180" height="180"></div>
+          <figcaption><span class="ajk-nm">Muhammad Faiz bin Mufasir</span><span class="ajk-rl">Imam 4</span></figcaption>
+        </figure>
+        <figure class="ajk-person">
+          <div class="ajk-av"><img src="ajk/bilal-1.webp" alt="Mohamad Norfaizal bin Mohamed" loading="lazy" width="180" height="180"></div>
+          <figcaption><span class="ajk-nm">Mohamad Norfaizal bin Mohamed</span><span class="ajk-rl">Bilal 1</span></figcaption>
+        </figure>
+        <figure class="ajk-person">
+          <div class="ajk-av"><img src="ajk/bilal-2.webp" alt="Muhammad Syamim Fikri bin Abu Samah" loading="lazy" width="180" height="180"></div>
+          <figcaption><span class="ajk-nm">Muhammad Syamim Fikri bin Abu Samah</span><span class="ajk-rl">Bilal 2</span></figcaption>
+        </figure>
+        <figure class="ajk-person">
+          <div class="ajk-av"><img src="ajk/bilal-3.webp" alt="Muhammad Fauzi bin Ruslan" loading="lazy" width="180" height="180"></div>
+          <figcaption><span class="ajk-nm">Muhammad Fauzi bin Ruslan</span><span class="ajk-rl">Bilal 3</span></figcaption>
+        </figure>
+        <figure class="ajk-person">
+          <div class="ajk-av"><img src="ajk/bilal-4.webp" alt="Mohamad Maksom bin Hj. Abdul Rahman" loading="lazy" width="180" height="180"></div>
+          <figcaption><span class="ajk-nm">Mohamad Maksom bin Hj. Abdul Rahman</span><span class="ajk-rl">Bilal 4</span></figcaption>
+        </figure>
+        <figure class="ajk-person">
+          <div class="ajk-av"><img src="ajk/bilal-4.webp" alt="Mohamad Maksom bin Hj. Abdul Rahman" loading="lazy" width="180" height="180"></div>
+          <figcaption><span class="ajk-nm">Mohamad Maksom bin Hj. Abdul Rahman</span><span class="ajk-rl">Siak 1</span></figcaption>
+        </figure>
+        <figure class="ajk-person">
+          <div class="ajk-av"><img src="ajk/siak-2.webp" alt="Mohd Suhaimi bin Adnan" loading="lazy" width="180" height="180"></div>
+          <figcaption><span class="ajk-nm">Mohd Suhaimi bin Adnan</span><span class="ajk-rl">Siak 2</span></figcaption>
+        </figure>
+        </div>
       </div>
-      <div class="ajk-group ajk-span reveal">
-        <h4>Pemeriksa Kira-Kira</h4><div class="gd"></div>
-        <div class="ajk-row"><span class="role">Pemeriksa Kira-Kira 1</span><span class="name">Dzulkafli bin Sharif</span></div>
-        <div class="ajk-row"><span class="role">Pemeriksa Kira-Kira 2</span><span class="name">Kamaruslan bin Che Teh</span></div>
+      <div class="ajk-cat reveal" style="transition-delay:.1s">
+        <div class="ajk-cat-label">Pemeriksa Kira-Kira</div>
+        <div class="ajk-grid">
+        <figure class="ajk-person">
+          <div class="ajk-av"><img src="ajk/kira-kira-1.webp" alt="Dzulkafli bin Sharif" loading="lazy" width="180" height="180"></div>
+          <figcaption><span class="ajk-nm">Dzulkafli bin Sharif</span><span class="ajk-rl">Pemeriksa Kira-Kira 1</span></figcaption>
+        </figure>
+        <figure class="ajk-person">
+          <div class="ajk-av"><img src="ajk/kira-kira-2.webp" alt="Kamaruslan bin Che Teh" loading="lazy" width="180" height="180"></div>
+          <figcaption><span class="ajk-nm">Kamaruslan bin Che Teh</span><span class="ajk-rl">Pemeriksa Kira-Kira 2</span></figcaption>
+        </figure>
+        </div>
+      </div>
+      <div class="ajk-cat reveal" style="transition-delay:.14s">
+        <div class="ajk-cat-label">Jawatankuasa Pengurusan</div>
+        <div class="ajk-grid">
+        <figure class="ajk-person">
+          <div class="ajk-av"><img src="ajk/setiausaha.webp" alt="Muhamad Zaidi bin Abdul Rahman" loading="lazy" width="180" height="180"></div>
+          <figcaption><span class="ajk-nm">Muhamad Zaidi bin Abdul Rahman</span><span class="ajk-rl">Setiausaha</span></figcaption>
+        </figure>
+        <figure class="ajk-person">
+          <div class="ajk-av"><img src="ajk/penolong-setiausaha.webp" alt="Nazammudin bin Mahaudin" loading="lazy" width="180" height="180"></div>
+          <figcaption><span class="ajk-nm">Nazammudin bin Mahaudin</span><span class="ajk-rl">Penolong Setiausaha</span></figcaption>
+        </figure>
+        <figure class="ajk-person">
+          <div class="ajk-av"><img src="ajk/bendahari.webp" alt="Mohd Darha bin Kasan" loading="lazy" width="180" height="180"></div>
+          <figcaption><span class="ajk-nm">Mohd Darha bin Kasan</span><span class="ajk-rl">Bendahari</span></figcaption>
+        </figure>
+        <figure class="ajk-person">
+          <div class="ajk-av"><img src="ajk/penolong-bendahari.webp" alt="Abu Samah bin Mohd Ran" loading="lazy" width="180" height="180"></div>
+          <figcaption><span class="ajk-nm">Abu Samah bin Mohd Ran</span><span class="ajk-rl">Penolong Bendahari</span></figcaption>
+        </figure>
+        <figure class="ajk-person">
+          <div class="ajk-av"><img src="ajk/wakil-pemuda.webp" alt="Mohammad Nu'aim bin Mohd Darha" loading="lazy" width="180" height="180"></div>
+          <figcaption><span class="ajk-nm">Mohammad Nu'aim bin Mohd Darha</span><span class="ajk-rl">Wakil Pemuda</span></figcaption>
+        </figure>
+        <figure class="ajk-person">
+          <div class="ajk-av"><img src="ajk/wakil-muslimat.webp" alt="Saliah binti Towel" loading="lazy" width="180" height="180"></div>
+          <figcaption><span class="ajk-nm">Saliah binti Towel</span><span class="ajk-rl">Wakil Muslimat</span></figcaption>
+        </figure>
+        <figure class="ajk-person">
+          <div class="ajk-av"><img src="ajk/pengurus-jenazah-muslimat.webp" alt="Minah binti Dini" loading="lazy" width="180" height="180"></div>
+          <figcaption><span class="ajk-nm">Minah binti Dini</span><span class="ajk-rl">Pengurus Jenazah Muslimat</span></figcaption>
+        </figure>
+        <figure class="ajk-person">
+          <div class="ajk-av"><img src="ajk/ajk-1.webp" alt="Norhisam bin Ngdari" loading="lazy" width="180" height="180"></div>
+          <figcaption><span class="ajk-nm">Norhisam bin Ngdari</span><span class="ajk-rl">AJK</span></figcaption>
+        </figure>
+        <figure class="ajk-person">
+          <div class="ajk-av"><img src="ajk/ajk-2.webp" alt="Ramlan bin Johari" loading="lazy" width="180" height="180"></div>
+          <figcaption><span class="ajk-nm">Ramlan bin Johari</span><span class="ajk-rl">AJK</span></figcaption>
+        </figure>
+        <figure class="ajk-person">
+          <div class="ajk-av"><img src="ajk/ajk-3.webp" alt="Misteri binti Dikun" loading="lazy" width="180" height="180"></div>
+          <figcaption><span class="ajk-nm">Misteri binti Dikun</span><span class="ajk-rl">AJK</span></figcaption>
+        </figure>
+        <figure class="ajk-person">
+          <div class="ajk-av"><img src="ajk/ajk-4.webp" alt="Md Din bin Ahmad" loading="lazy" width="180" height="180"></div>
+          <figcaption><span class="ajk-nm">Md Din bin Ahmad</span><span class="ajk-rl">AJK</span></figcaption>
+        </figure>
+        <figure class="ajk-person">
+          <div class="ajk-av"><img src="ajk/ajk-5.webp" alt="Mohamad Razemi bin Samingon" loading="lazy" width="180" height="180"></div>
+          <figcaption><span class="ajk-nm">Mohamad Razemi bin Samingon</span><span class="ajk-rl">AJK</span></figcaption>
+        </figure>
+        <figure class="ajk-person">
+          <div class="ajk-av"><img src="ajk/ajk-6.webp" alt="Mohd Salim bin Sanuri" loading="lazy" width="180" height="180"></div>
+          <figcaption><span class="ajk-nm">Mohd Salim bin Sanuri</span><span class="ajk-rl">AJK</span></figcaption>
+        </figure>
+        </div>
       </div>
     </div>
   </section>
