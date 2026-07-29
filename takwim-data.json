@@ -1,0 +1,61 @@
+{
+ "v": 3,
+ "state": {
+  "perdana": {
+   "sabtu": 4,
+   "gelaran": "Ust",
+   "ceramah": "Uda Kasim",
+   "photo": "uda"
+  },
+  "dhuha": {
+   "rabu": 3
+  },
+  "overrides": {
+   "2026-8": {
+    "15": {
+     "type": "kosong"
+    },
+    "31": {
+     "type": "khas",
+     "teks": "HARI KEBANGSAAN"
+    }
+   },
+   "2026-6": {
+    "1": {
+     "type": "custom",
+     "tajuk": "Kuliah Umum",
+     "gelaran": "Daie",
+     "nama": "Asyraf",
+     "photo": "asyraf"
+    },
+    "7": {
+     "type": "custom",
+     "tajuk": "Kuliah Subuh",
+     "gelaran": "Daie",
+     "nama": "Khairulanwar",
+     "photo": "khairul"
+    },
+    "28": {
+     "type": "custom",
+     "tajuk": "Kuliah Subuh",
+     "gelaran": "Daie",
+     "nama": "Khairulanwar",
+     "photo": "khairul"
+    },
+    "29": {
+     "type": "ustaz",
+     "key": "naudi"
+    }
+   },
+   "2026-7": {
+    "5": {
+     "type": "custom",
+     "tajuk": "Kuliah Subuh",
+     "gelaran": "Ust",
+     "nama": "Shahril",
+     "photo": "shahril"
+    }
+   }
+  }
+ }
+}
