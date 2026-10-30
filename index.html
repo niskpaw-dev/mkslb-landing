@@ -832,13 +832,15 @@
       4:{j:"kahfi"},5:{j:"halaqah",t:"Halaqah",p:{1:"aiman",2:"aiman",3:"aiman",4:"aiman"}},6:{j:"sabtu"}};
     const HARI=["Ahad","Isnin","Selasa","Rabu","Khamis","Jumaat","Sabtu"];
     const BLN=["Jan","Feb","Mac","Apr","Mei","Jun","Jul","Ogo","Sep","Okt","Nov","Dis"];
-    const WAKTU={subuh:"Selepas Subuh",maghrib:"Selepas Maghrib",halaqah:"Selepas Maghrib",kahfi:"Malam Jumaat",dhuha:"9:00 Pagi",perdana:"Selepas Maghrib"};
+    const WAKTU={subuh:"Selepas Subuh",maghrib:"Selepas Maghrib",halaqah:"Selepas Maghrib",kahfi:"Malam Jumaat",dhuha:"9:00 Pagi",perdana:"Selepas Maghrib",tazkirah:"Sebelum Solat Jumaat",zohor:"Selepas Zohor"};
     const occ=d=>Math.floor((d-1)/7)+1;
-    let TK_S={perdana:{sabtu:3,gelaran:"Ust",ceramah:"",photo:""},dhuha:{rabu:3},overrides:{}};
+    let TK_S={perdana:{sabtu:3,gelaran:"Ust",ceramah:"",photo:""},dhuha:{rabu:3},zohor:{jumaat:0,gelaran:"Ust",nama:""},bulanan:{},overrides:{},tazkirah:{}};
+    /* tetapan bulanan (Perdana/Dhuha/Zohor) ikut bulan; fallback ke medan lama */
+    const cfg=(y,m)=>{ const b=(TK_S.bulanan||{})[y+"-"+m]||{}; return {perdana:b.perdana||TK_S.perdana, dhuha:b.dhuha||TK_S.dhuha, zohor:b.zohor||TK_S.zohor}; };
     const esc=t=>String(t==null?"":t).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
     const ovFor=(y,m)=>TK_S.overrides[y+"-"+m]||{};
 
-    function resolve(y,m,d){
+    function baseResolve(y,m,d){
       const wd=new Date(Date.UTC(y,m-1,d)).getUTCDay(), o=occ(d), t=TK_T[wd];
       const ov=ovFor(y,m)[d];
       if(ov){
@@ -849,15 +851,29 @@
         if(ov.type==="custom")return{kind:"lec",jenis,title:ov.tajuk||"",name:((ov.gelaran||"Ust")+" "+(ov.nama||"")).trim()};
       }
       if(t.j==="kahfi")return{kind:"kahfi"};
-      if(wd===3 && TK_S.dhuha && TK_S.dhuha.rabu===o){
+      const CF=cfg(y,m);
+      if(wd===3 && CF.dhuha && CF.dhuha.rabu===o){
         const sh=TK_U.sharif, mk=t.p[o], mm=mk?TK_U[mk]:null;
-        return{kind:"split",left:{title:"K. Dhuha",name:sh.g+" "+sh.n,waktu:WAKTU.dhuha},right:mm?{title:mm.s,name:mm.g+" "+mm.n,waktu:WAKTU.maghrib}:null};
+        const parts=[{title:"K. Dhuha",name:sh.g+" "+sh.n,waktu:WAKTU.dhuha}]; if(mm)parts.push({title:mm.s,name:mm.g+" "+mm.n,waktu:WAKTU.maghrib}); return{kind:"split",parts};
       }
-      if(wd===6){const p=TK_S.perdana;
+      if(wd===6){const p=CF.perdana;
         if(p&&p.sabtu===o&&(p.ceramah||p.photo))return{kind:"lec",jenis:"perdana",title:"Kuliah Perdana",name:((p.gelaran||"Ust")+" "+(p.ceramah||"")).trim()};
         return{kind:"empty"};}
       if(t.p){const k=t.p[o]; if(!k)return{kind:"empty"}; const u=TK_U[k]; return{kind:"lec",jenis:t.j,title:t.t||u.s||"",name:u.g+" "+u.n};}
       return{kind:"empty"};
+    }
+    /* Tazkirah Jumaat (per tarikh): Tazkirah dulu, kuliah Maghrib selepasnya */
+    /* Jumaat ikut urutan masa: Tazkirah (sebelum Jumaat) → Zohor Muslimat → kuliah Maghrib */
+    function resolve(y,m,d){
+      const base=baseResolve(y,m,d);
+      if(new Date(Date.UTC(y,m-1,d)).getUTCDay()!==5) return base;
+      const parts=[], tz=((TK_S.tazkirah||{})[y+"-"+m]||{})[d], z=cfg(y,m).zohor;
+      if(tz) parts.push({title:"Tazkirah Jumaat",name:((tz.gelaran||"Ust")+" "+(tz.nama||"")).trim(),waktu:WAKTU.tazkirah,jenis:"tazkirah"});
+      if(z&&z.jumaat&&z.jumaat===occ(d)&&(z.nama||z.photo)) parts.push({title:"Kuliah Zohor Muslimat",name:((z.gelaran||"Ust")+" "+(z.nama||"")).trim(),waktu:WAKTU.zohor,jenis:"zohor"});
+      if(!parts.length||base.kind==="khas") return base;
+      if(base.kind==="lec") parts.push({title:base.title,name:base.name,waktu:WAKTU[base.jenis]||""});
+      if(parts.length===1) return{kind:"lec",jenis:parts[0].jenis,title:parts[0].title,name:parts[0].name};
+      return{kind:"split",parts};
     }
     const TK_API='https://apiwaktusolatsgr03.vercel.app/api/waktu-solat?today';
     let TK_OVR=null; // {y,m,d} tarikh rasmi dari API (anchor utama)
@@ -886,7 +902,7 @@
       else if(info.kind==="khas") body='<div class="ktitle">'+esc(info.text)+'</div>';
       else if(info.kind==="split"){
         const sline=s=> s?'<div class="sline"><div class="ktitle">'+esc(s.title)+'</div><div class="kustaz">'+esc(s.name)+'</div>'+(s.waktu?'<span class="kwaktu">'+esc(s.waktu)+'</span>':'')+'</div>':'';
-        body='<div class="ksplit">'+sline(info.left)+sline(info.right)+'</div>';
+        body='<div class="ksplit">'+info.parts.map(sline).join('')+'</div>';
       } else {
         body='<div class="ktitle">'+esc(info.title)+'</div><div class="kustaz">'+esc(info.name)+'</div><span class="kwaktu">'+esc(WAKTU[info.jenis]||"")+'</span>';
       }
@@ -912,7 +928,7 @@
     refresh();  // segera (Intl KL) supaya tak menunggu rangkaian
     // tarik jadual (override/perdana/dhuha) bulan ini
     fetch('takwim-data.json',{cache:'no-cache'}).then(r=>r.ok?r.json():null).then(j=>{
-      if(j&&j.state){ if(j.state.perdana)TK_S.perdana=j.state.perdana; if(j.state.dhuha)TK_S.dhuha=j.state.dhuha; TK_S.overrides=j.state.overrides||{}; renderReminder(); }
+      if(j&&j.state){ if(j.state.perdana)TK_S.perdana=j.state.perdana; if(j.state.dhuha)TK_S.dhuha=j.state.dhuha; TK_S.overrides=j.state.overrides||{}; TK_S.tazkirah=j.state.tazkirah||{}; if(j.state.zohor)TK_S.zohor=j.state.zohor; TK_S.bulanan=j.state.bulanan||{}; renderReminder(); }
     }).catch(()=>{});
     // anchor tarikh rasmi dari API waktu solat (kebal jam peranti salah)
     let _k=(()=>{const t=klToday();return t.y+"-"+t.m+"-"+t.d;})();
