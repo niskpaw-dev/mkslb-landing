@@ -871,7 +871,7 @@ function jamKuliah(y,m,d,slot){
   return jamMelayu(h*60+mi+KULIAH_OFFSET[slot]);
 }
 const FULL_TITLE={"K. Dhuha":"Kuliah Dhuha Muslimat","Taz. Jumaat":"Tazkirah Jumaat","K. Zohor Muslimat":"Kuliah Zohor Muslimat","K. Perdana":"Kuliah Perdana"};
-const WAKTU_TITLE={"K. Dhuha":"9:00 Pagi","Taz. Jumaat":"Sebelum Solat Jumaat","K. Zohor Muslimat":"Selepas Zohor"};
+const WAKTU_TITLE={"K. Dhuha":"9.00 Pagi","Taz. Jumaat":"Sebelum Solat Jumaat","K. Zohor Muslimat":"2.30 Petang"};
 function profileByName(name){
   const n=(name||"").trim().toLowerCase(); if(!n) return null;
   return Object.values(USTAZ).find(u=> (u.gelaran+" "+u.nama).toLowerCase()===n) || null;
