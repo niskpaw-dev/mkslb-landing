@@ -1272,8 +1272,12 @@ function webData(){
   const now=new Date(), cur={y:now.getFullYear(), m:now.getMonth()+1}, bul={};
   for(let i=-1;i<=12;i++){ const d=new Date(cur.y,cur.m-1+i,1); const y=d.getFullYear(), m=d.getMonth()+1; bul[ovKey(y,m)]=cfgFor(y,m); }
   const C=cfgFor(cur.y,cur.m);
+  /* jam kuliah tepat (formula iqamah) untuk reminder landing: s = Subuh, m = Maghrib */
+  const jam={};
+  for(let i=-1;i<=12;i++){ const d0=new Date(cur.y,cur.m-1+i,1), y=d0.getFullYear(), m=d0.getMonth()+1, n=new Date(y,m,0).getDate();
+    for(let d=1; d<=n; d++){ const s=jamKuliah(y,m,d,"subuh"), mg=jamKuliah(y,m,d,"maghrib"); if(s||mg) jam[y+"-"+m+"-"+d]={s,m:mg}; } }
   return { v:4, state:{ perdana:C.perdana, dhuha:C.dhuha, zohor:C.zohor,            /* medan lama: untuk landing versi lama */
-                        bulanan:bul, overrides:STATE.overrides, tazkirah:STATE.tazkirah||{} } };
+                        bulanan:bul, overrides:STATE.overrides, tazkirah:STATE.tazkirah||{}, jam } };
 }
 async function renderPosterCanvas(scale){
   const prevMode=STATE.mode;

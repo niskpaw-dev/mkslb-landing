@@ -832,7 +832,7 @@
       4:{j:"kahfi"},5:{j:"halaqah",t:"Halaqah",p:{1:"aiman",2:"aiman",3:"aiman",4:"aiman"}},6:{j:"sabtu"}};
     const HARI=["Ahad","Isnin","Selasa","Rabu","Khamis","Jumaat","Sabtu"];
     const BLN=["Jan","Feb","Mac","Apr","Mei","Jun","Jul","Ogo","Sep","Okt","Nov","Dis"];
-    const WAKTU={subuh:"Selepas Subuh",maghrib:"Selepas Maghrib",halaqah:"Selepas Maghrib",kahfi:"Malam Jumaat",dhuha:"9:00 Pagi",perdana:"Selepas Maghrib",tazkirah:"Sebelum Solat Jumaat",zohor:"Selepas Zohor"};
+    const WAKTU={subuh:"Selepas Subuh",maghrib:"Selepas Maghrib",halaqah:"Selepas Maghrib",kahfi:"Malam Jumaat",dhuha:"9.00 Pagi",perdana:"Selepas Maghrib",tazkirah:"Sebelum Solat Jumaat",zohor:"Selepas Zohor"};
     const occ=d=>Math.floor((d-1)/7)+1;
     let TK_S={perdana:{sabtu:3,gelaran:"Ust",ceramah:"",photo:""},dhuha:{rabu:3},zohor:{jumaat:0,gelaran:"Ust",nama:""},bulanan:{},overrides:{},tazkirah:{}};
     /* tetapan bulanan (Perdana/Dhuha/Zohor) ikut bulan; fallback ke medan lama */
@@ -854,7 +854,7 @@
       const CF=cfg(y,m);
       if(wd===3 && CF.dhuha && CF.dhuha.rabu===o){
         const sh=TK_U.sharif, mk=t.p[o], mm=mk?TK_U[mk]:null;
-        const parts=[{title:"K. Dhuha",name:sh.g+" "+sh.n,waktu:WAKTU.dhuha}]; if(mm)parts.push({title:mm.s,name:mm.g+" "+mm.n,waktu:WAKTU.maghrib}); return{kind:"split",parts};
+        const parts=[{title:"K. Dhuha",name:sh.g+" "+sh.n,waktu:WAKTU.dhuha,jenis:"dhuha"}]; if(mm)parts.push({title:mm.s,name:mm.g+" "+mm.n,waktu:WAKTU.maghrib,jenis:"maghrib"}); return{kind:"split",parts};
       }
       if(wd===6){const p=CF.perdana;
         if(p&&p.sabtu===o&&(p.ceramah||p.photo))return{kind:"lec",jenis:"perdana",title:"Kuliah Perdana",name:((p.gelaran||"Ust")+" "+(p.ceramah||"")).trim()};
@@ -871,7 +871,7 @@
       if(tz) parts.push({title:"Tazkirah Jumaat",name:((tz.gelaran||"Ust")+" "+(tz.nama||"")).trim(),waktu:WAKTU.tazkirah,jenis:"tazkirah"});
       if(z&&z.jumaat&&z.jumaat===occ(d)&&(z.nama||z.photo)) parts.push({title:"Kuliah Zohor Muslimat",name:((z.gelaran||"Ust")+" "+(z.nama||"")).trim(),waktu:WAKTU.zohor,jenis:"zohor"});
       if(!parts.length||base.kind==="khas") return base;
-      if(base.kind==="lec") parts.push({title:base.title,name:base.name,waktu:WAKTU[base.jenis]||""});
+      if(base.kind==="lec") parts.push({title:base.title,name:base.name,waktu:WAKTU[base.jenis]||"",jenis:base.jenis});
       if(parts.length===1) return{kind:"lec",jenis:parts[0].jenis,title:parts[0].title,name:parts[0].name};
       return{kind:"split",parts};
     }
@@ -894,17 +894,24 @@
     function addDays(b,n){const dt=new Date(Date.UTC(b.y,b.m-1,b.d)); dt.setUTCDate(dt.getUTCDate()+n);
       return {y:dt.getUTCFullYear(),m:dt.getUTCMonth()+1,d:dt.getUTCDate(),wd:dt.getUTCDay()};}
 
+    /* jam kuliah tepat (formula iqamah) dari takwim-data.json; fallback label teks */
+    function waktuFor(jenis,dt){
+      const j=(TK_S.jam||{})[dt.y+"-"+dt.m+"-"+dt.d];
+      if(j){ if(jenis==="subuh"&&j.s) return j.s;
+             if(["maghrib","halaqah","perdana","kahfi"].includes(jenis)&&j.m) return j.m; }
+      return WAKTU[jenis]||"";
+    }
     function cardHTML(when,info,dt,isToday){
       const dateStr=HARI[dt.wd]+", "+dt.d+" "+BLN[dt.m-1];
       let body;
       if(info.kind==="empty") body='<div class="kempty">Tiada kuliah</div>';
-      else if(info.kind==="kahfi") body='<div class="ktitle">Bacaan Kahfi, Yasin &amp; Doa Selamat</div><span class="kwaktu">Malam Jumaat</span>';
+      else if(info.kind==="kahfi") body='<div class="ktitle">Bacaan Kahfi, Yasin &amp; Doa Selamat</div><span class="kwaktu">'+esc(waktuFor("kahfi",dt))+'</span>';
       else if(info.kind==="khas") body='<div class="ktitle">'+esc(info.text)+'</div>';
       else if(info.kind==="split"){
-        const sline=s=> s?'<div class="sline"><div class="ktitle">'+esc(s.title)+'</div><div class="kustaz">'+esc(s.name)+'</div>'+(s.waktu?'<span class="kwaktu">'+esc(s.waktu)+'</span>':'')+'</div>':'';
+        const sline=s=> s?'<div class="sline"><div class="ktitle">'+esc(s.title)+'</div><div class="kustaz">'+esc(s.name)+'</div>'+((s.jenis?waktuFor(s.jenis,dt):s.waktu)?'<span class="kwaktu">'+esc(s.jenis?waktuFor(s.jenis,dt):s.waktu)+'</span>':'')+'</div>':'';
         body='<div class="ksplit">'+info.parts.map(sline).join('')+'</div>';
       } else {
-        body='<div class="ktitle">'+esc(info.title)+'</div><div class="kustaz">'+esc(info.name)+'</div><span class="kwaktu">'+esc(WAKTU[info.jenis]||"")+'</span>';
+        body='<div class="ktitle">'+esc(info.title)+'</div><div class="kustaz">'+esc(info.name)+'</div><span class="kwaktu">'+esc(waktuFor(info.jenis,dt))+'</span>';
       }
       return '<div class="kcard'+(isToday?' today':'')+'"><span class="ac-glow" aria-hidden="true"></span>'+
         '<div class="kwhen">'+when+'</div><div class="kdate">'+dateStr+'</div><div class="kbody">'+body+'</div></div>';
@@ -928,7 +935,7 @@
     refresh();  // segera (Intl KL) supaya tak menunggu rangkaian
     // tarik jadual (override/perdana/dhuha) bulan ini
     fetch('takwim-data.json',{cache:'no-cache'}).then(r=>r.ok?r.json():null).then(j=>{
-      if(j&&j.state){ if(j.state.perdana)TK_S.perdana=j.state.perdana; if(j.state.dhuha)TK_S.dhuha=j.state.dhuha; TK_S.overrides=j.state.overrides||{}; TK_S.tazkirah=j.state.tazkirah||{}; if(j.state.zohor)TK_S.zohor=j.state.zohor; TK_S.bulanan=j.state.bulanan||{}; renderReminder(); }
+      if(j&&j.state){ if(j.state.perdana)TK_S.perdana=j.state.perdana; if(j.state.dhuha)TK_S.dhuha=j.state.dhuha; TK_S.overrides=j.state.overrides||{}; TK_S.tazkirah=j.state.tazkirah||{}; if(j.state.zohor)TK_S.zohor=j.state.zohor; TK_S.bulanan=j.state.bulanan||{}; TK_S.jam=j.state.jam||{}; renderReminder(); }
     }).catch(()=>{});
     // anchor tarikh rasmi dari API waktu solat (kebal jam peranti salah)
     let _k=(()=>{const t=klToday();return t.y+"-"+t.m+"-"+t.d;})();
