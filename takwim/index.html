@@ -535,9 +535,23 @@ const ovKey=(y,m)=> y+"-"+m;
 /* Tetapan bulanan (Perdana · Dhuha · Zohor Muslimat) — ikut bulan.
    Bulan tanpa tetapan sendiri guna nilai lalai (STATE.perdana/dhuha/zohor), jadi data lama kekal sama. */
 const ZOHOR_KOSONG={jumaat:0,gelaran:"Ust",nama:"",photo:""};
+const PERDANA_KOSONG={sabtu:0,gelaran:"Ust",ceramah:"",photo:""};
+/* Perdana & Zohor Muslimat berubah setiap bulan → bulan tanpa tetapan = tiada (elak nama/minggu bulan lain terbawa).
+   Dhuha kekal guna lalai lama (minggu 3) seperti sejak awal. */
 function cfgFor(y,m){
   const b=(STATE.bulanan||{})[ovKey(y,m)]||{};
-  return { perdana:b.perdana||STATE.perdana||{sabtu:0}, dhuha:b.dhuha||STATE.dhuha||{rabu:0}, zohor:b.zohor||STATE.zohor||ZOHOR_KOSONG };
+  return { perdana:b.perdana||PERDANA_KOSONG, dhuha:b.dhuha||STATE.dhuha||{rabu:0}, zohor:b.zohor||ZOHOR_KOSONG };
+}
+/* Migrasi sekali: Perdana & Zohor dari fail lama memang ditetapkan untuk November 2026 → pindah ke tetapan November. */
+function migrateLegacy(){
+  if((STATE.migrasi||0)>=1) return false;
+  if(!STATE.bulanan) STATE.bulanan={};
+  const b=STATE.bulanan["2026-11"]=STATE.bulanan["2026-11"]||{};
+  const P=STATE.perdana, Z=STATE.zohor;
+  if(!b.perdana && P && P.sabtu && (P.ceramah||P.photo)) b.perdana=JSON.parse(JSON.stringify(P));
+  if(!b.zohor && Z && Z.jumaat && (Z.nama||Z.photo)) b.zohor=JSON.parse(JSON.stringify(Z));
+  if(!Object.keys(b).length) delete STATE.bulanan["2026-11"];
+  STATE.migrasi=1; return true;
 }
 function cfgEdit(field){   /* salinan boleh-ubah untuk bulan yang sedang dibuka di editbar */
   const k=ovKey(STATE.tahun,STATE.bulan);
@@ -1206,7 +1220,7 @@ async function syncNow(reason){
         else merged={ state:merge3(base.state,local.state,remote.state,"local"),
                       photos:merge3(base.photos||{},local.photos,remote.photos||{},"local"),
                       solat:merge3(base.solat||{},local.solat,remote.solat||{},"local") };
-        if(jstr(merged)!==jstr(local)){ applyDoc(merged); renderAll(); }
+        if(jstr(merged)!==jstr(local)){ applyDoc(merged); if(migrateLegacy()){ try{ localStorage.setItem(LS_STATE,JSON.stringify(STATE)); }catch(e){} merged.state=localDoc().state; } renderAll(); }
         BASE={ head, doc: empty?{state:undefined,photos:undefined,solat:undefined}:{state:remote.state,photos:remote.photos||{},solat:remote.solat||{}} };
       }
       const changed=Object.keys(DOC_FILES).filter(k=> jstr(merged[k])!==jstr(BASE.doc[k]));
@@ -1331,6 +1345,7 @@ async function terbit(){
 
 /* ── Mula ── */
 wireEditbar(); wireModal(); wirePhotoModal(); wireSettingsIO(); wireSync();
+if(migrateLegacy()) saveState();
 renderAll();
 window.addEventListener("resize",fitPreview);
 $("btnPng").addEventListener("click",exportPng);
