@@ -893,8 +893,9 @@ function eventsFor(y,m,d){
   };
   if(c.kind==="lecture") out.push(fromPart(c,c.jenis));
   else if(c.kind==="split") c.parts.forEach(p=> out.push(fromPart(p,"maghrib")));
-  else if(c.kind==="kahfi") out.push({title:"Bacaan Kahfi, Yasin & Doa Selamat",tajuk:"Bacaan Kahfi, Yasin & Doa Selamat",sub:"Malam Mustajab Doa",
-    name:"",photo:"",waktu:"Malam Jumaat",muslimat:false,jamuan:"Jamuan Ringan Disediakan"});
+  else if(c.kind==="kahfi") out.push({title:"Malam Mustajab Doa",tajuk:"Malam Mustajab Doa",     /* ikut preset skill MKSLB Poster Builder */
+    sub:"Bacaan Surah Kahfi, Yasin, Tahlil dan Doa Selamat",
+    name:"Imam Bertugas",penuh:"Imam Bertugas",photo:"",waktu:"Malam Jumaat",muslimat:false,jamuan:"Jamuan Ringan Disediakan"});
   else if(c.kind==="khas" && c.text) out.push({title:c.text,tajuk:c.text,sub:"",name:"",photo:"",waktu:"",muslimat:false,jamuan:""});
   return out;
 }
@@ -911,7 +912,7 @@ function studioPayload(y,m,d,ev){
   return { v:2, src:"takwim-mkslb", jenis:"Poster Kreatif",
     tajuk:UP(ev.tajuk||ev.title), subtajuk:UP(ev.sub||""), audiens:"",
     cta:ev.muslimat?"Semua Muslimat Dijemput Hadir":"Semua Ahli Kariah Dijemput Hadir",
-    lines, infaq:true,
+    lines, infaq:true, duaSaiz:true,      /* 4:5 + 16:9 (TV masjid), ikut default skill GPT */
     tarikh:lines[0][1] };   /* untuk banner */
 }
 function b64url(str){ return btoa(unescape(encodeURIComponent(str))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,""); }
