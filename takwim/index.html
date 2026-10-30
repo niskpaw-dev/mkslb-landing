@@ -895,7 +895,7 @@ function eventsFor(y,m,d){
   else if(c.kind==="split") c.parts.forEach(p=> out.push(fromPart(p,"maghrib")));
   else if(c.kind==="kahfi") out.push({title:"Malam Mustajab Doa",tajuk:"Malam Mustajab Doa",     /* ikut preset skill MKSLB Poster Builder */
     sub:"Bacaan Surah Kahfi, Yasin, Tahlil dan Doa Selamat",
-    name:"Imam Bertugas",penuh:"Imam Bertugas",photo:"",waktu:"Malam Jumaat",muslimat:false,jamuan:"Jamuan Ringan Disediakan"});
+    name:"Imam Bertugas",penuh:"Imam Bertugas",photo:"",waktu:jamKuliah(y,m,d,"maghrib")||"Selepas Maghrib",muslimat:false,jamuan:"Jamuan Ringan Disediakan"});
   else if(c.kind==="khas" && c.text) out.push({title:c.text,tajuk:c.text,sub:"",name:"",photo:"",waktu:"",muslimat:false,jamuan:""});
   return out;
 }
