@@ -138,6 +138,7 @@ button.danger{ background:#6e2b2b; color:#f7dcdc; border:1px solid #8a3a3a; }
 .cal{ flex:1; display:grid; grid-template-columns:repeat(7,1fr); gap:14px; grid-auto-rows:1fr; }
 .cell{ position:relative; border-radius:18px; overflow:hidden; box-shadow:0 4px 10px rgba(0,0,0,.10); }
 .cell[data-day]{ cursor:pointer; }
+#poster.noshadow .cell, #poster.noshadow .dow div{ box-shadow:none; }
 .cell[data-day]:hover{ outline:4px solid rgba(201,162,39,.85); outline-offset:-4px; }
 .cell .date{ position:absolute; top:14px; right:18px; z-index:3; font-weight:800; font-size:30px; line-height:1; }
 .cell .body{ position:absolute; right:18px; bottom:16px; left:auto; z-index:3; text-align:right; max-width:62%; }
@@ -1279,16 +1280,18 @@ function webData(){
   return { v:4, state:{ perdana:C.perdana, dhuha:C.dhuha, zohor:C.zohor,            /* medan lama: untuk landing versi lama */
                         bulanan:bul, overrides:STATE.overrides, tazkirah:STATE.tazkirah||{}, jam } };
 }
-async function renderPosterCanvas(scale){
+async function renderPosterCanvas(scale,noShadow){
   const prevMode=STATE.mode;
   if(prevMode!=="bulanan"){ STATE.mode="bulanan"; renderAll(); }
   const scaler=$("scaler"), pT=scaler.style.transform, pH=scaler.style.height;
   scaler.style.transform="none"; scaler.style.height="auto";
+  if(noShadow) $("poster").classList.add("noshadow");   /* html2canvas lukis box-shadow salah pada skala 1 */
   try{
     if(document.fonts && document.fonts.ready) await document.fonts.ready;
     return await html2canvas($("poster"),{ width:2560, height:1440, scale, windowWidth:2560, windowHeight:1440,
       backgroundColor:null, useCORS:true, imageTimeout:0, logging:false });
   }finally{
+    $("poster").classList.remove("noshadow");
     scaler.style.transform=pT; scaler.style.height=pH;
     if(prevMode!=="bulanan"){ STATE.mode=prevMode; renderAll(); }
   }
@@ -1301,8 +1304,17 @@ async function terbit(){
   try{
     setStatus("Menyegerak dulu…",true); await syncNow("terbit");
     setStatus("Menjana poster "+label+"…",true);
-    const canvas=await renderPosterCanvas(1);     // 2560×1440 — cukup untuk laman, selamat untuk memori telefon
-    const png=canvas.toDataURL("image/png").split(",")[1];
+    /* jana pada skala 2 (tajam, bayang betul) lalu kecilkan ke 2560×1440; jika memori tak cukup
+       (telefon), jana skala 1 tanpa bayang supaya tiada kesan "kotak hantu" html2canvas */
+    let out;
+    try{
+      const big=await renderPosterCanvas(2);
+      out=document.createElement("canvas"); out.width=2560; out.height=1440;
+      const cx=out.getContext("2d"); cx.imageSmoothingEnabled=true; cx.imageSmoothingQuality="high";
+      cx.drawImage(big,0,0,2560,1440); big.width=big.height=0;
+      if(!out.toDataURL("image/png").startsWith("data:image/png")) throw new Error("kanvas kosong");
+    }catch(e){ console.warn("Skala 2 gagal, guna skala 1:",e); out=await renderPosterCanvas(1,true); }
+    const png=out.toDataURL("image/png").split(",")[1];
     const files=[ { path:"takwim-"+BULAN_RINGKAS[m-1].toLowerCase()+"-"+y+".png", b64:png },
                   { path:"takwim-data.json", b64:b64enc(JSON.stringify(webData(),null,1)) } ];
     setStatus("Menghantar ke laman masjid…",true);
