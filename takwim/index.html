@@ -274,6 +274,14 @@ button.danger{ background:#6e2b2b; color:#f7dcdc; border:1px solid #8a3a3a; }
 .umumsec .sbtns button small{ color:var(--paper-dim); font-weight:500; }
 .umumsec .sbtns button.semua{ background:#2c5239; border-color:#4a7d5a; }
 #umumModal{ z-index:110; }
+.sov{ position:fixed; inset:0; z-index:120; display:flex; flex-direction:column; background:#0c0d10; height:100vh; height:100dvh; }
+.sov.hidden{ display:none; }
+.sovbar{ display:flex; align-items:center; gap:10px; padding:8px 12px; padding-top:max(8px,env(safe-area-inset-top));
+  background:var(--ink); color:var(--paper); border-bottom:1px solid var(--line); flex:none; }
+.sovbar b{ font-size:14px; white-space:nowrap; }
+.sovctx{ flex:1; min-width:0; color:var(--paper-dim); font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.sovbar button{ padding:7px 12px; }
+#sovFrame{ flex:1; width:100%; border:0; background:#0c0d10; }
 #umumModal .seg{ display:inline-flex; margin-bottom:12px; }
 .ukh{ background:#1f1a2e; border:1px solid #4a3a6a; border-radius:10px; padding:10px 12px; margin-bottom:12px; }
 .ukh.hidden{ display:none; }
@@ -450,7 +458,7 @@ button.danger{ background:#6e2b2b; color:#f7dcdc; border:1px solid #8a3a3a; }
     </div>
     <div class="msec studiosec hidden" id="secStudio">
       <div class="shead">🎨 Poster Khas → Pawaka Studio</div>
-      <div class="shint">Buka Pawaka Studio dengan borang dah terisi (tajuk, penceramah, tarikh, waktu, lokasi, foto). Simpan perubahan sel dulu kalau ada.</div>
+      <div class="shint">Pawaka Studio dibuka terus di sini dengan borang dah terisi (tajuk, penceramah, tarikh, waktu, lokasi, foto). Jana → 📤 Hantar ke GPT. Simpan perubahan sel dulu kalau ada.</div>
       <div class="sbtns" id="studioBtns"></div>
     </div>
     <div class="msec umumsec hidden" id="secUmum">
@@ -460,6 +468,16 @@ button.danger{ background:#6e2b2b; color:#f7dcdc; border:1px solid #8a3a3a; }
     </div>
     <div class="mactions"><button class="ghost" id="mBatal">Batal</button><button id="mSimpan">Simpan</button></div>
   </div>
+</div>
+
+<!-- PAWAKA STUDIO (dibenam, skrin penuh) -->
+<div id="studioOverlay" class="sov hidden" role="dialog" aria-label="Pawaka Studio">
+  <div class="sovbar">
+    <b>🎨 Pawaka Studio</b><span class="sovctx" id="sovCtx"></span>
+    <button class="ghost" id="sovTab" type="button" title="Buka dalam tab baru">↗</button>
+    <button id="sovTutup" type="button">✕ Tutup</button>
+  </div>
+  <iframe id="sovFrame" title="Pawaka Studio" allow="clipboard-write; web-share"></iframe>
 </div>
 
 <!-- MODAL: teks pengumuman -->
@@ -1047,27 +1065,46 @@ function logoDataUrl(){
   const v=getComputedStyle(document.documentElement).getPropertyValue("--logo-img");
   const mt=v.match(/url\(["']?(data:[^"')]+)["']?\)/); return mt?mt[1]:"";
 }
-function sendToStudio(y,m,d,ev){
-  const payload=studioPayload(y,m,d,ev);
-  const win=window.open(STUDIO_URL+"#takwim="+b64url(JSON.stringify(payload)),"_blank");
-  if(!win){ alert("Popup disekat — benarkan popup untuk fail ini, kemudian cuba lagi."); return; }
-  const imgs=[];                                    /* susunan ikut kebiasaan: logo, QR, hero */
-  const lg=logoDataUrl();
+function studioImages(ev){                         /* susunan ikut kebiasaan: logo, QR, hero */
+  const imgs=[], lg=logoDataUrl();
   if(lg) imgs.push({ name:"logo-mkslb.png", url:lg, role:"element", pos:"top-center", size:"small", detail:"LOGO UTAMA PADA POSTER." });
   const qr=photoSrc("qr-infaq");
   if(PHOTOS["qr-infaq"] && qr.startsWith("data:")) imgs.push({ name:"qr-infaq.png", url:qr, role:"element", pos:"auto", size:"auto", detail:"QR INFAQ." });
   if(hasPhoto(ev)) imgs.push({ name:(ev.photo||"penceramah")+".png", url:photoSrc(ev.photo), role:"element", pos:"middle-left", size:"hero",
     detail:'HERO UTAMA PADA POSTER. TEXT PADA FOTO,\n"'+(ev.khutbah?"KHATIB & IMAM":"BERSAMA")+' : '+namaPenuh(ev)+'"'
       +(ev.jawatan?'\nDI BAWAH NAMA (BARIS BERASINGAN, SAIZ LEBIH KECIL), "'+UP(ev.jawatan)+'"':'') });
+  return imgs;
+}
+function studioUrl(y,m,d,ev){ return STUDIO_URL+"?t="+Date.now()+"#takwim="+b64url(JSON.stringify(studioPayload(y,m,d,ev))); }
+/* hantar gambar bila Studio isyarat "sedia" — sumber = iframe (dibenam) atau tab baru */
+function handshakeImages(getWin,imgs){
   if(!imgs.length) return;
   const onMsg=(e)=>{
-    if(e.source!==win || !e.data || e.data.type!=="pawaka-studio-ready") return;
-    win.postMessage({type:"takwim-images", images:imgs}, STUDIO_ORIGIN);
+    const w=getWin(); if(!w || e.source!==w || !e.data || e.data.type!=="pawaka-studio-ready") return;
+    w.postMessage({type:"takwim-images", images:imgs}, STUDIO_ORIGIN);
     window.removeEventListener("message",onMsg);
   };
   window.addEventListener("message",onMsg);
   setTimeout(()=> window.removeEventListener("message",onMsg), 60000);
-  setStatus("Pawaka Studio dibuka — borang sedang diisi…");
+}
+let SOV=null;
+function sendToStudio(y,m,d,ev){                  /* dibenam dalam takwim — tiada tab baru */
+  SOV={y,m,d,ev};
+  const fr=$("sovFrame");
+  $("sovCtx").textContent="· "+ev.title+" · "+d+" "+BULAN_TITLE[m-1]+" "+y;
+  handshakeImages(()=> fr.contentWindow, studioImages(ev));
+  fr.src=studioUrl(y,m,d,ev);
+  $("studioOverlay").classList.remove("hidden");
+  document.documentElement.style.overflow="hidden";
+}
+function sendToStudioTab(y,m,d,ev){               /* sandaran: tab baru */
+  const win=window.open(studioUrl(y,m,d,ev),"_blank");
+  if(!win){ alert("Popup disekat — benarkan popup, kemudian cuba lagi."); return; }
+  handshakeImages(()=> win, studioImages(ev));
+}
+function closeStudio(){
+  $("studioOverlay").classList.add("hidden"); $("sovFrame").src="about:blank";
+  document.documentElement.style.overflow=""; SOV=null;
 }
 function renderStudioBtns(y,m,d){
   const evs=eventsFor(y,m,d), box=$("studioBtns");
@@ -1175,6 +1212,11 @@ function renderUmumBtns(y,m,d){
     b.addEventListener("click",()=> openUmum(y,m,d,list)); box.appendChild(b); };
   if(evs.length>1) add("📣 Semua program hari ini <small>· "+evs.length+" program dalam satu mesej</small>",evs,"semua");
   evs.forEach(ev=> add("📣 "+ev.title+(ev.name?" <small>· "+ev.name+"</small>":"")+(ev.waktu?" <small>· "+ev.waktu+"</small>":""),[ev]));
+}
+function wireStudio(){
+  $("sovTutup").addEventListener("click",closeStudio);
+  $("sovTab").addEventListener("click",()=>{ if(!SOV) return; const {y,m,d,ev}=SOV; closeStudio(); sendToStudioTab(y,m,d,ev); });
+  document.addEventListener("keydown",e=>{ if(e.key==="Escape" && SOV) closeStudio(); });
 }
 function wireUmum(){
   document.querySelectorAll("#uGaya button").forEach(b=> b.addEventListener("click",()=>{
@@ -1584,7 +1626,7 @@ async function terbit(){
 }
 
 /* ── Mula ── */
-wireEditbar(); wireModal(); wirePhotoModal(); wireSettingsIO(); wireSync(); wireUmum();
+wireEditbar(); wireModal(); wirePhotoModal(); wireSettingsIO(); wireSync(); wireUmum(); wireStudio();
 if(migrateLegacy()) saveState();
 renderAll();
 window.addEventListener("resize",fitPreview);
