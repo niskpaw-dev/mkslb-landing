@@ -440,6 +440,7 @@ button.danger{ background:#6e2b2b; color:#f7dcdc; border:1px solid #8a3a3a; }
       <div class="shead">🕌 Khutbah &amp; Solat Jumaat <small id="mKhGiliran"></small></div>
       <div class="row"><span class="lbl">Khatib</span><select id="mKhPilih" style="flex:1"></select></div>
       <div class="row hidden" id="mKhLainRow"><span class="lbl">Nama</span><input id="mKhNama" style="flex:1" placeholder="cth: Tuan Haji Ahmad bin Ali"></div>
+      <div class="row hidden" id="mKhJawRow"><span class="lbl">Jawatan</span><input id="mKhJaw" style="flex:1" placeholder="Pilihan — cth: Imam Masjid Al-Hidayah"></div>
       <div class="row"><span class="lbl">Tajuk</span><input id="mKhTajuk" style="flex:1" placeholder="Tajuk khutbah (pilihan)"></div>
     </div>
     <div class="msec studiosec hidden" id="secStudio">
@@ -626,11 +627,11 @@ function setTzFor(y,m,d,tz){
    Giliran tetap 5 khatib (setiap Jumaat, berterusan merentas bulan). Sauh: 6 Nov 2026 = Haji Fauzi.
    Tukar minit akhir → STATE.khutbah["Y-M"][d] = {key} atau {nama,photo}, + tajuk khutbah (pilihan). */
 const KHATIB={
-  fauzi:  {label:"Haji Fauzi",   penuh:"Tuan Haji Fauzi bin Din",                   photo:"khatib-fauzi"},
-  azahari:{label:"Imam Azahari", penuh:"Tuan Imam Azahari bin Redzuan",             photo:"khatib-azahari"},
-  naudi:  {label:"Imam Naudi",   penuh:"Tuan Imam Mohd Naudi Haqqi bin Ahmad",      photo:"khatib-naudi"},
-  faiz:   {label:"Imam Faiz",    penuh:"Tuan Imam Muhammad Faiz bin Mohd Mufasir",  photo:"khatib-faiz"},
-  aiman:  {label:"Imam Aiman",   penuh:"Tuan Imam Muhammad Aiman bin Mohamad Rafee",photo:"khatib-aiman"}
+  fauzi:  {label:"Haji Fauzi",   penuh:"Tuan Haji Fauzi bin Din",                   photo:"khatib-fauzi",jawatan:"Nazir MKSLB"},
+  azahari:{label:"Imam Azahari", penuh:"Tuan Imam Azahari bin Redzuan",             photo:"khatib-azahari",jawatan:"Imam 1 MKSLB"},
+  naudi:  {label:"Imam Naudi",   penuh:"Tuan Imam Mohd Naudi Haqqi bin Ahmad",      photo:"khatib-naudi",jawatan:"Imam 2 MKSLB"},
+  faiz:   {label:"Imam Faiz",    penuh:"Tuan Imam Muhammad Faiz bin Mohd Mufasir",  photo:"khatib-faiz",jawatan:"Imam 4 MKSLB"},
+  aiman:  {label:"Imam Aiman",   penuh:"Tuan Imam Muhammad Aiman bin Mohamad Rafee",photo:"khatib-aiman",jawatan:"Imam 3 MKSLB"}
 };
 const KHATIB_GILIRAN=["fauzi","azahari","naudi","faiz","aiman"], KHATIB_SAUH=Date.UTC(2026,10,6);
 function khatibGiliran(y,m,d){
@@ -652,7 +653,7 @@ function khatibFor(y,m,d){
   const ov=getKhFor(y,m)[d]||{}, g=khatibGiliran(y,m,d);
   let k=null;
   if(ov.key && KHATIB[ov.key]) k={...KHATIB[ov.key]};
-  else if(ov.nama) k={label:ov.nama, penuh:ov.nama, photo:ov.photo||""};
+  else if(ov.nama) k={label:ov.nama, penuh:ov.nama, photo:ov.photo||"", jawatan:ov.jawatan||""};
   else k={...KHATIB[g]};
   k.tajuk=ov.tajuk||""; k.tukar=!!(ov.key&&ov.key!==g || ov.nama); k.giliran=g;
   return k;
@@ -944,8 +945,9 @@ function openModal(y,m,d){
     $("mKhGiliran").textContent="· giliran: "+KHATIB[g].label;
     fillSelect($("mKhPilih"),[["","Ikut giliran — "+KHATIB[g].label]].concat(KHATIB_GILIRAN.map(k=>[k,KHATIB[k].penuh])).concat([["__lain","Lain-lain (taip nama)"]]));
     $("mKhPilih").value=ov.key&&KHATIB[ov.key]?ov.key:(ov.nama?"__lain":"");
-    $("mKhNama").value=ov.nama||""; $("mKhTajuk").value=ov.tajuk||"";
+    $("mKhNama").value=ov.nama||""; $("mKhJaw").value=ov.jawatan||""; $("mKhTajuk").value=ov.tajuk||"";
     $("mKhLainRow").classList.toggle("hidden",$("mKhPilih").value!=="__lain");
+    $("mKhJawRow").classList.toggle("hidden",$("mKhPilih").value!=="__lain");
   }
   renderStudioBtns(y,m,d);
   renderUmumBtns(y,m,d);
@@ -1011,7 +1013,7 @@ function eventsFor(y,m,d){
   if(kh){                                   /* susun ikut masa: Tazkirah → Khutbah → Zohor Muslimat → Maghrib */
     const z=jamZohor(y,m,d);
     const ev={ title:"Khutbah & Solat Jumaat", tajuk:"Khutbah dan Solat Jumaat", sub:kh.tajuk, name:kh.label, penuh:kh.penuh,
-      photo:kh.photo, waktu:z, waktuPrefix:"", muslimat:false, jamuan:"", khutbah:true };
+      photo:kh.photo, jawatan:kh.jawatan||"", waktu:z, waktuPrefix:"", muslimat:false, jamuan:"", khutbah:true };
     const i=out.length && out[0].title==="Tazkirah Jumaat" ? 1 : 0;
     out.splice(i,0,ev);
   }
@@ -1025,7 +1027,7 @@ function studioPayload(y,m,d,ev){
   lines.push(["CALENDAR", UP(HARI[wd]+", "+d+" "+BULAN_TITLE[m-1]+" "+y)]);
   if(ev.waktu) lines.push(["CLOCK", UP((ev.waktuPrefix||"")+ev.waktu).replace(/(\d):(\d\d)/,"$1.$2")]);
   lines.push(["LOCATION", "MASJID KAMPUNG SUNGAI LANG BARU"]);
-  if(ev.name && !hasPhoto(ev)) lines.push(["MICROPHONE", (ev.khutbah?"KHATIB & IMAM : ":"BERSAMA : ")+namaPenuh(ev)]);   // tiada foto → nama dalam butiran
+  if(ev.name && !hasPhoto(ev)) lines.push(["MICROPHONE", (ev.khutbah?"KHATIB & IMAM : ":"BERSAMA : ")+namaPenuh(ev)+(ev.jawatan?" ("+UP(ev.jawatan)+")":"")]);   // tiada foto → nama dalam butiran
   if(ev.jamuan) lines.push(["FOOD SERVING", UP(ev.jamuan)]);
   return { v:2, src:"takwim-mkslb", jenis:"Poster Kreatif",
     tajuk:UP(ev.tajuk||ev.title), subtajuk:UP(ev.sub||""), audiens:"",
@@ -1048,7 +1050,8 @@ function sendToStudio(y,m,d,ev){
   const qr=photoSrc("qr-infaq");
   if(PHOTOS["qr-infaq"] && qr.startsWith("data:")) imgs.push({ name:"qr-infaq.png", url:qr, role:"element", pos:"auto", size:"auto", detail:"QR INFAQ." });
   if(hasPhoto(ev)) imgs.push({ name:(ev.photo||"penceramah")+".png", url:photoSrc(ev.photo), role:"element", pos:"middle-left", size:"hero",
-    detail:'HERO UTAMA PADA POSTER. TEXT PADA FOTO,\n"'+(ev.khutbah?"KHATIB & IMAM":"BERSAMA")+' : '+namaPenuh(ev)+'"' });
+    detail:'HERO UTAMA PADA POSTER. TEXT PADA FOTO,\n"'+(ev.khutbah?"KHATIB & IMAM":"BERSAMA")+' : '+namaPenuh(ev)+'"'
+      +(ev.jawatan?'\nDI BAWAH NAMA (BARIS BERASINGAN, SAIZ LEBIH KECIL), "'+UP(ev.jawatan)+'"':'') });
   if(!imgs.length) return;
   const onMsg=(e)=>{
     if(e.source!==win || !e.data || e.data.type!=="pawaka-studio-ready") return;
@@ -1098,7 +1101,7 @@ function uTarikh(y,m,d,evs){
 function uButiran(ev){
   const L=[];
   if(ev.sub) L.push("📖 *"+uClean(ev.sub)+"*");
-  if(ev.name) L.push("🎙️ "+(isDoa(ev)?"Pimpinan":ev.khutbah?"Khatib & Imam":"Bersama")+": "+uPenceramah(ev));
+  if(ev.name) L.push("🎙️ "+(isDoa(ev)?"Pimpinan":ev.khutbah?"Khatib & Imam":"Bersama")+": "+uPenceramah(ev)+(ev.jawatan?" ("+uClean(ev.jawatan)+")":""));
   return L;
 }
 function umumText(y,m,d,evs,gaya){
@@ -1185,7 +1188,7 @@ function wireModal(){
     e.target.value="";
   });
   $("mTzOn").addEventListener("change",e=> $("tzFields").classList.toggle("off",!e.target.checked));
-  $("mKhPilih").addEventListener("change",e=>{ const lain=e.target.value==="__lain"; $("mKhLainRow").classList.toggle("hidden",!lain); if(lain) $("mKhNama").focus(); });
+  $("mKhPilih").addEventListener("change",e=>{ const lain=e.target.value==="__lain"; $("mKhLainRow").classList.toggle("hidden",!lain); $("mKhJawRow").classList.toggle("hidden",!lain); if(lain) $("mKhNama").focus(); });
   $("mTzUpload").addEventListener("change",e=>{
     const f=e.target.files[0]; if(!f) return;
     const cad=slug($("mTzNama").value)||("foto"+Date.now());
@@ -1210,7 +1213,8 @@ function wireModal(){
       if($("mTzOn").checked && nama) setTzFor(y,m,d,{gelaran:$("mTzGel").value.trim()||"Ust",nama,photo:$("mTzFoto").value});
       else setTzFor(y,m,d,null);
       const pk=$("mKhPilih").value, kn=$("mKhNama").value.trim(), kt=$("mKhTajuk").value.trim(), kh={};
-      if(pk==="__lain" && kn) kh.nama=kn; else if(pk && pk!=="__lain") kh.key=pk;
+      if(pk==="__lain" && kn){ kh.nama=kn; const kj=$("mKhJaw").value.trim(); if(kj) kh.jawatan=kj; }
+      else if(pk && pk!=="__lain") kh.key=pk;
       if(kt) kh.tajuk=kt;
       setKhFor(y,m,d,Object.keys(kh).length?kh:null);
     }
