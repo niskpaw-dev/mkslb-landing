@@ -972,7 +972,7 @@ function jamMelayu(mins){
 }
 function jamZohor(y,m,d){                  /* waktu masuk Zohor (azan) — tepat, tanpa bundar */
   const t=solatFor(y,m,d); if(!t || !t[2]) return "";
-  const [h,mi]=t[2].split(":").map(Number), label=h<12?"PAGI":h<14?"TENGAH HARI":"PETANG";
+  const [h,mi]=t[2].split(":").map(Number), label=h<12?"PAGI":h<13?"TENGAH HARI":"PETANG";   /* 1.00 ke atas = PETANG */
   return ((h%12)||12)+"."+pad2(mi)+" "+label;
 }
 function jamKuliah(y,m,d,slot){
@@ -1011,7 +1011,7 @@ function eventsFor(y,m,d){
   if(kh){                                   /* susun ikut masa: Tazkirah → Khutbah → Zohor Muslimat → Maghrib */
     const z=jamZohor(y,m,d);
     const ev={ title:"Khutbah & Solat Jumaat", tajuk:"Khutbah dan Solat Jumaat", sub:kh.tajuk, name:kh.label, penuh:kh.penuh,
-      photo:kh.photo, waktu:z, waktuPrefix:z?"Azan Zohor ":"", muslimat:false, jamuan:"", khutbah:true };
+      photo:kh.photo, waktu:z, waktuPrefix:"", muslimat:false, jamuan:"", khutbah:true };
     const i=out.length && out[0].title==="Tazkirah Jumaat" ? 1 : 0;
     out.splice(i,0,ev);
   }
