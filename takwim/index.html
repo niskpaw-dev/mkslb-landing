@@ -262,6 +262,22 @@ button.danger{ background:#6e2b2b; color:#f7dcdc; border:1px solid #8a3a3a; }
 .studiosec .sbtns{ display:flex; flex-direction:column; gap:6px; }
 .studiosec .sbtns button{ text-align:left; background:#2a3550; color:var(--paper); border:1px solid #3d4a6a; }
 .studiosec .sbtns button small{ color:var(--paper-dim); font-weight:500; }
+.umumsec{ border-color:#2f5a3e; background:#16261c; }
+.umumsec .shead{ font-weight:700; font-size:13px; margin-bottom:4px; }
+.umumsec .shint{ color:var(--paper-dim); font-size:12px; margin-bottom:10px; }
+.umumsec .sbtns{ display:flex; flex-direction:column; gap:6px; }
+.umumsec .sbtns button{ text-align:left; background:#22402d; color:var(--paper); border:1px solid #2f5a3e; }
+.umumsec .sbtns button small{ color:var(--paper-dim); font-weight:500; }
+.umumsec .sbtns button.semua{ background:#2c5239; border-color:#4a7d5a; }
+#umumModal{ z-index:110; }
+#umumModal .seg{ display:inline-flex; margin-bottom:12px; }
+.ububble{ background:#fbf6e4; color:#2a2118; border-radius:4px 14px 14px 14px; padding:16px 18px;
+  white-space:pre-wrap; overflow-wrap:anywhere; line-height:1.7; font-size:14.5px; max-height:52vh; overflow:auto;
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; }
+.ububble strong{ font-weight:700; }
+.umeta{ display:flex; flex-wrap:wrap; justify-content:space-between; gap:4px 10px; color:var(--paper-dim); font-size:12px; margin:8px 0 4px; }
+#uFallback{ width:100%; min-height:180px; margin-top:10px; font:inherit; font-size:13px; }
+#umumModal .mactions{ flex-wrap:wrap; }
 .mode-list b{ display:block; font-size:13.5px; }
 .mode-list small{ color:var(--paper-dim); }
 .msec{ background:var(--ink3); border:1px solid var(--line); border-radius:10px; padding:12px; margin-bottom:14px; }
@@ -421,7 +437,25 @@ button.danger{ background:#6e2b2b; color:#f7dcdc; border:1px solid #8a3a3a; }
       <div class="shint">Buka Pawaka Studio dengan borang dah terisi (tajuk, penceramah, tarikh, waktu, lokasi, foto). Simpan perubahan sel dulu kalau ada.</div>
       <div class="sbtns" id="studioBtns"></div>
     </div>
+    <div class="msec umumsec hidden" id="secUmum">
+      <div class="shead">📣 Teks Pengumuman → WhatsApp / Telegram</div>
+      <div class="shint">Teks siap dari takwim: tarikh, masa iqamah, nama penuh, kitab &amp; jamuan. Simpan perubahan sel dulu kalau ada.</div>
+      <div class="sbtns" id="umumBtns"></div>
+    </div>
     <div class="mactions"><button class="ghost" id="mBatal">Batal</button><button id="mSimpan">Simpan</button></div>
+  </div>
+</div>
+
+<!-- MODAL: teks pengumuman -->
+<div id="umumModal" class="modal hidden">
+  <div class="mbox">
+    <h3>📣 Teks Pengumuman</h3>
+    <div class="ctx" id="uCtx"></div>
+    <div class="seg" id="uGaya"><button type="button" data-g="ringkas">Ringkas</button><button type="button" data-g="santai">Santai</button><button type="button" data-g="rasmi">Rasmi</button></div>
+    <div class="ububble" id="uPreview"></div>
+    <div class="umeta"><span id="uCount"></span><span id="uStatus">Teks disalin sahaja · tiada mesej dihantar automatik</span></div>
+    <textarea id="uFallback" readonly hidden aria-label="Teks pengumuman untuk disalin"></textarea>
+    <div class="mactions"><button class="ghost" id="uTutup" type="button">Tutup</button><button class="ghost" id="uSocial" type="button">Salin Telegram / FB</button><button id="uWa" type="button">Salin WhatsApp</button></div>
   </div>
 </div>
 
@@ -859,6 +893,7 @@ function openModal(y,m,d){
     $("tzFields").classList.toggle("off",!tz);
   }
   renderStudioBtns(y,m,d);
+  renderUmumBtns(y,m,d);
   $("modal").classList.remove("hidden");
 }
 /* ╔═══ PAUTAN PAWAKA STUDIO ═══╗
@@ -966,6 +1001,107 @@ function renderStudioBtns(y,m,d){
     b.addEventListener("click",()=> sendToStudio(y,m,d,ev));
     box.appendChild(b);
   });
+}
+/* ╔═══ TEKS PENGUMUMAN (WhatsApp / Telegram) ═══╗
+   Format sama dengan Pawaka Pengumuman; data terus dari takwim. */
+const LS_GAYA="takwim-mkslb-gaya-v1";
+const UMUM_BUKA={
+  "Kuliah Maghrib":{santai:"Jom luangkan masa selepas Maghrib untuk menambah ilmu bersama.",rasmi:"Tuan-tuan dan puan-puan dijemput menghadiri Kuliah Maghrib seperti ketetapan berikut."},
+  "Kuliah Subuh":{santai:"Jom mulakan pagi dengan menambah ilmu bersama dalam Kuliah Subuh.",rasmi:"Tuan-tuan dan puan-puan dijemput menghadiri Kuliah Subuh seperti ketetapan berikut."},
+  "Kuliah Dhuha Muslimat":{santai:"Jom muslimat, luangkan masa untuk menambah ilmu bersama.",rasmi:"Para muslimat dijemput menghadiri Kuliah Dhuha Muslimat seperti ketetapan berikut."},
+  "Kuliah Zohor Muslimat":{santai:"Jom muslimat, luangkan masa petang Jumaat untuk menambah ilmu bersama.",rasmi:"Para muslimat dijemput menghadiri Kuliah Zohor Muslimat seperti ketetapan berikut."},
+  "Tazkirah Jumaat":{santai:"Jom hadir awal ke masjid dan dengar Tazkirah Jumaat sebelum solat.",rasmi:"Tuan-tuan dijemput hadir awal untuk mendengar Tazkirah Jumaat seperti ketetapan berikut."},
+  "Kuliah Perdana":{santai:"Jom hadir bersama untuk menimba ilmu dalam Kuliah Perdana.",rasmi:"Tuan-tuan dan puan-puan dijemput menghadiri Kuliah Perdana seperti ketetapan berikut."},
+  "Malam Mustajab Doa":{santai:"Jom bersama-sama mengimarahkan masjid dengan bacaan dan doa.",rasmi:"Ahli kariah dijemput menyertai Malam Mustajab Doa seperti ketetapan berikut."}
+};
+const UMUM_BUKA_GABUNG={santai:"Jom penuhkan hari ini dengan majlis ilmu di masjid.",rasmi:"Tuan-tuan dan puan-puan dijemput menghadiri program berikut."};
+let UMUM={y:0,m:0,d:0,evs:[],gaya:"santai",msg:""};
+try{ const g=localStorage.getItem(LS_GAYA); if(["ringkas","santai","rasmi"].includes(g)) UMUM.gaya=g; }catch(e){}
+const uClean=s=>String(s||"").replace(/[\r\n*_~`]/g," ").replace(/\s+/g," ").trim();
+const uPenceramah=ev=> uClean(ev.penuh || (ev.name||"").replace(/^Ust\s+/i,"Ustaz ").replace(/^Ustzh?\s+/i,"Ustazah "));
+const uMasa=w=> /^\d/.test(w||"") ? w.toLocaleLowerCase("ms-MY") : (w||"");
+const isDoa=ev=> ev.tajuk==="Malam Mustajab Doa";
+function umumEvents(y,m,d){ return eventsFor(y,m,d).filter(ev=> ev.name || isDoa(ev)); }
+function uTarikh(y,m,d,evs){
+  const wd=new Date(y,m-1,d).getDay();
+  return HARI[wd]+", "+d+" "+BULAN_TITLE[m-1]+" "+y + (wd===4 && evs.some(isDoa) ? " (Malam Jumaat)" : "");
+}
+function uButiran(ev){
+  const L=[];
+  if(ev.sub) L.push("📖 *"+uClean(ev.sub)+"*");
+  if(ev.name) L.push("🎙️ "+(isDoa(ev)?"Pimpinan":"Bersama")+": "+uPenceramah(ev));
+  return L;
+}
+function umumText(y,m,d,evs,gaya){
+  const tarikh=uTarikh(y,m,d,evs), tempat="Masjid Kampung Sungai Lang Baru";
+  const semuaMuslimat=evs.every(e=>e.muslimat);
+  const cta=semuaMuslimat?"Semua Muslimat Dijemput Hadir":"Semua Ahli Kariah Dijemput Hadir";
+  const salam=gaya==="ringkas"?[]:["Assalamualaikum "+(gaya==="rasmi"?"warahmatullahi wabarakatuh.":"semua."),""];
+  const tutup=gaya==="ringkas"?[]:["",gaya==="rasmi"?"Kehadiran dan sokongan semua amat dihargai. Terima kasih.":"Semoga pertemuan ini membawa manfaat dan keberkatan. 🤲"];
+  if(evs.length===1){
+    const ev=evs[0], buka=(UMUM_BUKA[ev.tajuk]||{})[gaya];
+    const but=uButiran(ev);
+    return ["🕌 *"+UP(uClean(ev.tajuk))+"*","",
+      ...(gaya==="ringkas"?[]:[...salam, buka||(gaya==="rasmi"?UMUM_BUKA_GABUNG.rasmi:"Jom luangkan masa untuk hadir bersama."),""]),
+      ...but, ...(but.length?[""]:[]),
+      "🗓️ "+tarikh, ...(ev.waktu?["🕰️ "+uMasa(ev.waktu)]:[]), "📍 "+tempat, "",
+      "*"+cta+"*", ...(ev.jamuan?["","🍽️ *"+ev.jamuan+"*"]:[]), ...tutup].join("\n");
+  }
+  const NUM=["1️⃣","2️⃣","3️⃣","4️⃣","5️⃣"], out=["🕌 *PENGISIAN ILMU DI MASJID*","🗓️ *"+UP(tarikh)+"*",""];
+  if(gaya!=="ringkas") out.push(...salam, UMUM_BUKA_GABUNG[gaya], "");
+  evs.forEach((ev,i)=>{
+    out.push((NUM[i]||"▪️")+" *"+UP(uClean(ev.tajuk))+"*", ...uButiran(ev));
+    if(ev.waktu) out.push("🕰️ "+uMasa(ev.waktu));
+    if(ev.jamuan) out.push("🍽️ "+ev.jamuan);
+    out.push("");
+  });
+  out.push("📍 "+tempat,"","*"+cta+"*",...tutup);
+  return out.join("\n");
+}
+function toSocialText(t){ return t.replace(/\*([^*\n]+)\*/g,(_,part)=>Array.from(part,ch=>{ const n=ch.codePointAt(0);
+  return n>=65&&n<=90?String.fromCodePoint(0x1D5D4+n-65):n>=97&&n<=122?String.fromCodePoint(0x1D5EE+n-97):n>=48&&n<=57?String.fromCodePoint(0x1D7EC+n-48):ch; }).join("")); }
+function renderUmum(){
+  UMUM.msg=umumText(UMUM.y,UMUM.m,UMUM.d,UMUM.evs,UMUM.gaya);
+  const pv=$("uPreview"); pv.replaceChildren();
+  UMUM.msg.split(/(\*[^*\n]+\*)/g).forEach(part=>{
+    if(part.length>1 && part.startsWith("*") && part.endsWith("*")){ const b=document.createElement("strong"); b.textContent=part.slice(1,-1); pv.append(b); }
+    else pv.append(document.createTextNode(part));
+  });
+  document.querySelectorAll("#uGaya button").forEach(b=> b.classList.toggle("on",b.dataset.g===UMUM.gaya));
+  $("uCount").textContent=Array.from(UMUM.msg).length+" aksara";
+  const fb=$("uFallback"); fb.hidden=true; fb.value="";
+}
+function openUmum(y,m,d,evs){
+  UMUM={...UMUM,y,m,d,evs};
+  $("uCtx").textContent=uTarikh(y,m,d,evs)+" · "+evs.map(e=>e.tajuk).join(" + ");
+  $("uStatus").textContent="Teks disalin sahaja · tiada mesej dihantar automatik";
+  renderUmum();
+  $("umumModal").classList.remove("hidden");
+}
+async function salinUmum(social){
+  const text=social?toSocialText(UMUM.msg):UMUM.msg, label=social?"Telegram / FB":"WhatsApp", fb=$("uFallback");
+  try{ await navigator.clipboard.writeText(text); fb.hidden=true; $("uStatus").textContent="✓ Disalin — tampal ke "+label; }
+  catch(e){ fb.value=text; fb.hidden=false; fb.focus(); fb.select();
+    let ok=false; try{ ok=document.execCommand("copy"); }catch(_){}
+    $("uStatus").textContent=ok?"✓ Disalin — tampal ke "+label:"Salin teks di bawah secara manual"; }
+}
+function renderUmumBtns(y,m,d){
+  const evs=umumEvents(y,m,d), box=$("umumBtns");
+  $("secUmum").classList.toggle("hidden",!evs.length);
+  box.innerHTML="";
+  const add=(html,list,cls)=>{ const b=document.createElement("button"); b.type="button"; if(cls) b.className=cls; b.innerHTML=html;
+    b.addEventListener("click",()=> openUmum(y,m,d,list)); box.appendChild(b); };
+  if(evs.length>1) add("📣 Semua program hari ini <small>· "+evs.length+" program dalam satu mesej</small>",evs,"semua");
+  evs.forEach(ev=> add("📣 "+ev.title+(ev.name?" <small>· "+ev.name+"</small>":"")+(ev.waktu?" <small>· "+ev.waktu+"</small>":""),[ev]));
+}
+function wireUmum(){
+  document.querySelectorAll("#uGaya button").forEach(b=> b.addEventListener("click",()=>{
+    UMUM.gaya=b.dataset.g; try{ localStorage.setItem(LS_GAYA,UMUM.gaya); }catch(e){} renderUmum(); }));
+  $("uWa").addEventListener("click",()=> salinUmum(false));
+  $("uSocial").addEventListener("click",()=> salinUmum(true));
+  const tutup=()=> $("umumModal").classList.add("hidden");
+  $("uTutup").addEventListener("click",tutup);
+  $("umumModal").addEventListener("click",e=>{ if(e.target===$("umumModal")) tutup(); });
 }
 function closeModal(){ $("modal").classList.add("hidden"); modalDate=null; }
 function wireModal(){
@@ -1344,7 +1480,7 @@ async function terbit(){
 }
 
 /* ── Mula ── */
-wireEditbar(); wireModal(); wirePhotoModal(); wireSettingsIO(); wireSync();
+wireEditbar(); wireModal(); wirePhotoModal(); wireSettingsIO(); wireSync(); wireUmum();
 if(migrateLegacy()) saveState();
 renderAll();
 window.addEventListener("resize",fitPreview);
