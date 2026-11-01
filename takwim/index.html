@@ -128,6 +128,21 @@ button.danger{ background:#6e2b2b; color:#f7dcdc; border:1px solid #8a3a3a; }
 .uev .ub button.u{ background:#22402d; border-color:#2f5a3e; }
 .uall{ font-size:11.5px; font-weight:700; background:#22402d; border-color:#2f5a3e; text-align:left; }
 .ukos{ font-size:12px; color:var(--paper-dim); font-style:italic; }
+.uev .ub button{ position:relative; }
+.uev .ub button[data-st]::after{ position:absolute; top:-6px; right:-6px; min-width:15px; height:15px; border-radius:8px;
+  font-size:10px; font-weight:800; line-height:15px; text-align:center; color:#fff; padding:0 3px; }
+.uev .ub button[data-st="ok"]::after{ content:"✓"; background:#2e8b57; }
+.uev .ub button[data-st="stale"]::after{ content:"!"; background:#d9822b; }
+.siarsec{ border-color:#2f5a3e; background:#16261c; }
+.siarsec .shead{ font-weight:700; font-size:13px; margin-bottom:4px; }
+.siarsec .shint{ color:var(--paper-dim); font-size:12px; margin-bottom:10px; }
+.srow{ display:flex; align-items:center; gap:8px; padding:6px 0; border-top:1px solid #2f5a3e; flex-wrap:wrap; }
+.srow:first-of-type{ border-top:0; }
+.srow .sn{ flex:1; min-width:140px; font-size:13px; font-weight:700; }
+.srow .sn small{ display:block; color:var(--paper-dim); font-weight:500; font-size:11.5px; }
+.schip{ padding:6px 10px; font-size:12px; font-weight:700; box-shadow:none; background:var(--ink3); color:var(--paper-dim); border:1px solid var(--line); }
+.schip[data-st="ok"]{ background:#1f4a32; color:#bff0cf; border-color:#2e8b57; }
+.schip[data-st="stale"]{ background:#4a3215; color:#ffd59e; border-color:#d9822b; }
 @media (max-width:820px){ .upc{ padding:8px 12px 12px; } .uday{ flex-basis:78vw; max-width:300px; } }
 #scaler{ transform-origin:top center; }
 
@@ -490,6 +505,11 @@ button.danger{ background:#6e2b2b; color:#f7dcdc; border:1px solid #8a3a3a; }
       <div class="shint">Pawaka Studio dibuka terus di sini dengan borang dah terisi (tajuk, penceramah, tarikh, waktu, lokasi, foto). Jana → 📤 Hantar ke GPT. Simpan perubahan sel dulu kalau ada.</div>
       <div class="sbtns" id="studioBtns"></div>
     </div>
+    <div class="msec siarsec hidden" id="secSiar">
+      <div class="shead">✅ Status siar</div>
+      <div class="shint">Ditanda sendiri bila 📤 Hantar ke GPT / Salin pengumuman. <b>!</b> = maklumat berubah sejak disiar — siar semula. Tekan untuk tanda / buang tanda.</div>
+      <div id="siarRows"></div>
+    </div>
     <div class="msec umumsec hidden" id="secUmum">
       <div class="shead">📣 Teks Pengumuman → WhatsApp / Telegram</div>
       <div class="shint">Teks siap dari takwim: tarikh, masa iqamah, nama penuh, kitab &amp; jamuan. Simpan perubahan sel dulu kalau ada.</div>
@@ -612,7 +632,7 @@ function defaultState(){
   return { mode:"bulanan", bulan:now.getMonth()+1, tahun:now.getFullYear(),
     weekAnchor:isoOf(now),
     perdana:{sabtu:3,gelaran:"Ust",ceramah:"Firdaus Atan",photo:"firdaus"},
-    dhuha:{rabu:3}, zohor:{jumaat:0,gelaran:"Ust",nama:"",photo:""}, bulanan:{}, overrides:{}, tazkirah:{}, khutbah:{}, compact5:true };
+    dhuha:{rabu:3}, zohor:{jumaat:0,gelaran:"Ust",nama:"",photo:""}, bulanan:{}, overrides:{}, tazkirah:{}, khutbah:{}, siar:{}, compact5:true };
 }
 let STATE=defaultState(), PHOTOS={};
 try{ const s=localStorage.getItem(LS_STATE); if(s) STATE=Object.assign(defaultState(),JSON.parse(s)); }catch(e){}
@@ -1005,6 +1025,7 @@ function openModal(y,m,d){
   }
   renderStudioBtns(y,m,d);
   renderUmumBtns(y,m,d);
+  renderSiarRows(y,m,d);
   $("modal").classList.remove("hidden");
 }
 /* ╔═══ PAUTAN PAWAKA STUDIO ═══╗
@@ -1156,6 +1177,7 @@ function sendToStudio(y,m,d,ev){                  /* dibenam dalam takwim — ti
 function sendToStudioTab(y,m,d,ev){               /* sandaran: tab baru */
   const win=window.open(studioUrl(y,m,d,ev),"_blank");
   if(!win){ alert("Popup disekat — benarkan popup, kemudian cuba lagi."); return; }
+  STUDIO_TAB={win,y,m,d,ev};
   handshakeImages(()=> win, studioImages(ev));
 }
 function closeStudio(){
@@ -1255,10 +1277,14 @@ function openUmum(y,m,d,evs){
 }
 async function salinUmum(social){
   const text=social?toSocialText(UMUM.msg):UMUM.msg, label=social?"Telegram / FB":"WhatsApp", fb=$("uFallback");
-  try{ await navigator.clipboard.writeText(text); fb.hidden=true; $("uStatus").textContent="✓ Disalin — tampal ke "+label; }
+  let ok=false;
+  try{ await navigator.clipboard.writeText(text); fb.hidden=true; ok=true; $("uStatus").textContent="✓ Disalin — tampal ke "+label; }
   catch(e){ fb.value=text; fb.hidden=false; fb.focus(); fb.select();
-    let ok=false; try{ ok=document.execCommand("copy"); }catch(_){}
+    try{ ok=document.execCommand("copy"); }catch(_){}
     $("uStatus").textContent=ok?"✓ Disalin — tampal ke "+label:"Salin teks di bawah secara manual"; }
+  if(ok){ const {y,m,d}=UMUM; UMUM.evs.forEach(ev=>{ if(!STATE.siar) STATE.siar={};
+      const k=siarKey(y,m,d), day=STATE.siar[k]||(STATE.siar[k]={}), r=day[ev.title]||(day[ev.title]={}); r.u=evCap(ev); });
+    saveState(); refreshSiarUI(y,m,d); }
 }
 function renderUmumBtns(y,m,d){
   const evs=umumEvents(y,m,d), box=$("umumBtns");
@@ -1269,6 +1295,64 @@ function renderUmumBtns(y,m,d){
   if(evs.length>1) add("📣 Semua program hari ini <small>· "+evs.length+" program dalam satu mesej</small>",evs,"semua");
   evs.forEach(ev=> add("📣 "+ev.title+(ev.name?" <small>· "+ev.name+"</small>":"")+(ev.waktu?" <small>· "+ev.waktu+"</small>":""),[ev]));
 }
+/* ╔═══ STATUS SIAR ═══╗  STATE.siar["Y-M-D"][tajuk acara] = {p:cap-poster, u:cap-pengumuman}
+   Cap = hash kandungan acara semasa disiar; kandungan berubah → cap tak sepadan → "!" (siar semula). */
+function evCap(ev){
+  const k=JSON.stringify([ev.title,ev.tajuk,ev.sub,ev.name,ev.penuh,ev.jawatan,ev.waktu,ev.photo,ev.jamuan]);
+  let h=5381; for(let i=0;i<k.length;i++) h=((h<<5)+h+k.charCodeAt(i))|0;
+  return (h>>>0).toString(36);
+}
+const siarKey=(y,m,d)=> y+"-"+m+"-"+d;
+function siarSt(y,m,d,ev,jenis){            /* "ok" | "stale" | "" */
+  const r=((STATE.siar||{})[siarKey(y,m,d)]||{})[ev.title]; if(!r || !r[jenis]) return "";
+  return r[jenis]===evCap(ev)?"ok":"stale";
+}
+function setSiar(y,m,d,ev,jenis,on){
+  if(!STATE.siar) STATE.siar={};
+  const k=siarKey(y,m,d), day=STATE.siar[k]||(STATE.siar[k]={}), r=day[ev.title]||(day[ev.title]={});
+  if(on) r[jenis]=evCap(ev); else delete r[jenis];
+  if(!Object.keys(r).length) delete day[ev.title];
+  if(!Object.keys(day).length) delete STATE.siar[k];
+  /* buang rekod > 60 hari supaya data sync kekal kecil */
+  const had=new Date(); had.setDate(had.getDate()-60);
+  Object.keys(STATE.siar).forEach(x=>{ const [a,b,c]=x.split("-").map(Number); if(new Date(a,b-1,c)<had) delete STATE.siar[x]; });
+  saveState(); refreshSiarUI(y,m,d);
+}
+function refreshSiarUI(y,m,d){
+  renderUpcoming();
+  if(modalDate && modalDate.y===y && modalDate.m===m && modalDate.d===d) renderSiarRows(y,m,d);
+}
+function renderSiarRows(y,m,d){
+  const evs=eventsFor(y,m,d), box=$("siarRows");
+  $("secSiar").classList.toggle("hidden",!evs.length);
+  box.innerHTML="";
+  const ADA=new Set(umumEvents(y,m,d).map(e=>e.title));
+  evs.forEach(ev=>{
+    const row=document.createElement("div"); row.className="srow";
+    const n=document.createElement("div"); n.className="sn"; n.textContent=ev.title;
+    const sm=document.createElement("small"); sm.textContent=[ev.name,ev.waktu].filter(Boolean).join(" · "); n.appendChild(sm);
+    row.appendChild(n);
+    [["p","🎨 Poster"],["u","📣 Pengumuman"]].forEach(([j,lbl])=>{
+      if(j==="u" && !ADA.has(ev.title)) return;
+      const st=siarSt(y,m,d,ev,j), b=document.createElement("button"); b.type="button"; b.className="schip";
+      if(st) b.dataset.st=st;
+      b.textContent=lbl+(st==="ok"?" ✓":st==="stale"?" ! siar semula":"");
+      b.addEventListener("click",()=> setSiar(y,m,d,ev,j,st!=="ok"));
+      row.appendChild(b);
+    });
+    box.appendChild(row);
+  });
+}
+/* Studio (dibenam / tab) beritahu bila prompt dihantar / disalin → tanda poster */
+let STUDIO_TAB=null;
+window.addEventListener("message",e=>{
+  if(e.origin!==STUDIO_ORIGIN || !e.data || e.data.type!=="pawaka-studio-shared") return;
+  let t=null;
+  if(SOV && e.source===$("sovFrame").contentWindow) t=SOV;
+  else if(STUDIO_TAB && e.source===STUDIO_TAB.win) t=STUDIO_TAB;
+  if(t) setSiar(t.y,t.m,t.d,t.ev,"p",true);
+});
+
 /* ╔═══ 7 HARI AKAN DATANG ═══╗  (di luar #poster → tak masuk PNG) */
 const LS_UPC="takwim-mkslb-upc-v1";
 function renderUpcoming(){
@@ -1294,14 +1378,19 @@ function renderUpcoming(){
       const bb=document.createElement("div"); bb.className="ub";
       const bs=document.createElement("button"); bs.type="button"; bs.title="Poster (Pawaka Studio)"; bs.textContent="🎨";
       bs.addEventListener("click",()=> sendToStudio(y,m,d,ev)); bb.appendChild(bs);
+      const sp=siarSt(y,m,d,ev,"p"); if(sp){ bs.dataset.st=sp; bs.title=sp==="ok"?"Poster dah disiar":"Berubah sejak poster disiar — siar semula"; }
       const ue=uevs.find(u=>u.title===ev.title && u.name===ev.name);
       if(ue){ const bu=document.createElement("button"); bu.type="button"; bu.className="u"; bu.title="Teks pengumuman"; bu.textContent="📣";
-        bu.addEventListener("click",()=> openUmum(y,m,d,[ue])); bb.appendChild(bu); }
+        bu.addEventListener("click",()=> openUmum(y,m,d,[ue])); bb.appendChild(bu);
+        const su=siarSt(y,m,d,ue,"u"); if(su){ bu.dataset.st=su; bu.title=su==="ok"?"Pengumuman dah disiar":"Berubah sejak pengumuman disiar — siar semula"; } }
       row.append(tt,bb,nn); card.appendChild(row);
     });
     box.appendChild(card);
   }
-  $("upcCount").textContent=total+" program";
+  let perlu=0;
+  for(let i=0;i<7;i++){ const dt=new Date(base.getFullYear(),base.getMonth(),base.getDate()+i), y=dt.getFullYear(), m=dt.getMonth()+1, d=dt.getDate();
+    eventsFor(y,m,d).forEach(ev=>{ if(siarSt(y,m,d,ev,"p")==="stale"||siarSt(y,m,d,ev,"u")==="stale") perlu++; }); }
+  $("upcCount").textContent=total+" program"+(perlu?" · ⚠️ "+perlu+" perlu siar semula":"");
 }
 function wireUpcoming(){
   let tutup=false; try{ tutup=localStorage.getItem(LS_UPC)==="tutup"; }catch(e){}
