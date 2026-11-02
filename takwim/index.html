@@ -334,6 +334,34 @@ button.danger{ background:#6e2b2b; color:#f7dcdc; border:1px solid #8a3a3a; }
 .umeta{ display:flex; flex-wrap:wrap; justify-content:space-between; gap:4px 10px; color:var(--paper-dim); font-size:12px; margin:8px 0 4px; }
 #uFallback{ width:100%; min-height:180px; margin-top:10px; font:inherit; font-size:13px; }
 #umumModal .mactions{ flex-wrap:wrap; }
+.dbox{ width:640px; }
+#dTabs{ display:inline-flex; margin-bottom:12px; flex-wrap:wrap; }
+.dtool{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:10px; }
+.dtool small{ color:var(--paper-dim); }
+.drow{ background:var(--ink3); border:1px solid var(--line); border-radius:10px; padding:8px 10px; margin-bottom:8px; }
+.drow.off{ opacity:.55; }
+.dline{ display:flex; align-items:center; gap:10px; }
+.dline img[src=""]{ visibility:hidden; }
+.dline img{ width:34px; height:42px; object-fit:cover; object-position:top; border-radius:6px; background:#fff2; flex:none; }
+.dline .dn{ flex:1; min-width:0; font-weight:700; font-size:13.5px; }
+.dline .dn small{ display:block; color:var(--paper-dim); font-weight:500; font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.dline .dtag{ font-size:10.5px; color:var(--gold); border:1px solid var(--gold); border-radius:999px; padding:1px 7px; }
+.dline button{ padding:6px 10px; font-size:12.5px; box-shadow:none; }
+.dline{ flex-wrap:wrap; }
+.dline .dn{ min-width:150px; }
+.dbtns{ display:flex; gap:6px; margin-left:auto; }
+.dform{ margin-top:10px; display:grid; grid-template-columns:110px 1fr; gap:6px 10px; align-items:center; }
+.dform label{ color:var(--paper-dim); font-size:12px; font-weight:700; }
+.dform input, .dform select{ width:100%; }
+.dform .dact{ grid-column:1 / -1; display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap; margin-top:4px; }
+.dgrid{ background:var(--ink3); border:1px solid var(--line); border-radius:10px; padding:10px; margin-bottom:8px; }
+.dgrid b{ display:block; font-size:13px; margin-bottom:6px; }
+.dgrid .dmg{ display:grid; grid-template-columns:repeat(5,1fr); gap:6px; }
+.dgrid .dmg label{ font-size:10.5px; color:var(--paper-dim); display:block; margin-bottom:2px; }
+.dgrid select{ width:100%; font-size:12.5px; padding:6px 4px; }
+.dprev{ font-size:12.5px; color:var(--paper-dim); line-height:1.7; }
+.dprev b{ color:var(--paper); }
+@media (max-width:820px){ .dform{ grid-template-columns:1fr; } .dgrid .dmg{ grid-template-columns:repeat(3,1fr); } }
 .mode-list b{ display:block; font-size:13.5px; }
 .mode-list small{ color:var(--paper-dim); }
 .msec{ background:var(--ink3); border:1px solid var(--line); border-radius:10px; padding:12px; margin-bottom:14px; }
@@ -362,6 +390,7 @@ button.danger{ background:#6e2b2b; color:#f7dcdc; border:1px solid #8a3a3a; }
     </div>
     <span class="muted" id="status">Klik mana-mana sel untuk edit. Semua perubahan disimpan automatik.</span>
     <span class="grow"></span>
+    <button id="btnData" class="ghost">👥 Data</button>
     <button id="btnFoto" class="ghost">🖼️ Foto Ustaz</button>
     <button id="btnSync" class="ghost syncpill" data-st="off" title="Sync antara peranti">☁️ <span id="syncTxt">Sync belum disetup</span></button>
     <button id="btnSolat" class="ghost" title="Import jadual waktu solat SGR03 tahunan (cth sgr03-2027.json)">🕌 Waktu Solat</button>
@@ -571,6 +600,16 @@ button.danger{ background:#6e2b2b; color:#f7dcdc; border:1px solid #8a3a3a; }
 </div>
 
 <!-- MODAL: pengurus foto -->
+<div id="dataModal" class="modal hidden">
+  <div class="mbox dbox">
+    <h3>👥 Data Takwim</h3>
+    <div class="ctx">Penceramah, khatib &amp; jadual tetap — diedit di sini, sync ke semua peranti. Tekan 🌐 Terbit selepas ubah supaya landing ikut.</div>
+    <div class="seg" id="dTabs"><button type="button" data-t="ustaz" class="on">Penceramah</button><button type="button" data-t="khatib">Khatib</button><button type="button" data-t="jadual">Jadual Tetap</button></div>
+    <div id="dBody"></div>
+    <div class="mactions"><button id="dTutup" type="button">Tutup</button></div>
+  </div>
+</div>
+
 <div id="photoModal" class="modal hidden">
   <div class="mbox">
     <h3>🖼️ Foto Ustaz</h3>
@@ -651,6 +690,43 @@ function savePhotos(){ try{ localStorage.setItem(LS_PHOTOS,JSON.stringify(PHOTOS
   catch(e){ alert("Storan browser penuh — foto tidak dapat disimpan."); } }
 
 const ovKey=(y,m)=> y+"-"+m;
+/* ╔═══ DATA BOLEH EDIT (👥 Data) ═══╗
+   STATE.reg = { ustaz:{key:{...}}, khatib:{key:{...}}, giliran:[keys], sauh:"YYYY-MM-DD",
+                 tpl:{ "Y-M":{ pools:{wd:{minggu:key}}, dhuha:key } } }   ← jadual tetap ikut bulan berkuat kuasa
+   Nilai asal dalam kod kekal sebagai asas; STATE.reg menindih & sync ke semua peranti. */
+const USTAZ_ASAL=JSON.parse(JSON.stringify(USTAZ));
+const TEMPLATE_ASAL=Object.assign(JSON.parse(JSON.stringify(TEMPLATE)),{dhuha:"sharif"});
+const TPL_HARI=[0,1,2,3,5];                         /* hari ada kuliah ikut giliran minggu */
+let KHATIB_ASAL=null, GILIRAN_ASAL=null, SAUH_ASAL=null;
+const regOf=()=> STATE.reg||{};
+const ymNum=k=>{ const [a,b]=String(k).split("-").map(Number); return a*12+b; };
+let TPL_CACHE={};
+function tplFor(y,m){
+  const ck=ovKey(y,m); if(TPL_CACHE[ck]) return TPL_CACHE[ck];
+  const T=regOf().tpl||{}, target=y*12+m;
+  const key=Object.keys(T).filter(k=>ymNum(k)<=target).sort((a,b)=>ymNum(a)-ymNum(b)).pop();
+  const out=JSON.parse(JSON.stringify(TEMPLATE_ASAL));
+  if(key){ const v=T[key]||{};
+    TPL_HARI.forEach(wd=>{ if(v.pools && v.pools[wd]) out[wd].pool={...v.pools[wd]}; });
+    if(v.dhuha) out.dhuha=v.dhuha; }
+  out._mula=key||"";
+  return (TPL_CACHE[ck]=out);
+}
+function rebuildReg(){
+  if(!KHATIB_ASAL){ KHATIB_ASAL=JSON.parse(JSON.stringify(KHATIB)); GILIRAN_ASAL=KHATIB_GILIRAN.slice(); SAUH_ASAL=KHATIB_SAUH; }
+  const R=regOf();
+  Object.keys(USTAZ).forEach(k=> delete USTAZ[k]);
+  Object.assign(USTAZ, JSON.parse(JSON.stringify(USTAZ_ASAL)));
+  Object.entries(R.ustaz||{}).forEach(([k,v])=>{ if(v && typeof v==="object") USTAZ[k]={...(USTAZ[k]||{}),...v}; });
+  Object.keys(KHATIB).forEach(k=> delete KHATIB[k]);
+  Object.assign(KHATIB, JSON.parse(JSON.stringify(KHATIB_ASAL)));
+  Object.entries(R.khatib||{}).forEach(([k,v])=>{ if(v && typeof v==="object") KHATIB[k]={...(KHATIB[k]||{}),...v}; });
+  KHATIB_GILIRAN.length=0;
+  (Array.isArray(R.giliran)?R.giliran:GILIRAN_ASAL).filter(k=>KHATIB[k]).forEach(k=> KHATIB_GILIRAN.push(k));
+  KHATIB_SAUH=SAUH_ASAL;
+  if(/^\d{4}-\d{2}-\d{2}$/.test(R.sauh||"")){ const [a,b,c]=R.sauh.split("-").map(Number); KHATIB_SAUH=Date.UTC(a,b-1,c); }
+  TPL_CACHE={};
+}
 /* Tetapan bulanan (Perdana · Dhuha · Zohor Muslimat) — ikut bulan.
    Bulan tanpa tetapan sendiri guna nilai lalai (STATE.perdana/dhuha/zohor), jadi data lama kekal sama. */
 const ZOHOR_KOSONG={jumaat:0,gelaran:"Ust",nama:"",photo:""};
@@ -707,9 +783,11 @@ const KHATIB={
   faiz:   {label:"Imam Faiz",    penuh:"Tuan Imam Muhammad Faiz bin Mohd Mufasir",  photo:"khatib-faiz",jawatan:"Imam 4 MKSLB"},
   aiman:  {label:"Imam Aiman",   penuh:"Tuan Imam Muhammad Aiman bin Mohamad Rafee",photo:"khatib-aiman",jawatan:"Imam 3 MKSLB"}
 };
-const KHATIB_GILIRAN=["fauzi","azahari","naudi","faiz","aiman"], KHATIB_SAUH=Date.UTC(2026,10,6);
+const KHATIB_GILIRAN=["fauzi","azahari","naudi","faiz","aiman"];
+let KHATIB_SAUH=Date.UTC(2026,10,6);
 function khatibGiliran(y,m,d){
   const w=Math.round((Date.UTC(y,m-1,d)-KHATIB_SAUH)/(7*864e5)), n=KHATIB_GILIRAN.length;
+  if(!n) return null;
   return KHATIB_GILIRAN[((w%n)+n)%n];
 }
 const getKhFor=(y,m)=> (STATE.khutbah||{})[ovKey(y,m)] || {};
@@ -728,7 +806,8 @@ function khatibFor(y,m,d){
   let k=null;
   if(ov.key && KHATIB[ov.key]) k={...KHATIB[ov.key]};
   else if(ov.nama) k={label:ov.nama, penuh:ov.nama, photo:ov.photo||"", jawatan:ov.jawatan||""};
-  else k={...KHATIB[g]};
+  else if(g && KHATIB[g]) k={...KHATIB[g]};
+  else return null;
   k.tajuk=ov.tajuk||""; k.tukar=!!(ov.key&&ov.key!==g || ov.nama); k.giliran=g;
   return k;
 }
@@ -742,7 +821,7 @@ function lectureContent(jenis,key,tajukTetap){
   return { kind:"lecture", jenis, title:tajukTetap||u.subjek||"", name:u.gelaran+" "+u.nama, photo:u.photo||key };
 }
 function baseCellFor(y,m,d,ignoreOv){
-  const wd=new Date(y,m-1,d).getDay(), occ=occurrenceOf(d), t=TEMPLATE[wd];
+  const TP=tplFor(y,m), wd=new Date(y,m-1,d).getDay(), occ=occurrenceOf(d), t=TP[wd];
   if(!ignoreOv){
     const ov=getOvFor(y,m)[d];
     if(ov){
@@ -757,7 +836,7 @@ function baseCellFor(y,m,d,ignoreOv){
   if(t.jenis==="kahfi") return {kind:"kahfi"};
   const CF=cfgFor(y,m);
   if(wd===3 && CF.dhuha && CF.dhuha.rabu===occ){
-    const sharif=USTAZ["sharif"], mk=t.pool[occ], mm=mk?USTAZ[mk]:null;
+    const sharif=USTAZ[TP.dhuha]||USTAZ["sharif"], mk=t.pool[occ], mm=mk?USTAZ[mk]:null;
     const parts=[{title:"K. Dhuha",name:sharif.gelaran+" "+sharif.nama,photo:sharif.photo}];
     if(mm) parts.push({title:mm.subjek,name:mm.gelaran+" "+mm.nama,photo:mm.photo});
     return { kind:"split", parts };
@@ -942,7 +1021,7 @@ function updateModeUI(){
   $("poster").style.display = wk?"none":"flex";
   $("posterWeek").style.display = wk?"flex":"none";
 }
-function renderAll(){ syncEditbar(); updateModeUI(); render(); fitPreview(); renderUpcoming(); ensureSolatShown(); }
+function renderAll(){ rebuildReg(); syncEditbar(); updateModeUI(); render(); fitPreview(); renderUpcoming(); ensureSolatShown(); }
 
 function wireEditbar(){
   fillSelect($("selBulan"), BULAN_PENUH.map((n,i)=>[i+1,titleCase(n)]));
@@ -1015,9 +1094,9 @@ function openModal(y,m,d){
   }
   $("secKh").classList.toggle("hidden",!isJum);
   if(isJum){
-    const g=khatibGiliran(y,m,d), ov=getKhFor(y,m)[d]||{};
-    $("mKhGiliran").textContent="· giliran: "+KHATIB[g].label;
-    fillSelect($("mKhPilih"),[["","Ikut giliran — "+KHATIB[g].label]].concat(KHATIB_GILIRAN.map(k=>[k,KHATIB[k].penuh])).concat([["__lain","Lain-lain (taip nama)"]]));
+    const g=khatibGiliran(y,m,d), ov=getKhFor(y,m)[d]||{}, gl=g&&KHATIB[g]?KHATIB[g].label:"(tiada giliran)";
+    $("mKhGiliran").textContent="· giliran: "+gl;
+    fillSelect($("mKhPilih"),[["","Ikut giliran — "+gl]].concat(KHATIB_GILIRAN.map(k=>[k,KHATIB[k].penuh])).concat([["__lain","Lain-lain (taip nama)"]]));
     $("mKhPilih").value=ov.key&&KHATIB[ov.key]?ov.key:(ov.nama?"__lain":"");
     $("mKhNama").value=ov.nama||""; $("mKhJaw").value=ov.jawatan||""; $("mKhTajuk").value=ov.tajuk||"";
     $("mKhLainRow").classList.toggle("hidden",$("mKhPilih").value!=="__lain");
@@ -1400,6 +1479,171 @@ function wireUpcoming(){
   let hari=new Date().toDateString();          /* tukar hari (tab dibiar terbuka) → muat semula senarai */
   setInterval(()=>{ const h=new Date().toDateString(); if(h!==hari){ hari=h; renderUpcoming(); } },60000);
 }
+/* ╔═══ 👥 DATA: penceramah · khatib · jadual tetap ═══╗ */
+let DTAB="ustaz", DOPEN=null;
+const dEsc=t=>String(t==null?"":t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function regEdit(){ if(!STATE.reg) STATE.reg={}; return STATE.reg; }
+function dCommit(msg){ saveState(); renderAll(); renderData(); if(msg) setStatus(msg); }
+function opts(sel,items,val){ sel.innerHTML=""; items.forEach(([v,l])=>{ const o=document.createElement("option"); o.value=v; o.textContent=l; sel.appendChild(o); }); if(val!==undefined) sel.value=val; }
+function ustazDipakai(key){
+  const T=regOf().tpl||{}, src=[TEMPLATE_ASAL].concat(Object.values(T).map(v=>({pools:v.pools,dhuha:v.dhuha})));
+  return src.some(t=>{ if(t.dhuha===key) return true;
+    return TPL_HARI.some(wd=>{ const p=t.pools?t.pools[wd]:(t[wd]&&t[wd].pool); return p && Object.values(p).includes(key); }); });
+}
+function formRow(box,lbl,el){ const l=document.createElement("label"); l.textContent=lbl; box.append(l,el); return el; }
+function inp(v,ph){ const i=document.createElement("input"); i.value=v||""; if(ph) i.placeholder=ph; return i; }
+function renderData(){
+  document.querySelectorAll("#dTabs button").forEach(b=> b.classList.toggle("on",b.dataset.t===DTAB));
+  const B=$("dBody"); B.innerHTML="";
+  if(DTAB==="ustaz") renderDataUstaz(B); else if(DTAB==="khatib") renderDataKhatib(B); else renderDataJadual(B);
+}
+function renderDataUstaz(B){
+  const tool=document.createElement("div"); tool.className="dtool";
+  const add=document.createElement("button"); add.type="button"; add.textContent="➕ Tambah penceramah"; add.addEventListener("click",()=>{ DOPEN="__baru"; renderData(); });
+  tool.append(add); const sm=document.createElement("small"); sm.textContent="Kitab khatam? Tekan ✎ dan tukar kitab — terus guna untuk poster & pengumuman."; tool.append(sm); B.appendChild(tool);
+  const keys=Object.keys(USTAZ).sort((a,b)=> (USTAZ[a].nama||"").localeCompare(USTAZ[b].nama||""));
+  if(DOPEN==="__baru") keys.unshift("__baru");
+  keys.forEach(k=>{
+    const baru=k==="__baru", u=baru?{gelaran:"Ust"}:USTAZ[k], R=regOf().ustaz||{};
+    const row=document.createElement("div"); row.className="drow";
+    if(!baru){
+      const ln=document.createElement("div"); ln.className="dline";
+      ln.innerHTML='<img alt="" src="'+dEsc(photoSrc(u.photo||k))+'"><div class="dn">'+dEsc(u.gelaran+" "+u.nama)+'<small>'+dEsc(u.kitab||"—")+(u.kitabDhuha?" · Dhuha: "+dEsc(u.kitabDhuha):"")+'</small></div>'
+        +(R[k]?'<span class="dtag">'+(USTAZ_ASAL[k]?"diubah":"baru")+'</span>':'');
+      const e=document.createElement("button"); e.type="button"; e.className="ghost"; e.textContent=DOPEN===k?"✕":"✎";
+      e.addEventListener("click",()=>{ DOPEN=DOPEN===k?null:k; renderData(); }); ln.appendChild(e); row.appendChild(ln);
+    }
+    if(DOPEN===k){
+      const f=document.createElement("div"); f.className="dform";
+      const fg=formRow(f,"Gelaran",inp(u.gelaran,"Ust / Ustazah / Dr")), fn=formRow(f,"Nama pendek",inp(u.nama,"cth: Hafizin")),
+            fp=formRow(f,"Nama penuh",inp(u.penuh,"cth: Ustaz Hafizin bin Tanawi")), fs=formRow(f,"Label takwim",inp(u.subjek,"pilihan — cth: Tauhid")),
+            fk=formRow(f,"Kitab",inp(u.kitab,"cth: Matan Jauharah Tauhid")), fd=formRow(f,"Kitab Dhuha",inp(u.kitabDhuha,"pilihan — jika mengajar Dhuha"));
+      const ff=formRow(f,"Foto",document.createElement("select")); fillPhotoSelect(ff,u.photo||(baru?"":k));
+      const act=document.createElement("div"); act.className="dact";
+      if(!baru && R[k] && USTAZ_ASAL[k]){ const a=document.createElement("button"); a.type="button"; a.className="ghost"; a.textContent="↺ Asal";
+        a.addEventListener("click",()=>{ delete regEdit().ustaz[k]; DOPEN=null; dCommit("Penceramah dikembalikan ke asal ✓"); }); act.appendChild(a); }
+      if(!baru && !USTAZ_ASAL[k]){ const del=document.createElement("button"); del.type="button"; del.className="danger"; del.textContent="Padam";
+        del.addEventListener("click",()=>{ if(ustazDipakai(k)){ alert("Penceramah ini masih dalam Jadual Tetap. Keluarkan dari jadual dulu."); return; }
+          if(confirm("Padam "+u.gelaran+" "+u.nama+"?")){ delete regEdit().ustaz[k]; DOPEN=null; dCommit("Penceramah dipadam ✓"); } }); act.appendChild(del); }
+      const sv=document.createElement("button"); sv.type="button"; sv.textContent="Simpan";
+      sv.addEventListener("click",()=>{
+        const nama=fn.value.trim(); if(!nama){ fn.focus(); return; }
+        let key=k; if(baru){ key=slug(nama)||("ustaz"+Date.now()); while(USTAZ[key]) key+="2"; }
+        const rec={gelaran:fg.value.trim()||"Ust", nama, penuh:fp.value.trim(), subjek:fs.value.trim(), kitab:fk.value.trim(), kitabDhuha:fd.value.trim(), photo:ff.value};
+        const R2=regEdit(); if(!R2.ustaz) R2.ustaz={}; R2.ustaz[key]=rec; DOPEN=null;
+        dCommit((baru?"Penceramah ditambah":"Penceramah dikemas kini")+" ✓"); });
+      const bt=document.createElement("button"); bt.type="button"; bt.className="ghost"; bt.textContent="Batal"; bt.addEventListener("click",()=>{ DOPEN=null; renderData(); });
+      act.append(bt,sv); f.appendChild(act); row.appendChild(f);
+      if(baru){ const h=document.createElement("b"); h.textContent="Penceramah baru"; row.prepend(h); }
+    }
+    B.appendChild(row);
+  });
+}
+function nextFridays(n){ const out=[], t=new Date(), d=new Date(t.getFullYear(),t.getMonth(),t.getDate()); d.setDate(d.getDate()+((5-d.getDay()+7)%7)); for(let i=0;i<n;i++){ out.push(new Date(d)); d.setDate(d.getDate()+7); } return out; }
+function renderDataKhatib(B){
+  const R=regOf();
+  const tool=document.createElement("div"); tool.className="dtool";
+  const add=document.createElement("button"); add.type="button"; add.textContent="➕ Tambah khatib"; add.addEventListener("click",()=>{ DOPEN="__baruK"; renderData(); });
+  tool.appendChild(add); B.appendChild(tool);
+  const aktif=KHATIB_GILIRAN.slice(), lain=Object.keys(KHATIB).filter(k=>!aktif.includes(k));
+  const setGiliran=arr=>{ regEdit().giliran=arr; dCommit("Giliran dikemas kini ✓"); };
+  const list=(DOPEN==="__baruK"?["__baruK"]:[]).concat(aktif,lain);
+  list.forEach(k=>{
+    const baru=k==="__baruK", K=baru?{}:KHATIB[k], on=aktif.includes(k), i=aktif.indexOf(k);
+    const row=document.createElement("div"); row.className="drow"+(!baru&&!on?" off":"");
+    if(!baru){
+      const ln=document.createElement("div"); ln.className="dline";
+      ln.innerHTML='<img alt="" src="'+dEsc(photoSrc(K.photo))+'"><div class="dn">'+(on?(i+1)+". ":"")+dEsc(K.label)+'<small>'+dEsc(K.penuh)+(K.jawatan?" · "+dEsc(K.jawatan):"")+'</small></div>';
+      const bx=document.createElement("div"); bx.className="dbtns"; ln.appendChild(bx);
+      const mk=(txt,fn,dis,tt)=>{ const b=document.createElement("button"); b.type="button"; b.className="ghost"; b.textContent=txt; if(tt) b.title=tt; b.disabled=!!dis; b.addEventListener("click",fn); bx.appendChild(b); };
+      if(on){ mk("▲",()=>{ const a=aktif.slice(); [a[i-1],a[i]]=[a[i],a[i-1]]; setGiliran(a); },i===0);
+              mk("▼",()=>{ const a=aktif.slice(); [a[i+1],a[i]]=[a[i],a[i+1]]; setGiliran(a); },i===aktif.length-1);
+              mk("Rehat",()=>{ setGiliran(aktif.filter(x=>x!==k)); },false,"Keluarkan dari giliran (data kekal)"); }
+      else mk("＋ Giliran",()=>{ setGiliran(aktif.concat([k])); });
+      mk(DOPEN===k?"✕":"✎",()=>{ DOPEN=DOPEN===k?null:k; renderData(); });
+      row.appendChild(ln);
+    }
+    if(DOPEN===k){
+      const f=document.createElement("div"); f.className="dform";
+      const fl=formRow(f,"Nama pendek",inp(K.label,"cth: Imam Faiz")), fp=formRow(f,"Nama penuh",inp(K.penuh,"cth: Tuan Imam Muhammad Faiz bin …")),
+            fj=formRow(f,"Jawatan",inp(K.jawatan,"pilihan — cth: Imam 4 MKSLB"));
+      const ff=formRow(f,"Foto",document.createElement("select")); fillPhotoSelect(ff,K.photo||"");
+      const act=document.createElement("div"); act.className="dact";
+      if(!baru && (R.khatib||{})[k] && KHATIB_ASAL[k]){ const a=document.createElement("button"); a.type="button"; a.className="ghost"; a.textContent="↺ Asal";
+        a.addEventListener("click",()=>{ delete regEdit().khatib[k]; DOPEN=null; dCommit("Khatib dikembalikan ke asal ✓"); }); act.appendChild(a); }
+      if(!baru && !KHATIB_ASAL[k]){ const del=document.createElement("button"); del.type="button"; del.className="danger"; del.textContent="Padam";
+        del.addEventListener("click",()=>{ if(confirm("Padam "+K.label+"?")){ const R2=regEdit(); delete R2.khatib[k]; R2.giliran=KHATIB_GILIRAN.filter(x=>x!==k); DOPEN=null; dCommit("Khatib dipadam ✓"); } }); act.appendChild(del); }
+      const bt=document.createElement("button"); bt.type="button"; bt.className="ghost"; bt.textContent="Batal"; bt.addEventListener("click",()=>{ DOPEN=null; renderData(); });
+      const sv=document.createElement("button"); sv.type="button"; sv.textContent="Simpan";
+      sv.addEventListener("click",()=>{
+        const label=fl.value.trim(), penuh=fp.value.trim()||label; if(!label){ fl.focus(); return; }
+        let key=k; if(baru){ key=slug(label)||("khatib"+Date.now()); while(KHATIB[key]) key+="2"; }
+        const R2=regEdit(); if(!R2.khatib) R2.khatib={}; R2.khatib[key]={label,penuh,jawatan:fj.value.trim(),photo:ff.value};
+        if(baru) R2.giliran=KHATIB_GILIRAN.concat([key]);
+        DOPEN=null; dCommit((baru?"Khatib ditambah ke giliran":"Khatib dikemas kini")+" ✓"); });
+      act.append(bt,sv); f.appendChild(act); row.appendChild(f);
+      if(baru){ const h=document.createElement("b"); h.textContent="Khatib baru"; row.prepend(h); }
+    }
+    B.appendChild(row);
+  });
+  /* sauh giliran + pratonton */
+  const g=document.createElement("div"); g.className="dgrid";
+  const sau=new Date(KHATIB_SAUH), iso=sau.getUTCFullYear()+"-"+pad2(sau.getUTCMonth()+1)+"-"+pad2(sau.getUTCDate());
+  g.innerHTML='<b>Rujukan giliran</b><div class="dtool"><small>Khatib no. 1 bertugas pada Jumaat</small></div>';
+  const di=document.createElement("input"); di.type="date"; di.value=iso; g.querySelector(".dtool").appendChild(di);
+  di.addEventListener("change",()=>{ const d=new Date(di.value+"T00:00:00"); if(isNaN(d)||d.getDay()!==5){ alert("Pilih tarikh hari Jumaat."); di.value=iso; return; }
+    regEdit().sauh=di.value; dCommit("Rujukan giliran dikemas kini ✓"); });
+  const pv=document.createElement("div"); pv.className="dprev";
+  pv.innerHTML="<b>6 Jumaat akan datang:</b>"+nextFridays(6).map(d=>{ const kh=khatibFor(d.getFullYear(),d.getMonth()+1,d.getDate());
+    return d.getDate()+" "+BULAN_TITLE[d.getMonth()].slice(0,3)+" — "+(kh?dEsc(kh.label)+(kh.tukar?" (ditukar)":""):"tiada"); }).join("<br>");
+  g.appendChild(pv); B.appendChild(g);
+}
+let DJ_YM=null;
+function renderDataJadual(B){
+  const now=new Date(); if(!DJ_YM) DJ_YM=ovKey(STATE.tahun,STATE.bulan);
+  const tool=document.createElement("div"); tool.className="dtool";
+  const lab=document.createElement("small"); lab.textContent="Berkuat kuasa mulai:"; tool.appendChild(lab);
+  const sel=document.createElement("select"), items=[];
+  for(let i=-2;i<=18;i++){ const d=new Date(now.getFullYear(),now.getMonth()+i,1); items.push([ovKey(d.getFullYear(),d.getMonth()+1),BULAN_TITLE[d.getMonth()]+" "+d.getFullYear()]); }
+  if(!items.some(x=>x[0]===DJ_YM)){ const [a,b]=DJ_YM.split("-").map(Number); items.unshift([DJ_YM,BULAN_TITLE[b-1]+" "+a]); }
+  opts(sel,items,DJ_YM); sel.addEventListener("change",()=>{ DJ_YM=sel.value; renderData(); }); tool.appendChild(sel); B.appendChild(tool);
+  const [Y,M]=DJ_YM.split("-").map(Number), T=tplFor(Y,M);
+  const ustazOpts=[["","—"]].concat(Object.keys(USTAZ).sort((a,b)=>(USTAZ[a].nama||"").localeCompare(USTAZ[b].nama||"")).map(k=>[k,USTAZ[k].gelaran+" "+USTAZ[k].nama]));
+  const info=document.createElement("div"); info.className="dprev";
+  info.innerHTML=T._mula?("Jadual yang berkuat kuasa sekarang untuk bulan ini: versi mulai <b>"+dEsc((()=>{ const [a,b]=T._mula.split("-").map(Number); return BULAN_TITLE[b-1]+" "+a; })())+"</b>."):"Bulan ini guna <b>jadual asal</b>.";
+  B.appendChild(info);
+  const NAMA={0:"Ahad · Kuliah Subuh",1:"Isnin · Maghrib",2:"Selasa · Maghrib",3:"Rabu · Maghrib",5:"Jumaat · Halaqah (Maghrib)"};
+  const SEL={};
+  TPL_HARI.forEach(wd=>{
+    const g=document.createElement("div"); g.className="dgrid"; const h=document.createElement("b"); h.textContent=NAMA[wd]; g.appendChild(h);
+    const mg=document.createElement("div"); mg.className="dmg"; SEL[wd]={};
+    for(let o=1;o<=5;o++){ const w=document.createElement("div"); const l=document.createElement("label"); l.textContent="Minggu "+o;
+      const s2=document.createElement("select"); opts(s2,ustazOpts,(T[wd].pool||{})[o]||""); SEL[wd][o]=s2; w.append(l,s2); mg.appendChild(w); }
+    g.appendChild(mg); B.appendChild(g);
+  });
+  const gd=document.createElement("div"); gd.className="dgrid"; gd.innerHTML="<b>Penceramah Kuliah Dhuha Muslimat (Rabu)</b>";
+  const sd=document.createElement("select"); opts(sd,ustazOpts.slice(1),T.dhuha||"sharif"); gd.appendChild(sd); B.appendChild(gd);
+  const act=document.createElement("div"); act.className="dtool";
+  const sv=document.createElement("button"); sv.type="button"; sv.textContent="💾 Simpan jadual mulai "+sel.options[sel.selectedIndex].textContent;
+  sv.addEventListener("click",()=>{
+    const pools={}; TPL_HARI.forEach(wd=>{ pools[wd]={}; for(let o=1;o<=5;o++){ const v=SEL[wd][o].value; if(v) pools[wd][o]=v; } });
+    const R=regEdit(); if(!R.tpl) R.tpl={}; R.tpl[DJ_YM]={pools,dhuha:sd.value};
+    dCommit("Jadual tetap disimpan — berkuat kuasa mulai "+sel.options[sel.selectedIndex].textContent+" ✓"); });
+  act.appendChild(sv); B.appendChild(act);
+  const vers=Object.keys(regOf().tpl||{}).sort((a,b)=>ymNum(a)-ymNum(b));
+  if(vers.length){ const vl=document.createElement("div"); vl.className="dgrid"; vl.innerHTML="<b>Versi jadual tersimpan</b>";
+    vers.forEach(k=>{ const [a,b]=k.split("-").map(Number), r=document.createElement("div"); r.className="dtool";
+      const t=document.createElement("small"); t.textContent="Mulai "+BULAN_TITLE[b-1]+" "+a; const del=document.createElement("button"); del.type="button"; del.className="ghost"; del.textContent="Padam";
+      del.addEventListener("click",()=>{ if(confirm("Padam versi jadual mulai "+BULAN_TITLE[b-1]+" "+a+"? Bulan berkenaan akan kembali guna versi sebelumnya.")){ delete regEdit().tpl[k]; dCommit("Versi jadual dipadam ✓"); } });
+      r.append(t,del); vl.appendChild(r); });
+    B.appendChild(vl); }
+}
+function wireData(){
+  $("btnData").addEventListener("click",()=>{ DOPEN=null; DJ_YM=null; rebuildReg(); renderData(); $("dataModal").classList.remove("hidden"); });
+  $("dTutup").addEventListener("click",()=> $("dataModal").classList.add("hidden"));
+  $("dataModal").addEventListener("click",e=>{ if(e.target===$("dataModal")) $("dataModal").classList.add("hidden"); });
+  document.querySelectorAll("#dTabs button").forEach(b=> b.addEventListener("click",()=>{ DTAB=b.dataset.t; DOPEN=null; renderData(); }));
+}
 function wireStudio(){
   $("sovTutup").addEventListener("click",closeStudio);
   $("sovTab").addEventListener("click",()=>{ if(!SOV) return; const {y,m,d,ev}=SOV; closeStudio(); sendToStudioTab(y,m,d,ev); });
@@ -1754,7 +1998,10 @@ function wireSync(){
 /* ── TERBIT ke masjidkslb.com: PNG bulanan + takwim-data.json dalam satu commit ── */
 function webData(){
   const now=new Date(), cur={y:now.getFullYear(), m:now.getMonth()+1}, bul={};
-  for(let i=-1;i<=12;i++){ const d=new Date(cur.y,cur.m-1+i,1); const y=d.getFullYear(), m=d.getMonth()+1; bul[ovKey(y,m)]=cfgFor(y,m); }
+  for(let i=-1;i<=12;i++){ const d=new Date(cur.y,cur.m-1+i,1); const y=d.getFullYear(), m=d.getMonth()+1, T=tplFor(y,m), tpl={dhuha:T.dhuha};
+    Object.keys(TEMPLATE_ASAL).forEach(wd=>{ if(/^\d$/.test(wd)){ const x=T[wd]; tpl[wd]={j:x.jenis}; if(x.tajuk) tpl[wd].t=x.tajuk; if(x.pool) tpl[wd].p=x.pool; } });
+    bul[ovKey(y,m)]={...cfgFor(y,m), tpl}; }
+  const ustaz={}; Object.entries(USTAZ).forEach(([k,u])=>{ ustaz[k]={g:u.gelaran,n:u.nama}; if(u.subjek) ustaz[k].s=u.subjek; });
   const C=cfgFor(cur.y,cur.m);
   /* jam kuliah tepat (formula iqamah) untuk reminder landing: s = Subuh, m = Maghrib */
   const jam={};
@@ -1768,7 +2015,7 @@ function webData(){
       const dt=new Date(y,m-1,d), src=photoSrc(kh.photo);
       if(kh.photo && dt>=new Date(now.getFullYear(),now.getMonth(),now.getDate()) && dt<=lim && src.startsWith("data:")) kfoto[kh.photo]=src; } }
   return { v:5, state:{ perdana:C.perdana, dhuha:C.dhuha, zohor:C.zohor,            /* medan lama: untuk landing versi lama */
-                        bulanan:bul, overrides:STATE.overrides, tazkirah:STATE.tazkirah||{}, jam, jumaat, kfoto } };
+                        bulanan:bul, overrides:STATE.overrides, tazkirah:STATE.tazkirah||{}, jam, jumaat, kfoto, ustaz } };
 }
 async function renderPosterCanvas(scale,noShadow){
   const prevMode=STATE.mode;
@@ -1821,7 +2068,8 @@ async function terbit(){
 }
 
 /* ── Mula ── */
-wireEditbar(); wireModal(); wirePhotoModal(); wireSettingsIO(); wireSync(); wireUmum(); wireStudio(); wireUpcoming();
+wireEditbar(); wireModal(); wirePhotoModal(); wireSettingsIO(); wireSync(); wireUmum(); wireStudio(); wireUpcoming(); wireData();
+rebuildReg();
 if(migrateLegacy()) saveState();
 renderAll();
 window.addEventListener("resize",fitPreview);
