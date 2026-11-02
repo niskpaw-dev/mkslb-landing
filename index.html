@@ -305,6 +305,9 @@
   .kcard .ktitle{font-family:var(--display);font-size:1.4rem;font-weight:600;color:var(--ink-cream);line-height:1.14}
   .kcard .kustaz{font-size:.86rem;color:var(--gold-soft);margin-top:3px}
   .kcard .kwaktu{display:inline-block;margin-top:12px;font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-muted);border:1px solid rgba(255,255,255,.12);border-radius:999px;padding:4px 11px}
+  .kcard .ktangguh{color:#f2a3a3}
+  .kcard .ksebab{font-size:.8rem;color:var(--ink-muted);margin-top:6px;font-style:italic}
+  .kcard .kmeta{display:flex;gap:6px;flex-wrap:wrap}
   .kcard .kempty{font-size:.95rem;color:var(--ink-muted);font-style:italic;padding:8px 0 4px}
   .kcard .ksplit{display:flex;flex-direction:column;gap:12px}
   .kcard .ksplit .sline .ktitle{font-size:1.18rem}
@@ -855,13 +858,20 @@
     const esc=t=>String(t==null?"":t).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
     const ovFor=(y,m)=>TK_S.overrides[y+"-"+m]||{};
 
-    function baseResolve(y,m,d){
+    const sesiOf=(y,m,d)=>(((TK_S.sesi||{})[y+"-"+m])||{})[d]||{};
+    function fmtJam(hm){ const x=/^(\d{1,2}):(\d{2})$/.exec(hm||""); if(!x)return""; const h=+x[1],mi=+x[2];
+      return ((h%12)||12)+"."+String(mi).padStart(2,"0")+" "+(h<12?"Pagi":h<13?"Tengah Hari":h<19?"Petang":"Malam"); }
+    function lecShort(c){ if(!c)return""; if(c.kind==="lec")return [c.title,c.name].filter(Boolean).join(" · ");
+      if(c.kind==="split")return c.parts.filter(p=>p.jenis!=="dhuha").map(p=>[p.title,p.name].filter(Boolean).join(" · ")).join(" + ");
+      if(c.kind==="kahfi")return "Malam Mustajab Doa"; return ""; }
+    function baseResolve(y,m,d,noOv){
       const TT=((TK_S.bulanan||{})[y+"-"+m]||{}).tpl||TK_T;     /* jadual tetap ikut bulan (dari Terbit) */
       const wd=new Date(Date.UTC(y,m-1,d)).getUTCDay(), o=occ(d), t=TT[wd]||TK_T[wd];
-      const ov=ovFor(y,m)[d];
+      const ov=noOv?null:ovFor(y,m)[d];
       if(ov){
         if(ov.type==="kosong")return{kind:"empty"};
-        if(ov.type==="khas")return{kind:"khas",text:ov.teks||""};
+        if(ov.type==="khas")return{kind:"khas",text:ov.teks||"",ov};
+        if(ov.type==="tangguh")return{kind:"tangguh",asal:baseResolve(y,m,d,true),sebab:ov.sebab||""};
         const jenis=(t&&t.p)?t.j:(wd===6?"perdana":"maghrib");
         if(ov.type==="ustaz"){const u=TK_U[ov.key]; if(u)return{kind:"lec",jenis,title:(t&&t.t)||u.s||"",name:u.g+" "+u.n};}
         if(ov.type==="custom")return{kind:"lec",jenis,title:ov.tajuk||"",name:((ov.gelaran||"Ust")+" "+(ov.nama||"")).trim()};
@@ -887,7 +897,8 @@
       if(tz) parts.push({title:"Tazkirah Jumaat",name:((tz.gelaran||"Ust")+" "+(tz.nama||"")).trim(),waktu:WAKTU.tazkirah,jenis:"tazkirah"});
       if(z&&z.jumaat&&z.jumaat===occ(d)&&(z.nama||z.photo)) parts.push({title:"Kuliah Zohor Muslimat",name:((z.gelaran||"Ust")+" "+(z.nama||"")).trim(),waktu:WAKTU.zohor,jenis:"zohor"});
       if(!parts.length||base.kind==="khas") return base;
-      if(base.kind==="lec") parts.push({title:base.title,name:base.name,waktu:WAKTU[base.jenis]||"",jenis:base.jenis});
+      if(base.kind==="lec") parts.push({title:base.title,name:base.name,waktu:WAKTU[base.jenis]||"",jenis:base.jenis,utama:true});
+      if(base.kind==="tangguh") parts.push({title:"Ditangguhkan",name:lecShort(base.asal),waktu:"",tangguh:true});
       if(parts.length===1) return{kind:"lec",jenis:parts[0].jenis,title:parts[0].title,name:parts[0].name};
       return{kind:"split",parts};
     }
@@ -921,13 +932,18 @@
       const dateStr=HARI[dt.wd]+", "+dt.d+" "+BLN[dt.m-1];
       let body;
       if(info.kind==="empty") body='<div class="kempty">Tiada kuliah</div>';
-      else if(info.kind==="kahfi") body='<div class="ktitle">Bacaan Kahfi, Yasin &amp; Doa Selamat</div><span class="kwaktu">'+esc(waktuFor("kahfi",dt))+'</span>';
-      else if(info.kind==="khas") body='<div class="ktitle">'+esc(info.text)+'</div>';
+      else if(info.kind==="kahfi") body='<div class="ktitle">Bacaan Kahfi, Yasin &amp; Doa Selamat</div><span class="kwaktu">'+esc(sesiOf(dt.y,dt.m,dt.d).masa?fmtJam(sesiOf(dt.y,dt.m,dt.d).masa):waktuFor("kahfi",dt))+'</span>';
+      else if(info.kind==="khas"){ const o=info.ov||{}, w=fmtJam(o.masa);
+        body='<div class="ktitle">'+esc(info.text)+'</div>'+(o.penceramah?'<div class="kustaz">'+esc(o.penceramah)+'</div>':'')+
+          (w||o.lokasi?'<div class="kmeta">'+(w?'<span class="kwaktu">'+esc(w)+'</span>':'')+(o.lokasi?'<span class="kwaktu">'+esc(o.lokasi)+'</span>':'')+'</div>':''); }
+      else if(info.kind==="tangguh") body='<div class="ktitle ktangguh">Ditangguhkan</div><div class="kustaz">'+esc(lecShort(info.asal))+'</div>'+(info.sebab?'<div class="ksebab">'+esc(info.sebab)+'</div>':'');
       else if(info.kind==="split"){
-        const sline=s=> s?'<div class="sline"><div class="ktitle">'+esc(s.title)+'</div><div class="kustaz">'+esc(s.name)+'</div>'+((s.jenis?waktuFor(s.jenis,dt):s.waktu)?'<span class="kwaktu">'+esc(s.jenis?waktuFor(s.jenis,dt):s.waktu)+'</span>':'')+'</div>':'';
+        const SS=sesiOf(dt.y,dt.m,dt.d), wOf=s=> s.tangguh?"":(s.utama&&SS.masa)?fmtJam(SS.masa):(s.jenis?waktuFor(s.jenis,dt):s.waktu);
+        const sline=s=> s?'<div class="sline"><div class="ktitle'+(s.tangguh?' ktangguh':'')+'">'+esc(s.title)+'</div><div class="kustaz">'+esc(s.name)+'</div>'+(wOf(s)?'<span class="kwaktu">'+esc(wOf(s))+'</span>':'')+'</div>':'';
         body='<div class="ksplit">'+info.parts.map(sline).join('')+'</div>';
       } else {
-        body='<div class="ktitle">'+esc(info.title)+'</div><div class="kustaz">'+esc(info.name)+'</div><span class="kwaktu">'+esc(waktuFor(info.jenis,dt))+'</span>';
+        const SS=sesiOf(dt.y,dt.m,dt.d);
+        body='<div class="ktitle">'+esc(info.title)+'</div><div class="kustaz">'+esc(info.name)+'</div><span class="kwaktu">'+esc(SS.masa?fmtJam(SS.masa):waktuFor(info.jenis,dt))+'</span>'+(SS.lokasi?' <span class="kwaktu">'+esc(SS.lokasi)+'</span>':'');
       }
       return '<div class="kcard'+(isToday?' today':'')+'"><span class="ac-glow" aria-hidden="true"></span>'+
         '<div class="kwhen">'+when+'</div><div class="kdate">'+dateStr+'</div><div class="kbody">'+body+'</div></div>';
@@ -967,7 +983,7 @@
     refresh();  // segera (Intl KL) supaya tak menunggu rangkaian
     // tarik jadual (override/perdana/dhuha) bulan ini
     fetch('takwim-data.json',{cache:'no-cache'}).then(r=>r.ok?r.json():null).then(j=>{
-      if(j&&j.state){ if(j.state.perdana)TK_S.perdana=j.state.perdana; if(j.state.dhuha)TK_S.dhuha=j.state.dhuha; TK_S.overrides=j.state.overrides||{}; TK_S.tazkirah=j.state.tazkirah||{}; if(j.state.zohor)TK_S.zohor=j.state.zohor; TK_S.bulanan=j.state.bulanan||{}; TK_S.jam=j.state.jam||{}; TK_S.jumaat=j.state.jumaat||{}; TK_S.kfoto=j.state.kfoto||{}; if(j.state.ustaz) Object.assign(TK_U,j.state.ustaz); renderReminder(); renderJumaat(); }
+      if(j&&j.state){ if(j.state.perdana)TK_S.perdana=j.state.perdana; if(j.state.dhuha)TK_S.dhuha=j.state.dhuha; TK_S.overrides=j.state.overrides||{}; TK_S.tazkirah=j.state.tazkirah||{}; if(j.state.zohor)TK_S.zohor=j.state.zohor; TK_S.bulanan=j.state.bulanan||{}; TK_S.jam=j.state.jam||{}; TK_S.jumaat=j.state.jumaat||{}; TK_S.kfoto=j.state.kfoto||{}; TK_S.sesi=j.state.sesi||{}; if(j.state.ustaz) Object.assign(TK_U,j.state.ustaz); renderReminder(); renderJumaat(); }
     }).catch(()=>{});
     // anchor tarikh rasmi dari API waktu solat (kebal jam peranti salah)
     let _k=(()=>{const t=klToday();return t.y+"-"+t.m+"-"+t.d;})();
