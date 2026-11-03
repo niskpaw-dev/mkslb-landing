@@ -620,6 +620,12 @@ button.danger{ background:#6e2b2b; color:#f7dcdc; border:1px solid #8a3a3a; }
       <div class="row" id="tvFormMsg" style="color:var(--paper-dim);font-size:12.5px"></div>
       <div class="mactions"><button class="danger hidden" id="tvBuang" type="button">Buang dari TV</button><button class="ghost" id="tvBaru" type="button">＋ Slaid lain</button><button id="tvHantar" type="button">📺 Hantar ke TV</button></div>
     </div>
+    <div class="msec" id="tvPosBox">
+      <div class="tvfhead">Kedudukan di TV <small style="color:var(--paper-dim);font-weight:500">— mySolatime susun ikut abjad nama fail</small></div>
+      <div class="row"><span class="lbl">Takwim</span><input id="tvPosTakwim" style="width:90px" inputmode="numeric"><small style="color:var(--paper-dim)">cth 10-11 = selepas 10-10</small></div>
+      <div class="row"><span class="lbl">Poster</span><input id="tvPosPoster" style="width:90px" inputmode="numeric"><small style="color:var(--paper-dim)">disusun ikut tarikh program</small></div>
+      <div class="row"><button class="ghost" id="tvPosSimpan" type="button">Simpan kedudukan</button><small id="tvPosMsg" style="color:var(--paper-dim)"></small></div>
+    </div>
     <div class="tvlhead">Slaid di saluran TV</div>
     <div id="tvList"></div>
     <div class="mactions" style="margin-top:12px"><button class="ghost" id="tvTutup" type="button">Tutup</button></div>
@@ -1583,6 +1589,17 @@ const TV_BASE="https://masjidkslb.com/tv/";
 const isoOfD=d=> d.getFullYear()+"-"+pad2(d.getMonth()+1)+"-"+pad2(d.getDate());
 const tvAll=()=> Object.values(STATE.tv||{}).sort((a,b)=> a.fail<b.fail?-1:1);
 const tvIdEv=(y,m,d,ev)=> y+"-"+m+"-"+d+"|"+ev.title;
+/* Kedudukan di TV: mySolatime susun slaid ikut abjad nama fail → awalan nombor menentukan tempat */
+const TV_POS_ASAL={ takwim:"10-11", poster:"10-12" };
+const tvPos=()=> ({ ...TV_POS_ASAL, ...((STATE.tvCfg)||{}) });
+const tvPosOk=v=> /^[0-9][0-9\-]{0,8}$/.test(v||"");
+function tvNama(e){                      /* nama fail ikut kedudukan semasa; ver kekal */
+  const P=tvPos(), f=e.fail||"", ver=e.ver||(f.match(/-([a-z0-9]{1,6})\.jpg$/)||[,"x"])[1];
+  if(!e.ym){ const mm=f.match(/takwim-(\d{6})-/); if(mm) e.ym=mm[1]; }                      /* format nama lama */
+  if(!e.tgl){ const mm=f.match(/mkslb-(\d{8})-(.+)-[a-z0-9]{1,6}\.jpg$/); if(mm){ e.tgl=mm[1]; e.slug=e.slug||mm[2]; } }
+  if(e.jenis==="takwim") return P.takwim+"-mkslb-takwim-"+(e.ym||"")+"-"+ver+".jpg";
+  return P.poster+"-mkslb-"+(e.tgl||"")+"-"+(e.slug||"slaid")+"-"+ver+".jpg";
+}
 function hash6(str){ let h=5381; for(let i=0;i<str.length;i+=7) h=((h<<5)+h+str.charCodeAt(i))|0; return (h>>>0).toString(36).slice(0,6); }
 function tvStatus(e){ const t=isoOfD(new Date()); if(e.tamat && t>e.tamat) return ["tamat","Tamat"]; if(e.mula && t<e.mula) return ["akan","Akan datang"]; return ["aktif","Di TV"]; }
 function tvJulat(e){ const f=x=>{ if(!x) return ""; const [a,b,c]=x.split("-").map(Number); return c+" "+BULAN_TITLE[b-1].slice(0,3); };
@@ -1605,13 +1622,21 @@ async function tvCommit(add,msg){
   saveState();
   for(let attempt=0;;attempt++){
     try{
-      const head=await ghHead(SYNC.pubRepo,SYNC.branch), ada=await ghPaths(SYNC.pubRepo,head,"tv/");
+      const head=await ghHead(SYNC.pubRepo,SYNC.branch), blobs=await ghBlobs(SYNC.pubRepo,head,"tv/"), ada=Object.keys(blobs);
+      const ren=tvRename(blobs);
       const simpan=new Set(tvAll().map(e=>"tv/"+e.fail).concat(["tv/manifest.json"]).concat((add||[]).map(f=>f.path)));
-      const files=(add||[]).concat([{ path:"tv/manifest.json", b64:b64enc(JSON.stringify(tvManifest(),null,1)) }])
+      const files=(add||[]).concat(ren).concat([{ path:"tv/manifest.json", b64:b64enc(JSON.stringify(tvManifest(),null,1)) }])
         .concat(ada.filter(x=>!simpan.has(x)).map(x=>({path:x,del:true})));
       await ghCommit(SYNC.pubRepo,SYNC.branch,head,files,msg); return;
     }catch(e){ if((e.status===422||e.status===409) && attempt<3) continue; throw e; }
   }
+}
+/* kemas kini nama fail ikut kedudukan semasa; salin blob lama ke nama baru (tanpa muat naik semula) */
+function tvRename(blobs){
+  const out=[];
+  tvAll().forEach(e=>{ const baru=tvNama(e); if(baru===e.fail) return;
+    const lama="tv/"+e.fail; if(blobs[lama]){ out.push({ path:"tv/"+baru, sha:blobs[lama] }); e.fail=baru; } });
+  return out;
 }
 let TVF=null;      /* borang semasa: {id, y,m,d, ev, img:{url,w,h}|null} */
 function tvDefaultDates(y,m,d){
@@ -1648,10 +1673,20 @@ function renderTvList(){
     r.append(im,tn,st,ed); box.appendChild(r);
   });
 }
+function fillTvPos(){ const P=tvPos(); $("tvPosTakwim").value=P.takwim; $("tvPosPoster").value=P.poster; $("tvPosMsg").textContent=""; }
+async function tvPosSimpan(){
+  const t=$("tvPosTakwim").value.trim(), p=$("tvPosPoster").value.trim(), msg=$("tvPosMsg");
+  if(!tvPosOk(t)||!tvPosOk(p)){ msg.textContent="Guna nombor & sengkang sahaja, cth 10-11."; return; }
+  STATE.tvCfg={ takwim:t, poster:p }; saveState();
+  if(!tvAll().length){ msg.textContent="✓ Disimpan."; return; }
+  msg.textContent="Menyusun semula slaid…";
+  try{ await tvCommit([],"Saluran TV: kedudukan "+t+" / "+p); saveState(); renderTvList(); msg.textContent="✓ Disusun semula. TV ikut dalam ~5–10 minit."; }
+  catch(e){ console.error(e); msg.textContent="⚠️ Gagal: "+e.message; }
+}
 function openTv(ctx){            /* ctx = {y,m,d,ev} dari program, atau kosong */
   let id=null; if(ctx&&ctx.ev){ const k=tvIdEv(ctx.y,ctx.m,ctx.d,ctx.ev); if((STATE.tv||{})[k]) id=k; }
   tvLoadForm(id, id?null:(ctx||null)); if(id && ctx) Object.assign(TVF,ctx);
-  renderTvList(); $("tvModal").classList.remove("hidden");
+  renderTvList(); fillTvPos(); $("tvModal").classList.remove("hidden");
 }
 function renderTvBtns(y,m,d){
   const evs=eventsFor(y,m,d).filter(ev=>!ev.tangguh), box=$("tvBtns");
@@ -1669,8 +1704,9 @@ async function tvHantar(){
     const add=[]; let e=lama?{...lama}:{ id:F.id||(F.ev?tvIdEv(F.y,F.m,F.d,F.ev):"x"+Date.now().toString(36)), y:F.y||0, m:F.m||0, d:F.d||0, evTitle:F.ev?F.ev.title:"", jenis:"poster" };
     e.tajuk=tajuk; e.mula=mula; e.tamat=tamat;
     if(F.img){
-      const b64=F.img.url.split(",")[1], tgl=(e.y?(e.y+pad2(e.m)+pad2(e.d)):(mula||isoOfD(new Date())).replace(/-/g,""));
-      e.fail="mkslb-"+tgl+"-"+(slug(tajuk).slice(0,32)||"slaid")+"-"+hash6(b64)+".jpg";
+      const b64=F.img.url.split(",")[1];
+      e.tgl=(e.y?(e.y+pad2(e.m)+pad2(e.d)):(mula||isoOfD(new Date())).replace(/-/g,"")); e.slug=slug(tajuk).slice(0,32)||"slaid"; e.ver=hash6(b64);
+      e.fail=tvNama(e);
       e.thumb=(await imgToJpeg(F.img.url,320,180,0.72)).url;
       add.push({ path:"tv/"+e.fail, b64 });
     }
@@ -1699,6 +1735,7 @@ function wireTv(){
   $("tvBaru").addEventListener("click",()=> tvLoadForm(null));
   $("tvHantar").addEventListener("click",tvHantar);
   $("tvBuang").addEventListener("click",tvBuang);
+  $("tvPosSimpan").addEventListener("click",tvPosSimpan);
   $("tvFile").addEventListener("change",async e=>{
     const f=e.target.files[0]; if(!f) return;
     try{ const src=await new Promise((ok,ng)=>{ const r=new FileReader(); r.onload=()=>ok(r.result); r.onerror=ng; r.readAsDataURL(f); });
@@ -2178,17 +2215,19 @@ async function ghRead(repo,commit,paths){
   }
   return out;
 }
-async function ghPaths(repo,commit,prefix){
+async function ghBlobs(repo,commit,prefix){
   const c=await gh("GET",`/repos/${repo}/git/commits/${commit}`);
   const t=await gh("GET",`/repos/${repo}/git/trees/${c.tree.sha}?recursive=1`);
-  return (t.tree||[]).filter(x=>x.type==="blob" && x.path.startsWith(prefix)).map(x=>x.path);
+  const o={}; (t.tree||[]).filter(x=>x.type==="blob" && x.path.startsWith(prefix)).forEach(x=> o[x.path]=x.sha); return o;
 }
+async function ghPaths(repo,commit,prefix){ return Object.keys(await ghBlobs(repo,commit,prefix)); }
 /* satu commit atomik; gagal (422/409) jika branch dah bergerak → pemanggil tarik & cuba semula */
 async function ghCommit(repo,br,parent,files,message){
   const pc=await gh("GET",`/repos/${repo}/git/commits/${parent}`);
   const tree=[];
   for(const f of files){
     if(f.del){ tree.push({ path:f.path, mode:"100644", type:"blob", sha:null }); continue; }   /* padam fail */
+    if(f.sha){ tree.push({ path:f.path, mode:"100644", type:"blob", sha:f.sha }); continue; }   /* salin blob sedia ada (tukar nama) */
     const bl=await gh("POST",`/repos/${repo}/git/blobs`,{ content:f.b64, encoding:"base64" });
     tree.push({ path:f.path, mode:"100644", type:"blob", sha:bl.sha });
   }
@@ -2351,18 +2390,20 @@ async function terbit(){
     /* takwim bulanan → Saluran TV (1920×1080 JPEG, berkuat kuasa sepanjang bulan) */
     const tvj=await imgToJpeg(out.toDataURL("image/png"),1920,1080,0.9), tvb=tvj.url.split(",")[1], tid="takwim|"+y+"-"+m;
     const tvE={ id:tid, jenis:"takwim", tajuk:"Takwim "+label, y:0,m:0,d:0, evTitle:"",
-      fail:"mkslb-0-takwim-"+y+pad2(m)+"-"+hash6(tvb)+".jpg", mula:y+"-"+pad2(m)+"-01", tamat:y+"-"+pad2(m)+"-"+pad2(new Date(y,m,0).getDate()),
+      ym:""+y+pad2(m), ver:hash6(tvb), fail:"", mula:y+"-"+pad2(m)+"-01", tamat:y+"-"+pad2(m)+"-"+pad2(new Date(y,m,0).getDate()),
       thumb:(await imgToJpeg(tvj.url,320,180,0.72)).url };
+    tvE.fail=tvNama(tvE);
     if(!STATE.tv) STATE.tv={}; STATE.tv[tid]=tvE; saveState();
     const files=[ { path:"takwim-"+BULAN_RINGKAS[m-1].toLowerCase()+"-"+y+".png", b64:png },
                   { path:"takwim-data.json", b64:b64enc(JSON.stringify(webData(),null,1)) },
                   { path:"tv/"+tvE.fail, b64:tvb } ];
     setStatus("Menghantar ke laman masjid…",true);
     for(let attempt=0;;attempt++){
-      try{ const head=await ghHead(SYNC.pubRepo,SYNC.branch), ada=await ghPaths(SYNC.pubRepo,head,"tv/"), kini=isoOfD(new Date());
+      try{ const head=await ghHead(SYNC.pubRepo,SYNC.branch), blobs=await ghBlobs(SYNC.pubRepo,head,"tv/"), ada=Object.keys(blobs), kini=isoOfD(new Date());
         Object.values(STATE.tv||{}).forEach(e=>{ if(e.tamat && e.tamat<kini) delete STATE.tv[e.id]; });
+        const ren=tvRename(blobs);
         const simpan=new Set(tvAll().map(e=>"tv/"+e.fail).concat(["tv/manifest.json"]));
-        const fx=files.concat([{ path:"tv/manifest.json", b64:b64enc(JSON.stringify(tvManifest(),null,1)) }]).concat(ada.filter(x=>!simpan.has(x)).map(x=>({path:x,del:true})));
+        const fx=files.concat(ren).concat([{ path:"tv/manifest.json", b64:b64enc(JSON.stringify(tvManifest(),null,1)) }]).concat(ada.filter(x=>!simpan.has(x)).map(x=>({path:x,del:true})));
         await ghCommit(SYNC.pubRepo,SYNC.branch,head,fx,"Terbit takwim "+label); break; }
       catch(e){ if((e.status===422||e.status===409) && attempt<3) continue; throw e; }
     }
