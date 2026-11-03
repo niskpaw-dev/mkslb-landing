@@ -1640,9 +1640,10 @@ function tvRename(blobs){
   return out;
 }
 let TVF=null;      /* borang semasa: {id, y,m,d, ev, img:{url,w,h}|null} */
+/* Amalan MKSLB: poster seminggu ditayang mulai Ahad minggu program (bermula Kuliah Subuh Ahad) hingga hari program */
 function tvDefaultDates(y,m,d){
   const ev=new Date(y,m-1,d), t=new Date(); t.setHours(0,0,0,0);
-  const mula=new Date(ev); mula.setDate(mula.getDate()-7);
+  const mula=new Date(ev); mula.setDate(mula.getDate()-mula.getDay());      /* Ahad minggu tersebut */
   return { mula:isoOfD(mula<t?t:mula), tamat:isoOfD(ev) };
 }
 function tvLoadForm(id,ctx){
