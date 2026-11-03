@@ -610,7 +610,7 @@ button.danger{ background:#6e2b2b; color:#f7dcdc; border:1px solid #8a3a3a; }
 <div id="tvModal" class="modal hidden">
   <div class="mbox tvbox">
     <h3>📺 Saluran TV masjid</h3>
-    <div class="ctx">Slaid masuk ke TV mySolatime melalui skrip di mini PC (setiap 30 minit) dan dibuang sendiri selepas tarikh tamat. Takwim bulanan masuk sendiri setiap kali 🌐 Terbit.</div>
+    <div class="ctx">Slaid masuk ke TV mySolatime melalui skrip di mini PC (setiap 5 minit) dan dibuang sendiri selepas tarikh tamat. Takwim bulanan masuk sendiri setiap kali 🌐 Terbit.</div>
     <div class="msec" id="tvForm">
       <div class="tvfhead" id="tvFormHead">Slaid baru</div>
       <div class="row"><span class="lbl">Tajuk</span><input id="tvTajuk" style="flex:1" placeholder="cth: Kuliah Maghrib — Ust Naudi"></div>
@@ -1678,7 +1678,7 @@ async function tvHantar(){
     await tvCommit(add,"Saluran TV: "+(lama?"kemas kini":"tambah")+" "+tajuk);
     if(F.ev && F.y) setSiar(F.y,F.m,F.d,F.ev,"t",true); else saveState();
     tvLoadForm(e.id); renderTvList(); refreshTvUI();
-    $("tvFormMsg").textContent="✓ Disimpan. TV dikemas kini dalam ~30–60 minit.";
+    $("tvFormMsg").textContent="✓ Disimpan. TV dikemas kini dalam ~5–10 minit.";
   }catch(err){ console.error(err); msg.textContent="⚠️ Gagal: "+(err.status===403||err.status===404?"token tiada akses tulis ke repo laman.":err.message); }
   finally{ btn.disabled=false; }
 }
@@ -1688,7 +1688,7 @@ async function tvBuang(){
   const msg=$("tvFormMsg"); msg.textContent="Membuang…";
   try{ delete STATE.tv[e.id]; await tvCommit([],"Saluran TV: buang "+(e.tajuk||e.fail));
     if(e.y && e.evTitle){ const ev=eventsFor(e.y,e.m,e.d).find(x=>x.title===e.evTitle); if(ev) setSiar(e.y,e.m,e.d,ev,"t",false); else saveState(); } else saveState();
-    tvLoadForm(null); msg.textContent="✓ Dibuang. Hilang dari TV dalam ~30–60 minit."; renderTvList(); refreshTvUI();
+    tvLoadForm(null); msg.textContent="✓ Dibuang. Hilang dari TV dalam ~5–10 minit."; renderTvList(); refreshTvUI();
   }catch(err){ console.error(err); msg.textContent="⚠️ Gagal: "+err.message; }
 }
 function refreshTvUI(){ renderUpcoming(); if(modalDate){ renderTvBtns(modalDate.y,modalDate.m,modalDate.d); renderSiarRows(modalDate.y,modalDate.m,modalDate.d); } }
@@ -2367,7 +2367,7 @@ async function terbit(){
       catch(e){ if((e.status===422||e.status===409) && attempt<3) continue; throw e; }
     }
     saveState();
-    setStatus("✓ Takwim "+label+" diterbitkan — laman & TV masjid dikemas kini (laman ~1 minit, TV ~30–60 minit).",true);
+    setStatus("✓ Takwim "+label+" diterbitkan — laman & TV masjid dikemas kini (laman ~1 minit, TV ~5–10 minit).",true);
   }catch(e){
     console.error(e);
     setStatus("⚠️ Terbit gagal: "+(e.status===403||e.status===404?"token tiada akses tulis ke repo laman.":e.message),true);
