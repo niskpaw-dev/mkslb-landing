@@ -87,20 +87,32 @@
     background:rgba(3,37,27,.86);
     box-shadow:0 1px 0 rgba(212,175,55,.18);
   }
-  .nav{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;max-width:var(--maxw);margin:0 auto}
-  .brand{display:flex;align-items:center;gap:11px;text-decoration:none}
+  .nav{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 24px;max-width:var(--maxw);margin:0 auto}
+  .brand{display:flex;align-items:center;gap:11px;text-decoration:none;min-width:0}
   .brand img{width:40px;height:40px;object-fit:contain;flex-shrink:0}
   .brand .bn{display:flex;flex-direction:column;line-height:1.15}
   .brand .bn b{font-weight:700;font-size:.82rem;letter-spacing:.04em;color:var(--ink-cream)}
   .brand .bn span{font-size:.62rem;letter-spacing:.22em;text-transform:uppercase;color:var(--gold-soft)}
   .nav-cta{
-    display:none;font-size:.78rem;font-weight:600;letter-spacing:.02em;
+    display:inline-block;flex-shrink:0;font-size:.74rem;font-weight:600;letter-spacing:.02em;
     color:var(--green-900);background:var(--gold-bright);
-    padding:9px 18px;border-radius:999px;text-decoration:none;
+    padding:8px 14px;border-radius:999px;text-decoration:none;white-space:nowrap;
     transition:transform .3s var(--ease),background .3s var(--ease);
   }
   .nav-cta:hover{transform:translateY(-1px);background:var(--gold)}
-  @media(min-width:720px){.nav-cta{display:inline-block}}
+  .nav-cta .cta-long{display:none}
+  @media(max-width:400px){.nav{padding:12px 16px}}
+  @media(max-width:360px){
+    .brand{gap:9px}
+    .brand img{width:34px;height:34px}
+    .brand .bn b{font-size:.72rem;letter-spacing:.02em}
+    .brand .bn span{font-size:.56rem;letter-spacing:.18em}
+  }
+  @media(min-width:720px){
+    .nav-cta{font-size:.78rem;padding:9px 18px}
+    .nav-cta .cta-long{display:inline}
+    .nav-cta .cta-short{display:none}
+  }
 
   /* ---------- HERO ---------- */
   .hero{position:relative;min-height:92vh;display:flex;align-items:flex-end;overflow:hidden;margin-top:-72px;padding-top:72px}
@@ -387,7 +399,7 @@
       <img src="logomkslb.png" alt="Logo MKSLB">
       <span class="bn"><b>Masjid Kg. Sungai Lang Baru</b><span>Banting · Selangor</span></span>
     </a>
-    <a href="https://infaq.masjidkslb.com/" class="nav-cta">Infaq Sekarang</a>
+    <a href="https://infaq.masjidkslb.com/" class="nav-cta"><span class="cta-long">Infaq Sekarang</span><span class="cta-short">Infaq</span></a>
   </nav>
 </header>
 
