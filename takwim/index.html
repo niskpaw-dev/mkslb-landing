@@ -617,12 +617,13 @@ button.danger{ background:#6e2b2b; color:#f7dcdc; border:1px solid #8a3a3a; }
       <div class="row"><span class="lbl">Poster</span><span class="filebtn"><button class="ghost" type="button" id="tvPilihBtn">🖼️ Pilih gambar 16:9</button><input type="file" id="tvFile" accept="image/*"></span><small id="tvFileInfo" style="color:var(--paper-dim)"></small></div>
       <div class="tvprev"><img id="tvPrev" alt=""></div>
       <div class="row"><span class="lbl">Mula</span><input id="tvMula" type="date"><span class="lbl" style="width:auto">Tamat</span><input id="tvTamat" type="date"></div>
+      <div class="row"><span class="lbl">Kedudukan</span><input id="tvPosSlaid" style="width:90px" inputmode="numeric" placeholder="auto"><small style="color:var(--paper-dim)">pilihan — kosong = ikut tarikh program. cth 10-14 = selit sebelum 10-14 (selepas 10-13)</small></div>
       <div class="row" id="tvFormMsg" style="color:var(--paper-dim);font-size:12.5px"></div>
       <div class="mactions"><button class="danger hidden" id="tvBuang" type="button">Buang dari TV</button><button class="ghost" id="tvBaru" type="button">＋ Slaid lain</button><button id="tvHantar" type="button">📺 Hantar ke TV</button></div>
     </div>
     <div class="msec" id="tvPosBox">
       <div class="tvfhead">Kedudukan di TV <small style="color:var(--paper-dim);font-weight:500">— mySolatime susun ikut abjad nama fail</small></div>
-      <div class="row"><span class="lbl">Takwim</span><input id="tvPosTakwim" style="width:90px" inputmode="numeric"><small style="color:var(--paper-dim)">cth 10-11 = selepas 10-10</small></div>
+      <div class="row"><span class="lbl">Takwim</span><input id="tvPosTakwim" style="width:90px" inputmode="numeric"><small style="color:var(--paper-dim)">cth 10-11 = sebelum 10-11, iaitu selepas 10-10</small></div>
       <div class="row"><span class="lbl">Poster</span><input id="tvPosPoster" style="width:90px" inputmode="numeric"><small style="color:var(--paper-dim)">disusun ikut tarikh program</small></div>
       <div class="row"><button class="ghost" id="tvPosSimpan" type="button">Simpan kedudukan</button><small id="tvPosMsg" style="color:var(--paper-dim)"></small></div>
     </div>
@@ -1598,7 +1599,7 @@ function tvNama(e){                      /* nama fail ikut kedudukan semasa; ver
   if(!e.ym){ const mm=f.match(/takwim-(\d{6})-/); if(mm) e.ym=mm[1]; }                      /* format nama lama */
   if(!e.tgl){ const mm=f.match(/mkslb-(\d{8})-(.+)-[a-z0-9]{1,6}\.jpg$/); if(mm){ e.tgl=mm[1]; e.slug=e.slug||mm[2]; } }
   if(e.jenis==="takwim") return P.takwim+"-mkslb-takwim-"+(e.ym||"")+"-"+ver+".jpg";
-  return P.poster+"-mkslb-"+(e.tgl||"")+"-"+(e.slug||"slaid")+"-"+ver+".jpg";
+  return (tvPosOk(e.pos)?e.pos:P.poster)+"-mkslb-"+(e.tgl||"")+"-"+(e.slug||"slaid")+"-"+ver+".jpg";
 }
 function hash6(str){ let h=5381; for(let i=0;i<str.length;i+=7) h=((h<<5)+h+str.charCodeAt(i))|0; return (h>>>0).toString(36).slice(0,6); }
 function tvStatus(e){ const t=isoOfD(new Date()); if(e.tamat && t>e.tamat) return ["tamat","Tamat"]; if(e.mula && t<e.mula) return ["akan","Akan datang"]; return ["aktif","Di TV"]; }
@@ -1652,6 +1653,7 @@ function tvLoadForm(id,ctx){
   $("tvTajuk").value=e?e.tajuk:(ctx&&ctx.ev?[ctx.ev.tajuk||ctx.ev.title,ctx.ev.name].filter(Boolean).join(" — "):"");
   const dd=ctx&&ctx.ev?tvDefaultDates(ctx.y,ctx.m,ctx.d):{mula:isoOfD(new Date()),tamat:""};
   $("tvMula").value=e?e.mula:dd.mula; $("tvTamat").value=e?e.tamat:dd.tamat;
+  $("tvPosSlaid").value=e&&e.pos?e.pos:""; $("tvPosSlaid").disabled=!!(e&&e.jenis==="takwim");
   $("tvPrev").src=e?e.thumb||"":""; $("tvPrev").classList.toggle("on",!!(e&&e.thumb));
   $("tvFile").value=""; $("tvFileInfo").textContent=e?"(kekal gambar sedia ada — pilih untuk ganti)":"";
   $("tvBuang").classList.toggle("hidden",!e);
@@ -1703,13 +1705,17 @@ async function tvHantar(){
   try{
     const add=[]; let e=lama?{...lama}:{ id:F.id||(F.ev?tvIdEv(F.y,F.m,F.d,F.ev):"x"+Date.now().toString(36)), y:F.y||0, m:F.m||0, d:F.d||0, evTitle:F.ev?F.ev.title:"", jenis:"poster" };
     e.tajuk=tajuk; e.mula=mula; e.tamat=tamat;
+    const pos=$("tvPosSlaid").value.trim(); if(pos && !tvPosOk(pos)){ msg.textContent="Kedudukan khas: guna nombor & sengkang sahaja, cth 10-13."; btn.disabled=false; return; }
+    if(pos) e.pos=pos; else delete e.pos;
     if(F.img){
       const b64=F.img.url.split(",")[1];
-      e.tgl=(e.y?(e.y+pad2(e.m)+pad2(e.d)):(mula||isoOfD(new Date())).replace(/-/g,"")); e.slug=slug(tajuk).slice(0,32)||"slaid"; e.ver=hash6(b64);
+      const urut=e.y&&F.ev?Math.max(1,eventsFor(e.y,e.m,e.d).findIndex(x=>x.title===F.ev.title)+1):1;   /* susunan masa dalam hari */
+      e.tgl=(e.y?(e.y+pad2(e.m)+pad2(e.d)):(mula||isoOfD(new Date())).replace(/-/g,""))+"-"+urut; e.slug=slug(tajuk).slice(0,32)||"slaid"; e.ver=hash6(b64);
       e.fail=tvNama(e);
       e.thumb=(await imgToJpeg(F.img.url,320,180,0.72)).url;
       add.push({ path:"tv/"+e.fail, b64 });
     }
+    if(!F.img && e.fail) e.fail=e.fail;      /* nama baru (jika kedudukan berubah) diurus tvRename */
     if(!STATE.tv) STATE.tv={}; STATE.tv[e.id]=e;
     await tvCommit(add,"Saluran TV: "+(lama?"kemas kini":"tambah")+" "+tajuk);
     if(F.ev && F.y) setSiar(F.y,F.m,F.d,F.ev,"t",true); else saveState();
