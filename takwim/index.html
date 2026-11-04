@@ -354,6 +354,11 @@ button.danger{ background:#6e2b2b; color:#f7dcdc; border:1px solid #8a3a3a; }
   white-space:pre-wrap; overflow-wrap:anywhere; line-height:1.7; font-size:14.5px; max-height:52vh; overflow:auto;
   font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; }
 .ububble strong{ font-weight:700; }
+.utg{ border:1px solid var(--line,#3a3026); border-radius:10px; padding:10px 12px; margin:10px 0 4px; }
+.utg-h{ font-weight:700; margin-bottom:6px; } .utg-h small{ font-weight:400; color:var(--paper-dim); margin-left:6px; }
+.utg-r{ display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:6px 0; }
+.utg-r select{ flex:1; min-width:180px; } #uTgThumb{ width:56px; height:56px; object-fit:cover; border-radius:6px; }
+.utg-n{ font-size:12px; color:var(--paper-dim); } .utg .hidden{ display:none; }
 .umeta{ display:flex; flex-wrap:wrap; justify-content:space-between; gap:4px 10px; color:var(--paper-dim); font-size:12px; margin:8px 0 4px; }
 #uFallback{ width:100%; min-height:180px; margin-top:10px; font:inherit; font-size:13px; }
 #umumModal .mactions{ flex-wrap:wrap; }
@@ -644,6 +649,16 @@ button.danger{ background:#6e2b2b; color:#f7dcdc; border:1px solid #8a3a3a; }
     <div class="ububble" id="uPreview"></div>
     <div class="umeta"><span id="uCount"></span><span id="uStatus">Teks disalin sahaja · tiada mesej dihantar automatik</span></div>
     <textarea id="uFallback" readonly hidden aria-label="Teks pengumuman untuk disalin"></textarea>
+    <div class="utg" id="uTg">
+      <div class="utg-h">✈️ Kumpulan Telegram <small id="uTgSt"></small></div>
+      <div class="utg-r">
+        <img id="uTgThumb" alt="" hidden>
+        <span class="filebtn"><button class="ghost" type="button" id="uTgPilih">🖼️ Pilih poster</button><input type="file" id="uTgFile" accept="image/*"></span>
+        <select id="uTgMasa" aria-label="Masa hantar"></select>
+      </div>
+      <div class="utg-r"><button id="uTgHantar" type="button">✈️ Jadual ke Telegram</button><button class="ghost hidden" id="uTgBatal" type="button">Batal jadual</button></div>
+      <div class="utg-n" id="uTgMsg">Bot Imarah MKSLB hantar poster + teks ini (gaya dipilih di atas) ke kumpulan jemaah.</div>
+    </div>
     <div class="mactions"><button class="ghost" id="uTutup" type="button">Tutup</button><button class="ghost" id="uSocial" type="button">Salin Telegram / FB</button><button id="uWa" type="button">Salin WhatsApp</button></div>
   </div>
 </div>
@@ -1493,6 +1508,7 @@ function renderUmum(){
   document.querySelectorAll("#uGaya button").forEach(b=> b.classList.toggle("on",b.dataset.g===UMUM.gaya));
   $("uCount").textContent=Array.from(UMUM.msg).length+" aksara";
   const fb=$("uFallback"); fb.hidden=true; fb.value="";
+  if(typeof tgRender==="function") tgRender();
 }
 function openUmum(y,m,d,evs){
   UMUM={...UMUM,y,m,d,evs};
@@ -1501,7 +1517,7 @@ function openUmum(y,m,d,evs){
   const kev=evs.find(e=>e.khutbah);
   $("uKhRow").classList.toggle("hidden",!kev);
   $("uKhTajuk").value=kev?(kev.sub||""):"";
-  renderUmum();
+  renderUmum(); tgBuka();
   $("umumModal").classList.remove("hidden");
 }
 async function salinUmum(social){
@@ -1973,6 +1989,84 @@ function wireStudio(){
   $("sovTab").addEventListener("click",()=>{ if(!SOV) return; const {y,m,d,ev}=SOV; closeStudio(); sendToStudioTab(y,m,d,ev); });
   document.addEventListener("keydown",e=>{ if(e.key==="Escape" && SOV) closeStudio(); });
 }
+/* ╔═══ TELEGRAM (bot Imarah MKSLB) ═══╗
+   STATE.tg[id] = { id, v, y,m,d, titles[], caps[], teks, gaya, gambar:"tg/…jpg", bila(ms), dibuat(ms) }
+   Gambar disimpan dalam repo data (tg/). Bot (GitHub Actions) hantar bila tiba masa, rekod di tg/hantar.json. */
+let TGF=null, TG_HANTAR={};
+const tgId=(y,m,d,evs)=> y+"-"+m+"-"+d+"|"+evs.map(e=>e.title).join("+");
+function tgAuto(y,m,d,evs){                      /* Subuh & Dhuha Muslimat: 9 malam sebelumnya · lain: 8 pagi hari program */
+  const malam=evs.some(e=>/subuh|dhuha/i.test(e.title+" "+(e.tajuk||"")));
+  return malam ? new Date(y,m-1,d-1,21,0).getTime() : new Date(y,m-1,d,8,0).getTime();
+}
+const tgFmt=ms=>{ const t=new Date(ms), h=t.getHours(), mm=String(t.getMinutes()).padStart(2,"0"), h12=((h+11)%12)+1;
+  return h12+"."+mm+" "+(h<12?"pagi":h<14?"tengah hari":h<19?"petang":"malam")+", "+HARI[t.getDay()]+" "+t.getDate()+" "+BULAN_RINGKAS[t.getMonth()]; };
+function tgBuka(){
+  TGF=null; $("uTgFile").value=""; $("uTgThumb").hidden=true;
+  tgRender();
+  if(syncReady()) ghHead(SYNC.dataRepo,SYNC.branch).then(h=>ghRead(SYNC.dataRepo,h,["tg/hantar.json"]))
+    .then(r=>{ try{ TG_HANTAR=JSON.parse(r["tg/hantar.json"]||"{}"); }catch(e){ TG_HANTAR={}; } tgRender(); }).catch(()=>{});
+}
+function tgRender(){
+  if(!$("uTg")) return;
+  const {y,m,d,evs}=UMUM; if(!evs||!evs.length) return;
+  const id=tgId(y,m,d,evs), e=(STATE.tg||{})[id], h=TG_HANTAR[id], auto=tgAuto(y,m,d,evs), kini=Date.now();
+  const tamat=new Date(y,m-1,d,23,59).getTime()<kini, tangguh=evs.some(x=>x.tangguh);
+  const sel=$("uTgMasa"), pilih=sel.value;
+  sel.innerHTML=""; const opt=(v,t)=>{ const o=document.createElement("option"); o.value=v; o.textContent=t; sel.appendChild(o); };
+  if(auto>kini) opt("auto","🕗 Auto · "+tgFmt(auto)); opt("now","⚡ Sekarang");
+  sel.value=[...sel.options].some(o=>o.value===pilih)?pilih:sel.options[0].value;
+  let st="";
+  if(e && h && h.v===e.v && h.status==="ok") st="✅ Dihantar "+tgFmt(h.at);
+  else if(e && h && h.v===e.v && h.status==="tahan") st="⏸ Ditahan bot: "+(h.sebab||"maklumat berubah");
+  else if(e) st=(e.caps.join()!==evs.map(evCap).join()?"⚠️ maklumat berubah selepas dijadual · ":"")+"🕗 Dijadual "+tgFmt(e.bila);
+  $("uTgSt").textContent=st;
+  if(e && e.thumb && !TGF){ $("uTgThumb").src=e.thumb; $("uTgThumb").hidden=false; }
+  $("uTgBatal").classList.toggle("hidden",!e || (h&&h.v===e.v&&h.status==="ok"));
+  $("uTgHantar").textContent=e?"✈️ Kemas kini jadual":"✈️ Jadual ke Telegram";
+  $("uTgHantar").disabled=tamat;
+  $("uTgMsg").textContent= tamat?"Program dah lepas.": tangguh?"Makluman penangguhan akan dihantar (poster pilihan).":"Bot Imarah MKSLB hantar poster + teks ini (gaya dipilih di atas) ke kumpulan jemaah.";
+}
+async function tgJadual(){
+  const {y,m,d,evs,gaya}=UMUM, id=tgId(y,m,d,evs), lama=(STATE.tg||{})[id], msg=$("uTgMsg");
+  if(!syncReady()){ alert("Sambung sync dulu (butang ☁️) — Telegram guna token yang sama."); openSync(); return; }
+  if(!TGF && !(lama&&lama.gambar)){ msg.textContent="Pilih poster dulu."; return; }
+  const btn=$("uTgHantar"); btn.disabled=true; msg.textContent="Menghantar ke bot…";
+  try{
+    const v=Date.now(), now=$("uTgMasa").value==="now";
+    const gambar=TGF ? "tg/"+y+pad2(m)+pad2(d)+"-"+hash6(id+v+TGF.url)+".jpg" : lama.gambar;
+    if(!STATE.tg) STATE.tg={};
+    const lim=Date.now()-30*864e5; Object.values(STATE.tg).forEach(x=>{ if(new Date(x.y,x.m-1,x.d).getTime()<lim) delete STATE.tg[x.id]; });
+    STATE.tg[id]={ id, v, y,m,d, titles:evs.map(e=>e.title), caps:evs.map(evCap), teks:UMUM.msg, gaya,
+      gambar, thumb:TGF?TGF.thumb:(lama&&lama.thumb)||"", bila: now?v:tgAuto(y,m,d,evs), dibuat:v };
+    saveState(); clearTimeout(syncTimer);
+    if(!(await syncNow("tg"))) throw new Error("sync gagal");
+    /* commit gambar (atau penanda) ke tg/ — mencetus bot serta-merta */
+    for(let attempt=0;;attempt++){
+      try{ const head=await ghHead(SYNC.dataRepo,SYNC.branch);
+        const files=TGF?[{ path:gambar, b64:TGF.url.split(",")[1] }]:[{ path:"tg/jadual.txt", b64:b64enc(id+" "+v+"\n") }];
+        await ghCommit(SYNC.dataRepo,SYNC.branch,head,files,"Telegram: jadual "+evs.map(e=>e.title).join(" + ")+" "+d+"/"+m); break; }
+      catch(e){ if((e.status===422||e.status===409) && attempt<3) continue; throw e; }
+    }
+    TGF=null; $("uTgFile").value="";
+    msg.textContent= now?"✓ Dihantar ke bot — masuk kumpulan dalam ±1 minit.":"✓ Dijadualkan · "+tgFmt(STATE.tg[id].bila)+". Bot lapor bila dah hantar.";
+  }catch(e){ console.error(e); msg.textContent="⚠️ Gagal: "+(e.message||e); }
+  finally{ const t=msg.textContent; btn.disabled=false; tgRender(); msg.textContent=t; }
+}
+async function tgBatal(){
+  const {y,m,d,evs}=UMUM, id=tgId(y,m,d,evs);
+  if(!(STATE.tg||{})[id] || !confirm("Batalkan jadual Telegram ini?")) return;
+  delete STATE.tg[id]; saveState(); tgRender(); $("uTgMsg").textContent="Jadual dibatalkan.";
+}
+function wireTg(){
+  $("uTgFile").addEventListener("change",async e=>{
+    const f=e.target.files[0]; if(!f) return;
+    try{ const src=URL.createObjectURL(f), j=await imgToJpeg(src,2048,2048,0.88), t=await imgToJpeg(src,160,160,0.7);
+      TGF={ url:j.url, thumb:t.url }; $("uTgThumb").src=t.url; $("uTgThumb").hidden=false; $("uTgMsg").textContent="Poster dipilih ("+j.w+"×"+j.h+")."; }
+    catch(err){ $("uTgMsg").textContent="⚠️ "+err.message; }
+  });
+  $("uTgHantar").addEventListener("click",tgJadual);
+  $("uTgBatal").addEventListener("click",tgBatal);
+}
 function wireUmum(){
   document.querySelectorAll("#uGaya button").forEach(b=> b.addEventListener("click",()=>{
     UMUM.gaya=b.dataset.g; try{ localStorage.setItem(LS_GAYA,UMUM.gaya); }catch(e){} renderUmum(); }));
@@ -2354,7 +2448,7 @@ function acaraData(){
       title:ev.title, tajuk:ev.tajuk||"", sub:ev.sub||"", nama:ev.penuh||ev.name||"", waktu:ev.waktu||"", lokasi:ev.lokasi||"",
       khutbah:!!ev.khutbah, khas:!!ev.khas, muslimat:!!ev.muslimat, tangguh:!!ev.tangguh, sebab:ev.sebab||"",
       ganti:ev.ganti?(ev.ganti.dari||""):"", jamuan:ev.jamuan||"",
-      siar:{ p:siarSt(y,m,d,ev,"p"), u:siarSt(y,m,d,ev,"u"), t:siarSt(y,m,d,ev,"t") }, tv:tvAda(y,m,d,ev.title) })) });
+      siar:{ p:siarSt(y,m,d,ev,"p"), u:siarSt(y,m,d,ev,"u"), t:siarSt(y,m,d,ev,"t") }, tv:tvAda(y,m,d,ev.title), cap:evCap(ev) })) });
   }
   return { v:1, dijana:new Date().toISOString(), dari:isoOfD(dari), hari };
 }
@@ -2446,7 +2540,7 @@ async function terbit(){
 }
 
 /* ── Mula ── */
-wireEditbar(); wireModal(); wirePhotoModal(); wireSettingsIO(); wireSync(); wireUmum(); wireStudio(); wireUpcoming(); wireData(); wireTv();
+wireEditbar(); wireModal(); wirePhotoModal(); wireSettingsIO(); wireSync(); wireUmum(); wireTg(); wireStudio(); wireUpcoming(); wireData(); wireTv();
 rebuildReg();
 if(migrateLegacy()) saveState();
 renderAll();
