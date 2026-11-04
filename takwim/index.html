@@ -2281,6 +2281,7 @@ async function syncNow(reason){
       if(!changed.length){ BASE.head=head; saveBase(); break; }
       try{
         const files=changed.map(k=>({ path:DOC_FILES[k], b64:b64enc(JSON.stringify(merged[k],null,1)) }));
+        if(changed.includes("state")){ try{ rebuildReg(); files.push({ path:"acara.json", b64:b64enc(JSON.stringify(acaraData(),null,1)) }); }catch(e){ console.warn("acara.json",e); } }
         const nh=await ghCommit(SYNC.dataRepo,SYNC.branch,head,files,"Takwim: kemas kini "+changed.join(", ")+" ("+(navigator.userAgentData&&navigator.userAgentData.mobile?"telefon":"peranti")+")");
         BASE={ head:nh, doc:JSON.parse(JSON.stringify(merged)) }; saveBase(); break;
       }catch(e){ if(e.status===422||e.status===409){ BASE.head=null; continue; } throw e; }   // branch bergerak → tarik semula
@@ -2334,6 +2335,23 @@ function wireSync(){
   document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible" && Date.now()-lastSyncAt>15000) syncNow("fokus"); });
   setInterval(()=>{ if(document.visibilityState==="visible") syncNow("berkala"); }, 60000);
   window.addEventListener("online",()=> syncNow("online"));
+}
+
+/* ── acara.json (repo data) — senarai acara yang dah siap dikira, untuk bot Telegram Imarah MKSLB ── */
+function acaraData(){
+  const now=new Date(), dari=new Date(now.getFullYear(),now.getMonth(),now.getDate()-7), hari=[];
+  const tvAda=(y,m,d,title)=> Object.values(STATE.tv||{}).some(e=> e.jenis!=="takwim" && e.y===y && e.m===m && e.d===d && e.evTitle===title);
+  for(let i=0;i<75;i++){
+    const dt=new Date(dari.getFullYear(),dari.getMonth(),dari.getDate()+i), y=dt.getFullYear(), m=dt.getMonth()+1, d=dt.getDate();
+    let evs=[]; try{ evs=eventsFor(y,m,d); }catch(e){}
+    if(!evs.length) continue;
+    hari.push({ t:isoOfD(dt), hari:HARI[dt.getDay()], acara: evs.map(ev=>({
+      title:ev.title, tajuk:ev.tajuk||"", sub:ev.sub||"", nama:ev.penuh||ev.name||"", waktu:ev.waktu||"", lokasi:ev.lokasi||"",
+      khutbah:!!ev.khutbah, khas:!!ev.khas, muslimat:!!ev.muslimat, tangguh:!!ev.tangguh, sebab:ev.sebab||"",
+      ganti:ev.ganti?(ev.ganti.dari||""):"", jamuan:ev.jamuan||"",
+      siar:{ p:siarSt(y,m,d,ev,"p"), u:siarSt(y,m,d,ev,"u"), t:siarSt(y,m,d,ev,"t") }, tv:tvAda(y,m,d,ev.title) })) });
+  }
+  return { v:1, dijana:new Date().toISOString(), dari:isoOfD(dari), hari };
 }
 
 /* ── TERBIT ke masjidkslb.com: PNG bulanan + takwim-data.json dalam satu commit ── */
