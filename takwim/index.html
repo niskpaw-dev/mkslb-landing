@@ -333,7 +333,8 @@ button.danger{ background:#6e2b2b; color:#f7dcdc; border:1px solid #8a3a3a; }
 .tvrow img{ width:96px; height:54px; object-fit:cover; border-radius:6px; background:#0006; flex:none; }
 .tvrow .tn{ flex:1; min-width:0; font-size:13px; font-weight:700; }
 .tvrow .tn small{ display:block; font-weight:500; color:var(--paper-dim); font-size:11.5px; }
-.tgrow img{ width:54px; height:54px; }
+.tgrow img{ width:54px; height:54px; } .tgrow .tgnoimg{ width:54px; height:54px; border-radius:6px; background:#0004; display:grid; place-items:center; font-size:22px; flex:none; }
+#tgForm .hidden{ display:none; }
 .tvst.tunggu{ background:#4a3a14; color:#ffe3a3; } .tvst.ubah{ background:#4a3a14; color:#ffe3a3; }
 .tvst{ font-size:10.5px; font-weight:800; border-radius:999px; padding:2px 8px; white-space:nowrap; }
 .tvst.aktif{ background:#1f4a32; color:#bff0cf; } .tvst.akan{ background:#2a3550; color:#cdd8ff; } .tvst.tamat{ background:#4a2020; color:#ffc9c9; }
@@ -619,6 +620,15 @@ button.danger{ background:#6e2b2b; color:#f7dcdc; border:1px solid #8a3a3a; }
   <div class="mbox tvbox">
     <h3>✈️ Posting kumpulan Telegram</h3>
     <div class="ctx">Bot <b>Imarah MKSLB</b> hantar poster + teks ke kumpulan masjid: 8.00 pagi hari program (Kuliah Subuh &amp; Dhuha Muslimat: 9.00 malam sebelumnya), selang 2 minit dengan divider, khutbah sentiasa dulu pada hari Jumaat. Jadualkan dari 📣 Pengumuman setiap program.</div>
+    <div class="msec" id="tgForm">
+      <div class="tvfhead" id="tgFormHead">Posting baru <small style="color:var(--paper-dim);font-weight:500">— notis &amp; hebahan bukan program (program → guna 📣 dalam takwim)</small></div>
+      <div class="row"><span class="lbl">Tajuk</span><input id="tgbTajuk" style="flex:1" placeholder="cth: Gotong-royong bersihkan masjid"></div>
+      <div class="row"><span class="lbl">Poster</span><span class="filebtn"><button class="ghost" type="button">🖼️ Pilih gambar</button><input type="file" id="tgbFile" accept="image/*"></span><img id="tgbThumb" alt="" hidden style="width:44px;height:44px;object-fit:cover;border-radius:6px"><button class="ghost hidden" id="tgbBuangGambar" type="button" title="Tanpa gambar">✕</button><small id="tgbFileInfo" style="color:var(--paper-dim)">pilihan</small></div>
+      <div class="row" style="align-items:flex-start"><span class="lbl">Teks</span><textarea id="tgbTeks" rows="6" style="flex:1;resize:vertical" placeholder="Assalamualaikum semua.&#10;&#10;*Gotong-royong* akan diadakan pada …&#10;(*tebal* guna bintang macam WhatsApp)"></textarea></div>
+      <div class="row"><span class="lbl">Hantar</span><input id="tgbTarikh" type="date"><select id="tgbJam"></select><small id="tgbCount" style="color:var(--paper-dim)"></small></div>
+      <div class="row" id="tgbMsg" style="color:var(--paper-dim);font-size:12.5px"></div>
+      <div class="mactions"><button class="danger hidden" id="tgbBuang" type="button">Batal jadual</button><button class="ghost" id="tgbBaru" type="button">＋ Posting lain</button><button id="tgbHantar" type="button">✈️ Jadual</button></div>
+    </div>
     <div class="tvlhead">Akan datang</div>
     <div id="tgListAkan"></div>
     <div class="tvlhead">Selesai &amp; ditahan <small style="color:var(--paper-dim);font-weight:500">— 14 hari lepas</small></div>
@@ -2051,23 +2061,66 @@ async function tgJadual(){
   try{
     const v=Date.now(), now=$("uTgMasa").value==="now";
     const gambar=TGF ? "tg/"+y+pad2(m)+pad2(d)+"-"+hash6(id+v+TGF.url)+".jpg" : lama.gambar;
-    if(!STATE.tg) STATE.tg={};
-    const lim=Date.now()-30*864e5; Object.values(STATE.tg).forEach(x=>{ if(new Date(x.y,x.m-1,x.d).getTime()<lim) delete STATE.tg[x.id]; });
+    tgPrune();
     STATE.tg[id]={ id, v, y,m,d, titles:evs.map(e=>e.title), caps:evs.map(evCap), teks:UMUM.msg, gaya,
       gambar, thumb:TGF?TGF.thumb:(lama&&lama.thumb)||"", bila: now?v:tgAuto(y,m,d,evs), dibuat:v };
-    saveState(); clearTimeout(syncTimer);
-    if(!(await syncNow("tg"))) throw new Error("sync gagal");
-    /* commit gambar (atau penanda) ke tg/ — mencetus bot serta-merta */
-    for(let attempt=0;;attempt++){
-      try{ const head=await ghHead(SYNC.dataRepo,SYNC.branch);
-        const files=TGF?[{ path:gambar, b64:TGF.url.split(",")[1] }]:[{ path:"tg/jadual.txt", b64:b64enc(id+" "+v+"\n") }];
-        await ghCommit(SYNC.dataRepo,SYNC.branch,head,files,"Telegram: jadual "+evs.map(e=>e.title).join(" + ")+" "+d+"/"+m); break; }
-      catch(e){ if((e.status===422||e.status===409) && attempt<3) continue; throw e; }
-    }
+    await tgHantarKeBot(STATE.tg[id], TGF, evs.map(e=>e.title).join(" + ")+" "+d+"/"+m);
     TGF=null; $("uTgFile").value="";
     msg.textContent= now?"✓ Dihantar ke bot — masuk kumpulan dalam ±1 minit.":"✓ Dijadualkan · "+tgFmt(STATE.tg[id].bila)+". Bot lapor bila dah hantar.";
   }catch(e){ console.error(e); msg.textContent="⚠️ Gagal: "+(e.message||e); }
   finally{ const t=msg.textContent; btn.disabled=false; tgRender(); msg.textContent=t; }
+}
+/* simpan jadual → sync state → commit gambar/penanda ke tg/ (mencetus bot serta-merta) */
+async function tgHantarKeBot(q, img, label){
+  saveState(); clearTimeout(syncTimer);
+  if(!(await syncNow("tg"))) throw new Error("sync gagal");
+  for(let attempt=0;;attempt++){
+    try{ const head=await ghHead(SYNC.dataRepo,SYNC.branch);
+      const files=img&&q.gambar?[{ path:q.gambar, b64:img.url.split(",")[1] }]:[{ path:"tg/jadual.txt", b64:b64enc(q.id+" "+q.v+"\n") }];
+      await ghCommit(SYNC.dataRepo,SYNC.branch,head,files,"Telegram: jadual "+label); return; }
+    catch(e){ if((e.status===422||e.status===409) && attempt<3) continue; throw e; }
+  }
+}
+function tgPrune(){ if(!STATE.tg) STATE.tg={}; const lim=Date.now()-30*864e5; Object.values(STATE.tg).forEach(x=>{ if(new Date(x.y,x.m-1,x.d).getTime()<lim) delete STATE.tg[x.id]; }); }
+/* ── posting bebas (notis / hebahan bukan program) ── */
+let TGB={ id:null, img:null, tanpaGambar:false };
+function tgbJamPilihan(){ const sel=$("tgbJam"); sel.innerHTML="";
+  const o=(v,t)=>{ const e=document.createElement("option"); e.value=v; e.textContent=t; sel.appendChild(e); };
+  o("now","⚡ Sekarang"); for(let h=7;h<=22;h++){ const h12=((h+11)%12)+1; o(String(h), h12+".00 "+(h<12?"pagi":h<14?"tengah hari":h<19?"petang":"malam")); } }
+function tgbLoad(id){
+  const q=id?(STATE.tg||{})[id]:null; TGB={ id:q?q.id:null, img:null, tanpaGambar:false };
+  $("tgFormHead").firstChild.textContent=q?"Sunting posting ":"Posting baru ";
+  $("tgbTajuk").value=q?q.titles[0]:""; $("tgbTeks").value=q?q.teks:""; $("tgbFile").value="";
+  const t=q?new Date(q.bila):new Date(Date.now()+864e5);
+  $("tgbTarikh").value=isoOfD(t); tgbJamPilihan(); $("tgbJam").value=q?String(Math.min(22,Math.max(7,t.getHours()))):"8";
+  $("tgbThumb").hidden=!(q&&q.thumb); if(q&&q.thumb) $("tgbThumb").src=q.thumb;
+  $("tgbBuangGambar").classList.toggle("hidden",!(q&&q.gambar)); $("tgbFileInfo").textContent=q&&q.gambar?"(kekal gambar sedia ada)":"pilihan";
+  $("tgbBuang").classList.toggle("hidden",!q); $("tgbHantar").textContent=q?"💾 Simpan perubahan":"✈️ Jadual";
+  $("tgbMsg").textContent=""; tgbCount();
+}
+function tgbCount(){ const n=Array.from($("tgbTeks").value.replace(/\*([^*\n]+)\*/g,"$1")).length;
+  $("tgbCount").textContent=n+" aksara"+(n>1000?" · gambar & teks dihantar berasingan":""); }
+async function tgbJadual(){
+  const msg=$("tgbMsg"), tajuk=$("tgbTajuk").value.trim(), teks=$("tgbTeks").value.trim(), lama=TGB.id?(STATE.tg||{})[TGB.id]:null;
+  if(!syncReady()){ alert("Sambung sync dulu (butang ☁️) — Telegram guna token yang sama."); openSync(); return; }
+  if(!tajuk){ msg.textContent="Isi tajuk (untuk senarai)."; return; }
+  const adaGambar=!!TGB.img || (lama&&lama.gambar&&!TGB.tanpaGambar);
+  if(!teks && !adaGambar){ msg.textContent="Isi teks atau pilih gambar."; return; }
+  const now=$("tgbJam").value==="now", [Y,M,D]=($("tgbTarikh").value||isoOfD(new Date())).split("-").map(Number);
+  const bila=now?Date.now():new Date(Y,M-1,D,+$("tgbJam").value,0).getTime();
+  if(!now && bila<Date.now()-5*60e3){ msg.textContent="Masa dah lepas — pilih masa lain atau ⚡ Sekarang."; return; }
+  const btn=$("tgbHantar"); btn.disabled=true; msg.textContent="Menghantar ke bot…";
+  try{
+    tgPrune();
+    const v=Date.now(), id=lama?lama.id:"bebas|"+v, dt=new Date(bila);
+    const gambar=TGB.img?"tg/"+isoOfD(dt).replace(/-/g,"")+"-"+hash6(id+v+TGB.img.url)+".jpg":(adaGambar?lama.gambar:"");
+    STATE.tg[id]={ id, v, jenis:"bebas", y:dt.getFullYear(), m:dt.getMonth()+1, d:dt.getDate(), titles:[tajuk], caps:[], teks, gambar,
+      thumb:TGB.img?TGB.img.thumb:(adaGambar&&lama?lama.thumb:""), bila, dibuat:v };
+    await tgHantarKeBot(STATE.tg[id], TGB.img, tajuk);
+    const t=now?"✓ Dihantar ke bot — masuk kumpulan dalam ±1 minit.":"✓ Dijadualkan · "+tgFmt(bila)+".";
+    tgbLoad(null); msg.textContent=t; await tgMuatHantar(); renderTgList();
+  }catch(e){ console.error(e); msg.textContent="⚠️ Gagal: "+(e.message||e); }
+  finally{ btn.disabled=false; }
 }
 async function tgBatal(){
   const {y,m,d,evs}=UMUM, id=tgId(y,m,d,evs);
@@ -2078,6 +2131,7 @@ function tgStatusQ(q){                 /* [kelas, label] untuk satu jadual */
   const h=TG_HANTAR[q.id], evs=eventsFor(q.y,q.m,q.d).filter(e=>q.titles.includes(e.title));
   if(h && h.v===q.v && h.status==="ok") return ["aktif","✅ Dihantar "+tgFmt(h.at).split(",")[0]];
   if(h && h.v===q.v && h.status==="tahan") return ["tamat","⏸ Ditahan"];
+  if(q.jenis==="bebas") return ["akan","🕗 Dijadual"];
   if(evs.length!==q.titles.length) return ["tamat","⚠️ Program tiada"];
   if(evs.map(evCap).join()!==q.caps.join()) return ["ubah","⚠️ Maklumat berubah"];
   if(h && h.v===q.v && h.status==="tunggu") return ["tunggu","⏳ Tunggu khutbah"];
@@ -2090,14 +2144,16 @@ function renderTgList(){
   const baris=(q,box)=>{
     const [cls,lbl]=tgStatusQ(q), h=TG_HANTAR[q.id];
     const r=document.createElement("div"); r.className="tvrow tgrow";
-    const im=document.createElement("img"); im.alt=""; if(q.thumb) im.src=q.thumb;
-    const tn=document.createElement("div"); tn.className="tn"; tn.textContent=q.titles.join(" + ");
+    let im; if(q.thumb){ im=document.createElement("img"); im.alt=""; im.src=q.thumb; } else { im=document.createElement("div"); im.className="tgnoimg"; im.textContent=q.jenis==="bebas"?"📝":"🖼️"; }
+    const tn=document.createElement("div"); tn.className="tn"; tn.textContent=(q.jenis==="bebas"?"📝 ":"")+q.titles.join(" + ");
     const sm=document.createElement("small"); sm.textContent=HARI[new Date(q.y,q.m-1,q.d).getDay()]+" "+q.d+" "+BULAN_RINGKAS[q.m-1]+" · hantar "+tgFmt(q.bila).split(",")[0]+(h&&h.v===q.v&&h.status==="tahan"&&h.sebab?" · "+h.sebab:""); tn.appendChild(sm);
     const st=document.createElement("span"); st.className="tvst "+cls; st.textContent=lbl;
     const ed=document.createElement("button"); ed.type="button"; ed.className="ghost"; ed.textContent="✎"; ed.title="Buka pengumuman";
     const evs=eventsFor(q.y,q.m,q.d).filter(e=>q.titles.includes(e.title));
-    ed.disabled=!evs.length;
-    ed.addEventListener("click",()=>{ $("tgModal").classList.add("hidden"); openUmum(q.y,q.m,q.d,evs); setTimeout(()=>$("uTg").scrollIntoView({block:"nearest"}),50); });
+    ed.disabled=q.jenis!=="bebas" && !evs.length;
+    if(q.jenis==="bebas" && h && h.v===q.v && h.status==="ok") ed.style.visibility="hidden";      /* dah dihantar — tiada suntingan */
+    ed.addEventListener("click",()=>{ if(q.jenis==="bebas"){ tgbLoad(q.id); $("tgForm").scrollIntoView({block:"nearest"}); return; }
+      $("tgModal").classList.add("hidden"); openUmum(q.y,q.m,q.d,evs); setTimeout(()=>$("uTg").scrollIntoView({block:"nearest"}),50); });
     r.append(im,tn,st,ed);
     if(!(h && h.v===q.v && h.status==="ok")){
       const del=document.createElement("button"); del.type="button"; del.className="ghost"; del.textContent="🗑"; del.title="Batal jadual";
@@ -2121,6 +2177,7 @@ async function tgMuatHantar(){
   try{ const h=await ghHead(SYNC.dataRepo,SYNC.branch), r=await ghRead(SYNC.dataRepo,h,["tg/hantar.json"]); TG_HANTAR=JSON.parse(r["tg/hantar.json"]||"{}"); }catch(e){}
 }
 async function openTgList(){
+  if(!TGB.id && !$("tgbTajuk").value && !$("tgbTeks").value) tgbLoad(null);
   $("tgModalMsg").textContent=syncReady()?"Menyemak status bot…":"Sambung sync (☁️) untuk lihat status hantaran.";
   renderTgList(); $("tgModal").classList.remove("hidden");
   await tgMuatHantar(); renderTgList(); $("tgModalMsg").textContent="";
@@ -2129,6 +2186,16 @@ function wireTg(){
   $("btnTg").addEventListener("click",openTgList);
   $("tgSegar").addEventListener("click",openTgList);
   $("tgTutup").addEventListener("click",()=> $("tgModal").classList.add("hidden"));
+  $("tgbFile").addEventListener("change",async e=>{ const f=e.target.files[0]; if(!f) return;
+    try{ const src=URL.createObjectURL(f), j=await imgToJpeg(src,2048,2048,0.88), t=await imgToJpeg(src,160,160,0.7);
+      TGB.img={ url:j.url, thumb:t.url }; TGB.tanpaGambar=false; $("tgbThumb").src=t.url; $("tgbThumb").hidden=false; $("tgbBuangGambar").classList.remove("hidden"); $("tgbFileInfo").textContent=j.w+"×"+j.h; }
+    catch(err){ $("tgbFileInfo").textContent="⚠️ "+err.message; } });
+  $("tgbBuangGambar").addEventListener("click",()=>{ TGB.img=null; TGB.tanpaGambar=true; $("tgbFile").value=""; $("tgbThumb").hidden=true; $("tgbBuangGambar").classList.add("hidden"); $("tgbFileInfo").textContent="tanpa gambar — teks sahaja"; });
+  $("tgbTeks").addEventListener("input",tgbCount);
+  $("tgbBaru").addEventListener("click",()=> tgbLoad(null));
+  $("tgbHantar").addEventListener("click",tgbJadual);
+  $("tgbBuang").addEventListener("click",()=>{ const q=TGB.id&&(STATE.tg||{})[TGB.id]; if(!q||!confirm("Batalkan jadual "+q.titles[0]+"?")) return;
+    delete STATE.tg[q.id]; saveState(); tgbLoad(null); renderTgList(); });
   $("tgModal").addEventListener("click",e=>{ if(e.target===$("tgModal")) $("tgModal").classList.add("hidden"); });
   $("uTgFile").addEventListener("change",async e=>{
     const f=e.target.files[0]; if(!f) return;
