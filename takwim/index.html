@@ -2170,6 +2170,7 @@ let BASE=null; try{ BASE=JSON.parse(localStorage.getItem(LS_BASE)||"null"); }cat
 let syncTimer=null, syncBusy=false, syncAgain=false, lastSyncAt=0;
 const VIEW_KEYS=["mode","bulan","tahun","weekAnchor"];
 const DOC_FILES={ state:"state.json", photos:"photos.json", solat:"solat.json" };
+const LS_ACARA="takwim-mkslb-acara-at";            /* bila acara.json terakhir dihantar (bot Imarah) */
 
 const b64enc=str=> btoa(unescape(encodeURIComponent(str)));
 const b64dec=b64=> decodeURIComponent(escape(atob(String(b64).replace(/\s/g,""))));
@@ -2278,12 +2279,16 @@ async function syncNow(reason){
         BASE={ head, doc: empty?{state:undefined,photos:undefined,solat:undefined}:{state:remote.state,photos:remote.photos||{},solat:remote.solat||{}} };
       }
       const changed=Object.keys(DOC_FILES).filter(k=> jstr(merged[k])!==jstr(BASE.doc[k]));
-      if(!changed.length){ BASE.head=head; saveBase(); break; }
+      let acaraLama=false; try{ acaraLama = Date.now()-(+localStorage.getItem(LS_ACARA)||0) > 6*3600e3; }catch(e){}
+      if(!changed.length && !acaraLama){ BASE.head=head; saveBase(); break; }
       try{
         const files=changed.map(k=>({ path:DOC_FILES[k], b64:b64enc(JSON.stringify(merged[k],null,1)) }));
-        if(changed.includes("state")){ try{ rebuildReg(); files.push({ path:"acara.json", b64:b64enc(JSON.stringify(acaraData(),null,1)) }); }catch(e){ console.warn("acara.json",e); } }
-        const nh=await ghCommit(SYNC.dataRepo,SYNC.branch,head,files,"Takwim: kemas kini "+changed.join(", ")+" ("+(navigator.userAgentData&&navigator.userAgentData.mobile?"telefon":"peranti")+")");
-        BASE={ head:nh, doc:JSON.parse(JSON.stringify(merged)) }; saveBase(); break;
+        if(changed.includes("state") || acaraLama){ try{ rebuildReg(); files.push({ path:"acara.json", b64:b64enc(JSON.stringify(acaraData(),null,1)) }); }catch(e){ console.warn("acara.json",e); } }
+        if(!files.length){ BASE.head=head; saveBase(); break; }
+        const nh=await ghCommit(SYNC.dataRepo,SYNC.branch,head,files,"Takwim: kemas kini "+(changed.length?changed.join(", "):"acara")+" ("+(navigator.userAgentData&&navigator.userAgentData.mobile?"telefon":"peranti")+")");
+        BASE={ head:nh, doc:JSON.parse(JSON.stringify(merged)) }; saveBase();
+        if(files.some(f=>f.path==="acara.json")){ try{ localStorage.setItem(LS_ACARA,String(Date.now())); }catch(e){} }
+        break;
       }catch(e){ if(e.status===422||e.status===409){ BASE.head=null; continue; } throw e; }   // branch bergerak → tarik semula
     }
     lastSyncAt=Date.now(); setSyncUI("ok","Disegerak "+hhmm(lastSyncAt));
