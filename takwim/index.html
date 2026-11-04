@@ -333,6 +333,8 @@ button.danger{ background:#6e2b2b; color:#f7dcdc; border:1px solid #8a3a3a; }
 .tvrow img{ width:96px; height:54px; object-fit:cover; border-radius:6px; background:#0006; flex:none; }
 .tvrow .tn{ flex:1; min-width:0; font-size:13px; font-weight:700; }
 .tvrow .tn small{ display:block; font-weight:500; color:var(--paper-dim); font-size:11.5px; }
+.tgrow img{ width:54px; height:54px; }
+.tvst.tunggu{ background:#4a3a14; color:#ffe3a3; } .tvst.ubah{ background:#4a3a14; color:#ffe3a3; }
 .tvst{ font-size:10.5px; font-weight:800; border-radius:999px; padding:2px 8px; white-space:nowrap; }
 .tvst.aktif{ background:#1f4a32; color:#bff0cf; } .tvst.akan{ background:#2a3550; color:#cdd8ff; } .tvst.tamat{ background:#4a2020; color:#ffc9c9; }
 .mactions .hidden{ display:none; }
@@ -426,6 +428,7 @@ button.danger{ background:#6e2b2b; color:#f7dcdc; border:1px solid #8a3a3a; }
     <input type="file" id="fileSolat" accept=".json" style="display:none">
     <button id="btnPng" class="ghost">⬇️ PNG</button>
     <button id="btnTv" class="ghost" title="Saluran TV masjid (mySolatime)">📺 TV</button>
+    <button id="btnTg" class="ghost" title="Posting kumpulan Telegram (bot Imarah MKSLB)">✈️ Telegram</button>
     <button id="btnTerbit">🌐 Terbit</button>
   </div>
 
@@ -609,6 +612,20 @@ button.danger{ background:#6e2b2b; color:#f7dcdc; border:1px solid #8a3a3a; }
     <button id="sovTutup" type="button">✕ Tutup</button>
   </div>
   <iframe id="sovFrame" title="Pawaka Studio" allow="clipboard-write; web-share"></iframe>
+</div>
+
+<!-- MODAL: Posting Telegram -->
+<div id="tgModal" class="modal hidden">
+  <div class="mbox tvbox">
+    <h3>✈️ Posting kumpulan Telegram</h3>
+    <div class="ctx">Bot <b>Imarah MKSLB</b> hantar poster + teks ke kumpulan masjid: 8.00 pagi hari program (Kuliah Subuh &amp; Dhuha Muslimat: 9.00 malam sebelumnya), selang 2 minit dengan divider, khutbah sentiasa dulu pada hari Jumaat. Jadualkan dari 📣 Pengumuman setiap program.</div>
+    <div class="tvlhead">Akan datang</div>
+    <div id="tgListAkan"></div>
+    <div class="tvlhead">Selesai &amp; ditahan <small style="color:var(--paper-dim);font-weight:500">— 14 hari lepas</small></div>
+    <div id="tgListLepas"></div>
+    <div class="row" id="tgModalMsg" style="color:var(--paper-dim);font-size:12.5px;margin-top:6px"></div>
+    <div class="mactions" style="margin-top:12px"><button class="ghost" id="tgSegar" type="button">↻ Segarkan status</button><button class="ghost" id="tgTutup" type="button">Tutup</button></div>
+  </div>
 </div>
 
 <!-- MODAL: Saluran TV -->
@@ -2057,7 +2074,62 @@ async function tgBatal(){
   if(!(STATE.tg||{})[id] || !confirm("Batalkan jadual Telegram ini?")) return;
   delete STATE.tg[id]; saveState(); tgRender(); $("uTgMsg").textContent="Jadual dibatalkan.";
 }
+function tgStatusQ(q){                 /* [kelas, label] untuk satu jadual */
+  const h=TG_HANTAR[q.id], evs=eventsFor(q.y,q.m,q.d).filter(e=>q.titles.includes(e.title));
+  if(h && h.v===q.v && h.status==="ok") return ["aktif","✅ Dihantar "+tgFmt(h.at).split(",")[0]];
+  if(h && h.v===q.v && h.status==="tahan") return ["tamat","⏸ Ditahan"];
+  if(evs.length!==q.titles.length) return ["tamat","⚠️ Program tiada"];
+  if(evs.map(evCap).join()!==q.caps.join()) return ["ubah","⚠️ Maklumat berubah"];
+  if(h && h.v===q.v && h.status==="tunggu") return ["tunggu","⏳ Tunggu khutbah"];
+  return ["akan","🕗 Dijadual"];
+}
+function renderTgList(){
+  const akan=$("tgListAkan"), lepas=$("tgListLepas"); akan.innerHTML=""; lepas.innerHTML="";
+  const kini=Date.now(), had=kini-14*864e5;
+  const L=Object.values(STATE.tg||{}).sort((a,b)=> a.bila-b.bila);
+  const baris=(q,box)=>{
+    const [cls,lbl]=tgStatusQ(q), h=TG_HANTAR[q.id];
+    const r=document.createElement("div"); r.className="tvrow tgrow";
+    const im=document.createElement("img"); im.alt=""; if(q.thumb) im.src=q.thumb;
+    const tn=document.createElement("div"); tn.className="tn"; tn.textContent=q.titles.join(" + ");
+    const sm=document.createElement("small"); sm.textContent=HARI[new Date(q.y,q.m-1,q.d).getDay()]+" "+q.d+" "+BULAN_RINGKAS[q.m-1]+" · hantar "+tgFmt(q.bila).split(",")[0]+(h&&h.v===q.v&&h.status==="tahan"&&h.sebab?" · "+h.sebab:""); tn.appendChild(sm);
+    const st=document.createElement("span"); st.className="tvst "+cls; st.textContent=lbl;
+    const ed=document.createElement("button"); ed.type="button"; ed.className="ghost"; ed.textContent="✎"; ed.title="Buka pengumuman";
+    const evs=eventsFor(q.y,q.m,q.d).filter(e=>q.titles.includes(e.title));
+    ed.disabled=!evs.length;
+    ed.addEventListener("click",()=>{ $("tgModal").classList.add("hidden"); openUmum(q.y,q.m,q.d,evs); setTimeout(()=>$("uTg").scrollIntoView({block:"nearest"}),50); });
+    r.append(im,tn,st,ed);
+    if(!(h && h.v===q.v && h.status==="ok")){
+      const del=document.createElement("button"); del.type="button"; del.className="ghost"; del.textContent="🗑"; del.title="Batal jadual";
+      del.addEventListener("click",()=>{ if(!confirm("Batalkan jadual "+q.titles.join(" + ")+" ("+q.d+"/"+q.m+")?")) return; delete STATE.tg[q.id]; saveState(); renderTgList(); renderUpcoming(); });
+      r.appendChild(del);
+    }
+    box.appendChild(r);
+  };
+  L.forEach(q=>{ const h=TG_HANTAR[q.id], siap=h&&h.v===q.v&&(h.status==="ok"||h.status==="tahan"), hariLepas=new Date(q.y,q.m-1,q.d,23,59).getTime()<kini;
+    if(!siap && !hariLepas) baris(q,akan); else if(Math.max(q.bila,(h&&h.at)||0)>had) baris(q,lepas); });
+  Object.entries(TG_HANTAR).filter(([k])=>k.startsWith("takwim|")).sort().reverse().slice(0,2).forEach(([k,h])=>{
+    const [y,m]=k.slice(7).split("-").map(Number), r=document.createElement("div"); r.className="tvrow tgrow";
+    const tn=document.createElement("div"); tn.className="tn"; tn.textContent="📅 Takwim "+BULAN_TITLE[m-1]+" "+y;
+    const sm=document.createElement("small"); sm.textContent=h.nota||("dihantar & dipin "+tgFmt(h.at).split(",")[0]); tn.appendChild(sm);
+    const st=document.createElement("span"); st.className="tvst aktif"; st.textContent="📌 Dipin"; r.append(tn,st); lepas.appendChild(r); });
+  if(!akan.children.length){ const p=document.createElement("div"); p.className="dprev"; p.textContent="Tiada posting dijadualkan. Buka 📣 Pengumuman mana-mana program → ✈️ Jadual ke Telegram."; akan.appendChild(p); }
+  if(!lepas.children.length){ const p=document.createElement("div"); p.className="dprev"; p.textContent="Belum ada."; lepas.appendChild(p); }
+}
+async function tgMuatHantar(){
+  if(!syncReady()) return;
+  try{ const h=await ghHead(SYNC.dataRepo,SYNC.branch), r=await ghRead(SYNC.dataRepo,h,["tg/hantar.json"]); TG_HANTAR=JSON.parse(r["tg/hantar.json"]||"{}"); }catch(e){}
+}
+async function openTgList(){
+  $("tgModalMsg").textContent=syncReady()?"Menyemak status bot…":"Sambung sync (☁️) untuk lihat status hantaran.";
+  renderTgList(); $("tgModal").classList.remove("hidden");
+  await tgMuatHantar(); renderTgList(); $("tgModalMsg").textContent="";
+}
 function wireTg(){
+  $("btnTg").addEventListener("click",openTgList);
+  $("tgSegar").addEventListener("click",openTgList);
+  $("tgTutup").addEventListener("click",()=> $("tgModal").classList.add("hidden"));
+  $("tgModal").addEventListener("click",e=>{ if(e.target===$("tgModal")) $("tgModal").classList.add("hidden"); });
   $("uTgFile").addEventListener("change",async e=>{
     const f=e.target.files[0]; if(!f) return;
     try{ const src=URL.createObjectURL(f), j=await imgToJpeg(src,2048,2048,0.88), t=await imgToJpeg(src,160,160,0.7);
