@@ -647,7 +647,7 @@ button.danger{ background:#6e2b2b; color:#f7dcdc; border:1px solid #8a3a3a; }
       <input id="uKhTajuk" placeholder="Taip / tampal tajuk khutbah" autocomplete="off"></div>
     <div class="seg" id="uGaya"><button type="button" data-g="ringkas">Ringkas</button><button type="button" data-g="santai">Santai</button><button type="button" data-g="rasmi">Rasmi</button></div>
     <div class="ububble" id="uPreview"></div>
-    <div class="umeta"><span id="uCount"></span><span id="uStatus">Teks disalin sahaja · tiada mesej dihantar automatik</span></div>
+    <div class="umeta"><span id="uCount"></span><span id="uStatus">Salin untuk WhatsApp · Telegram ikut jadual ✈️ di bawah</span></div>
     <textarea id="uFallback" readonly hidden aria-label="Teks pengumuman untuk disalin"></textarea>
     <div class="utg" id="uTg">
       <div class="utg-h">✈️ Kumpulan Telegram <small id="uTgSt"></small></div>
@@ -1513,7 +1513,7 @@ function renderUmum(){
 function openUmum(y,m,d,evs){
   UMUM={...UMUM,y,m,d,evs};
   $("uCtx").textContent=uTarikh(y,m,d,evs)+" · "+evs.map(e=>e.tajuk).join(" + ");
-  $("uStatus").textContent="Teks disalin sahaja · tiada mesej dihantar automatik";
+  $("uStatus").textContent="Salin untuk WhatsApp · Telegram ikut jadual ✈️ di bawah";
   const kev=evs.find(e=>e.khutbah);
   $("uKhRow").classList.toggle("hidden",!kev);
   $("uKhTajuk").value=kev?(kev.sub||""):"";
