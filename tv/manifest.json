@@ -1,6 +1,6 @@
 {
  "v": 1,
- "dikemaskini": "2026-11-03T12:23:46.507Z",
+ "dikemaskini": "2026-11-04T04:31:34.974Z",
  "folder": "C:\\mysolatime\\17playlist\\0UMUM",
  "slaid": [
   {
@@ -9,13 +9,6 @@
    "mula": "2026-11-01",
    "tamat": "2026-11-30",
    "tajuk": "Takwim November 2026"
-  },
-  {
-   "fail": "10-12-mkslb-20261103-1-kuliah-maghrib-ust-wahidan-tluknh.jpg",
-   "url": "https://masjidkslb.com/tv/10-12-mkslb-20261103-1-kuliah-maghrib-ust-wahidan-tluknh.jpg",
-   "mula": "2026-11-03",
-   "tamat": "2026-11-03",
-   "tajuk": "Kuliah Maghrib — Ust Wahidan"
   },
   {
    "fail": "10-12-mkslb-20261104-1-kuliah-maghrib-ust-abd-aziz-10svqi.jpg",
@@ -149,6 +142,13 @@
    "mula": "2026-11-22",
    "tamat": "2026-11-24",
    "tajuk": "Kuliah Maghrib — Ust Hazren"
+  },
+  {
+   "fail": "10-12-mkslb-20261125-1-kuliah-maghrib-ust-hafizin-psuvdi.jpg",
+   "url": "https://masjidkslb.com/tv/10-12-mkslb-20261125-1-kuliah-maghrib-ust-hafizin-psuvdi.jpg",
+   "mula": "2026-11-22",
+   "tamat": "2026-11-25",
+   "tajuk": "Kuliah Maghrib — Ust Hafizin"
   }
  ]
 }
