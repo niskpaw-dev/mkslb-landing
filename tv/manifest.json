@@ -1,6 +1,6 @@
 {
  "v": 1,
- "dikemaskini": "2026-11-04T06:55:40.922Z",
+ "dikemaskini": "2026-11-04T23:37:19.931400Z",
  "folder": "C:\\mysolatime\\17playlist\\0UMUM",
  "slaid": [
   {
@@ -142,6 +142,34 @@
    "mula": "2026-11-22",
    "tamat": "2026-11-24",
    "tajuk": "Kuliah Maghrib — Ust Hazren"
+  },
+  {
+   "fail": "10-12-mkslb-20261125-1-kuliah-maghrib-ust-hafizin-psuvdi.jpg",
+   "url": "https://masjidkslb.com/tv/10-12-mkslb-20261125-1-kuliah-maghrib-ust-hafizin-psuvdi.jpg",
+   "mula": "2026-11-22",
+   "tamat": "2026-11-25",
+   "tajuk": "Kuliah Maghrib — Ust Hafizin"
+  },
+  {
+   "fail": "10-12-mkslb-20261126-1-malam-mustajab-doa-imam-bertugas-1sgt1o.jpg",
+   "url": "https://masjidkslb.com/tv/10-12-mkslb-20261126-1-malam-mustajab-doa-imam-bertugas-1sgt1o.jpg",
+   "mula": "2026-11-22",
+   "tamat": "2026-11-26",
+   "tajuk": "Malam Mustajab Doa — Imam Bertugas"
+  },
+  {
+   "fail": "10-12-mkslb-20261127-2-kuliah-zohor-muslimat-ustazah-sh-1y9c6f.jpg",
+   "url": "https://masjidkslb.com/tv/10-12-mkslb-20261127-2-kuliah-zohor-muslimat-ustazah-sh-1y9c6f.jpg",
+   "mula": "2026-11-22",
+   "tamat": "2026-11-27",
+   "tajuk": "Kuliah Zohor Muslimat — Ustazah Shamsiah"
+  },
+  {
+   "fail": "10-12-mkslb-20261127-3-kuliah-maghrib-ust-aiman-618128.jpg",
+   "url": "https://masjidkslb.com/tv/10-12-mkslb-20261127-3-kuliah-maghrib-ust-aiman-618128.jpg",
+   "mula": "2026-11-22",
+   "tamat": "2026-11-27",
+   "tajuk": "Kuliah Maghrib — Ust Aiman"
   }
  ]
 }
