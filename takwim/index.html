@@ -2148,7 +2148,7 @@ function renderTgList(){
     const r=document.createElement("div"); r.className="tvrow tgrow";
     let im; if(q.thumb){ im=document.createElement("img"); im.alt=""; im.src=q.thumb; } else { im=document.createElement("div"); im.className="tgnoimg"; im.textContent=q.jenis==="bebas"?"📝":"🖼️"; }
     const tn=document.createElement("div"); tn.className="tn"; tn.textContent=(q.jenis==="bebas"?"📝 ":"")+q.titles.join(" + ");
-    const sm=document.createElement("small"); sm.textContent=HARI[new Date(q.y,q.m-1,q.d).getDay()]+" "+q.d+" "+BULAN_RINGKAS[q.m-1]+" · hantar "+tgFmt(q.bila).split(",")[0]+(h&&h.v===q.v&&h.status==="tahan"&&h.sebab?" · "+h.sebab:""); tn.appendChild(sm);
+    const sm=document.createElement("small"); sm.textContent=(q.jenis==="bebas"?"":"📅 "+HARI[new Date(q.y,q.m-1,q.d).getDay()]+" "+q.d+" "+BULAN_RINGKAS[q.m-1]+" · ")+"✈️ hantar "+tgFmt(q.bila)+(h&&h.v===q.v&&h.status==="tahan"&&h.sebab?" · "+h.sebab:""); tn.appendChild(sm);
     const st=document.createElement("span"); st.className="tvst "+cls; st.textContent=lbl;
     const ed=document.createElement("button"); ed.type="button"; ed.className="ghost"; ed.textContent="✎"; ed.title="Buka pengumuman";
     const evs=eventsFor(q.y,q.m,q.d).filter(e=>q.titles.includes(e.title));
