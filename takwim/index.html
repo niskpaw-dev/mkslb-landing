@@ -2690,7 +2690,19 @@ renderAll();
 window.addEventListener("resize",fitPreview);
 $("btnPng").addEventListener("click",exportPng);
 $("btnTerbit").addEventListener("click",terbit);
-syncNow("buka");
+/* pautan terus dari bot Imarah: #khutbah=2026-11-6 → buka ruang tajuk khutbah hari itu */
+async function bukaPautan(){
+  const mt=/^#khutbah=(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(location.hash||""); if(!mt) return;
+  history.replaceState(null,"",location.pathname+location.search);
+  const y=+mt[1], m=+mt[2], d=+mt[3];
+  if(syncReady()){ try{ await syncNow("pautan"); }catch(e){} }
+  const evs=eventsFor(y,m,d).filter(e=>e.khutbah);
+  if(!evs.length){ setStatus("Tiada khutbah pada "+d+"/"+m+"/"+y,true); return; }
+  openUmum(y,m,d,evs);
+  setTimeout(()=>{ const f=$("uKhTajuk"); f.scrollIntoView({block:"center"}); f.focus(); },120);
+}
+window.addEventListener("hashchange",bukaPautan);
+if(/^#khutbah=/.test(location.hash||"")) bukaPautan(); else syncNow("buka");
 </script>
 </body>
 </html>
