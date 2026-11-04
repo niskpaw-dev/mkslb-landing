@@ -802,8 +802,25 @@ function setStatus(msg,sticky){
   if(statusTimer) clearTimeout(statusTimer);
   if(!sticky) statusTimer=setTimeout(()=>{ el.textContent="Klik mana-mana sel untuk edit. Semua perubahan disimpan automatik."; },3500);
 }
-function saveState(){ try{ localStorage.setItem(LS_STATE,JSON.stringify(STATE)); setStatus("Disimpan ✓"); if(typeof queueSync==="function") queueSync(); }
-  catch(e){ setStatus("⚠️ Gagal simpan — storan browser penuh?",true); } }
+/* Simpan STATE ke storan pelayar. Jika storan penuh: buang salinan asas sync dulu (beri ruang) dan cuba lagi.
+   Peraturan keselamatan: asas sync yang disimpan TIDAK boleh lebih baru daripada STATE yang disimpan —
+   jika STATE gagal disimpan, asas sync dibuang supaya buka seterusnya ambil data awan sepenuhnya. */
+let LS_STATE_OK=true;
+const LS_BASE_KEY="takwim-mkslb-syncbase-v1", LS_VER="takwim-mkslb-state-ver";
+let STATE_VER=0; try{ STATE_VER=+localStorage.getItem(LS_VER)||0; }catch(e){}
+const STATE_VER_DISIMPAN=STATE_VER;              /* versi STATE yang benar-benar ada dalam storan semasa dibuka */
+function simpanState(){
+  const v=JSON.stringify(STATE), ver=++STATE_VER;
+  const tulis=()=>{ localStorage.setItem(LS_STATE,v); localStorage.setItem(LS_VER,String(ver)); };
+  try{ tulis(); LS_STATE_OK=true; return true; }catch(e){}
+  try{ localStorage.removeItem(LS_BASE_KEY); tulis(); LS_STATE_OK=true; console.warn("Storan penuh: asas sync dibuang untuk beri ruang"); return true; }catch(e){}
+  LS_STATE_OK=false; try{ localStorage.removeItem(LS_BASE_KEY); }catch(e){}
+  return false;
+}
+function saveState(){
+  if(simpanState()) setStatus("Disimpan ✓"); else setStatus("⚠️ Storan pelayar penuh — perubahan disegerak ke awan sahaja",true);
+  if(typeof queueSync==="function") queueSync();
+}
 function savePhotos(){ try{ localStorage.setItem(LS_PHOTOS,JSON.stringify(PHOTOS)); if(typeof queueSync==="function") queueSync(); }
   catch(e){ alert("Storan browser penuh — foto tidak dapat disimpan."); } }
 
@@ -1757,7 +1774,7 @@ async function tvHantar(){
       const urut=e.y&&F.ev?Math.max(1,eventsFor(e.y,e.m,e.d).findIndex(x=>x.title===F.ev.title)+1):1;   /* susunan masa dalam hari */
       e.tgl=(e.y?(e.y+pad2(e.m)+pad2(e.d)):(mula||isoOfD(new Date())).replace(/-/g,""))+"-"+urut; e.slug=slug(tajuk).slice(0,32)||"slaid"; e.ver=hash6(b64);
       e.fail=tvNama(e);
-      e.thumb=(await imgToJpeg(F.img.url,320,180,0.72)).url;
+      e.thumb=(await imgToJpeg(F.img.url,192,108,0.6)).url;
       add.push({ path:"tv/"+e.fail, b64 });
     }
     if(!F.img && e.fail) e.fail=e.fail;      /* nama baru (jika kedudukan berubah) diurus tvRename */
@@ -2189,7 +2206,7 @@ function wireTg(){
   $("tgSegar").addEventListener("click",openTgList);
   $("tgTutup").addEventListener("click",()=> $("tgModal").classList.add("hidden"));
   $("tgbFile").addEventListener("change",async e=>{ const f=e.target.files[0]; if(!f) return;
-    try{ const src=URL.createObjectURL(f), j=await imgToJpeg(src,2048,2048,0.88), t=await imgToJpeg(src,160,160,0.7);
+    try{ const src=URL.createObjectURL(f), j=await imgToJpeg(src,2048,2048,0.88), t=await imgToJpeg(src,120,120,0.6);
       TGB.img={ url:j.url, thumb:t.url }; TGB.tanpaGambar=false; $("tgbThumb").src=t.url; $("tgbThumb").hidden=false; $("tgbBuangGambar").classList.remove("hidden"); $("tgbFileInfo").textContent=j.w+"×"+j.h; }
     catch(err){ $("tgbFileInfo").textContent="⚠️ "+err.message; } });
   $("tgbBuangGambar").addEventListener("click",()=>{ TGB.img=null; TGB.tanpaGambar=true; $("tgbFile").value=""; $("tgbThumb").hidden=true; $("tgbBuangGambar").classList.add("hidden"); $("tgbFileInfo").textContent="tanpa gambar — teks sahaja"; });
@@ -2203,7 +2220,7 @@ function wireTg(){
   $("tgModal").addEventListener("click",e=>{ if(e.target===$("tgModal")) $("tgModal").classList.add("hidden"); });
   $("uTgFile").addEventListener("change",async e=>{
     const f=e.target.files[0]; if(!f) return;
-    try{ const src=URL.createObjectURL(f), j=await imgToJpeg(src,2048,2048,0.88), t=await imgToJpeg(src,160,160,0.7);
+    try{ const src=URL.createObjectURL(f), j=await imgToJpeg(src,2048,2048,0.88), t=await imgToJpeg(src,120,120,0.6);
       TGF={ url:j.url, thumb:t.url }; $("uTgThumb").src=t.url; $("uTgThumb").hidden=false; $("uTgMsg").textContent="Poster dipilih ("+j.w+"×"+j.h+")."; }
     catch(err){ $("uTgMsg").textContent="⚠️ "+err.message; }
   });
@@ -2404,6 +2421,8 @@ const GH_API="https://api.github.com";
 const SYNC_DEF={ token:"", dataRepo:"niskpaw-dev/mkslb-takwim-data", pubRepo:"niskpaw-dev/mkslb-landing", branch:"main" };
 let SYNC=Object.assign({},SYNC_DEF); try{ Object.assign(SYNC, JSON.parse(localStorage.getItem(LS_SYNC)||"{}")); }catch(e){}
 let BASE=null; try{ BASE=JSON.parse(localStorage.getItem(LS_BASE)||"null"); }catch(e){}
+/* asas sync hanya dipercayai jika ia sepadan dengan STATE yang tersimpan (bukan lebih baru) — jika tidak, data awan menang */
+if(BASE && !(BASE.ver && STATE_VER_DISIMPAN>=BASE.ver)){ console.warn("Asas sync tidak sepadan dengan data tersimpan — guna data awan"); BASE=null; }
 let syncTimer=null, syncBusy=false, syncAgain=false, lastSyncAt=0;
 const VIEW_KEYS=["mode","bulan","tahun","weekAnchor"];
 const DOC_FILES={ state:"state.json", photos:"photos.json", solat:"solat.json" };
@@ -2422,7 +2441,9 @@ function applyDoc(doc){
   const view={}; VIEW_KEYS.forEach(k=> view[k]=STATE[k]);
   STATE=Object.assign(defaultState(), doc.state||{}, view);
   PHOTOS=doc.photos||{}; SOLAT_EXTRA=doc.solat||{};
-  try{ localStorage.setItem(LS_STATE,JSON.stringify(STATE)); localStorage.setItem(LS_PHOTOS,JSON.stringify(PHOTOS)); localStorage.setItem(LS_SOLAT,JSON.stringify(SOLAT_EXTRA)); }catch(e){}
+  simpanState();
+  try{ localStorage.setItem(LS_PHOTOS,JSON.stringify(PHOTOS)); }catch(e){ try{ localStorage.removeItem(LS_BASE_KEY); }catch(_){} }
+  try{ localStorage.setItem(LS_SOLAT,JSON.stringify(SOLAT_EXTRA)); }catch(e){}
 }
 /* gabungan 3-hala: perubahan sebelah sahaja diambil; konflik sebenar → `prefer` menang */
 function merge3(base,a,b,prefer){
@@ -2489,8 +2510,11 @@ async function remoteDoc(head){
   doc.solat = raw[DOC_FILES.solat]!==undefined ? parse(raw[DOC_FILES.solat],{}) : undefined;
   return doc;
 }
-function saveBase(){ try{ localStorage.setItem(LS_BASE,JSON.stringify(BASE)); }catch(e){ /* foto besar: simpan tanpa foto */
-  try{ localStorage.setItem(LS_BASE,JSON.stringify({head:BASE.head, doc:{state:BASE.doc.state, solat:BASE.doc.solat}, nophotos:true})); }catch(e2){} } }
+function saveBase(){
+  if(!LS_STATE_OK){ try{ localStorage.removeItem(LS_BASE); }catch(e){} return; }   /* STATE tak tersimpan → jangan simpan asas yang lebih baru */
+  BASE.ver=STATE_VER;
+  try{ localStorage.setItem(LS_BASE,JSON.stringify(BASE)); }catch(e){ /* foto besar: simpan tanpa foto */
+  try{ localStorage.setItem(LS_BASE,JSON.stringify({head:BASE.head, doc:{state:BASE.doc.state, solat:BASE.doc.solat}, nophotos:true, ver:BASE.ver})); }catch(e2){} } }
 
 /* tarik → gabung → tolak. Dipanggil semasa buka, kembali ke tab, berkala, dan selepas setiap perubahan. */
 async function syncNow(reason){
@@ -2506,13 +2530,13 @@ async function syncNow(reason){
         const remote=await remoteDoc(head);
         const empty=remote.state===undefined;
         if(empty) merged=local;                                   // repo baru: data peranti ini jadi asas
-        else if(!base) merged={ state:merge3({},local.state,remote.state,"remote"),   // peranti baru: awan menang
+        else if(!base) merged={ state:remote.state,                                    // peranti baru / asas tiada: awan menang sepenuhnya
                                 photos:merge3({},local.photos,remote.photos||{},"remote"),
                                 solat:merge3({},local.solat,remote.solat||{},"remote") };
         else merged={ state:merge3(base.state,local.state,remote.state,"local"),
                       photos:merge3(base.photos||{},local.photos,remote.photos||{},"local"),
                       solat:merge3(base.solat||{},local.solat,remote.solat||{},"local") };
-        if(jstr(merged)!==jstr(local)){ applyDoc(merged); if(migrateLegacy()){ try{ localStorage.setItem(LS_STATE,JSON.stringify(STATE)); }catch(e){} merged.state=localDoc().state; } renderAll(); }
+        if(jstr(merged)!==jstr(local)){ applyDoc(merged); if(migrateLegacy()){ simpanState(); merged.state=localDoc().state; } renderAll(); }
         BASE={ head, doc: empty?{state:undefined,photos:undefined,solat:undefined}:{state:remote.state,photos:remote.photos||{},solat:remote.solat||{}} };
       }
       const changed=Object.keys(DOC_FILES).filter(k=> jstr(merged[k])!==jstr(BASE.doc[k]));
@@ -2658,7 +2682,7 @@ async function terbit(){
     const tvj=await imgToJpeg(out.toDataURL("image/png"),1920,1080,0.9), tvb=tvj.url.split(",")[1], tid="takwim|"+y+"-"+m;
     const tvE={ id:tid, jenis:"takwim", tajuk:"Takwim "+label, y:0,m:0,d:0, evTitle:"",
       ym:""+y+pad2(m), ver:hash6(tvb), fail:"", mula:y+"-"+pad2(m)+"-01", tamat:y+"-"+pad2(m)+"-"+pad2(new Date(y,m,0).getDate()),
-      thumb:(await imgToJpeg(tvj.url,320,180,0.72)).url };
+      thumb:(await imgToJpeg(tvj.url,192,108,0.6)).url };
     tvE.fail=tvNama(tvE);
     if(!STATE.tv) STATE.tv={}; STATE.tv[tid]=tvE; saveState();
     const files=[ { path:"takwim-"+BULAN_RINGKAS[m-1].toLowerCase()+"-"+y+".png", b64:png },
