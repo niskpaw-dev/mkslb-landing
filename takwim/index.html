@@ -1648,6 +1648,10 @@ window.addEventListener("message",e=>{
    STATE.tv[id] = {id, fail, tajuk, mula, tamat, thumb, y,m,d, evTitle, jenis:"poster"|"takwim"}
    Gambar disimpan dalam repo laman di tv/; tv/manifest.json dibaca skrip mini PC (C:\mysolatime\17playlist\0UMUM). */
 const TV_BASE="https://masjidkslb.com/tv/";
+/* gambar kecil slaid disimpan sebagai fail di laman (tvkecil/<ver>.jpg), bukan dalam data takwim — data kekal kecil.
+   Mini PC tidak menyentuh folder ini (skrip ikut tv/manifest.json sahaja). */
+const TV_KECIL="https://masjidkslb.com/tvkecil/";
+const tvThumb=e=> e ? (e.thumb || (e.ver ? TV_KECIL+e.ver+".jpg" : "")) : "";
 const isoOfD=d=> d.getFullYear()+"-"+pad2(d.getMonth()+1)+"-"+pad2(d.getDate());
 const tvAll=()=> Object.values(STATE.tv||{}).sort((a,b)=> a.fail<b.fail?-1:1);
 const tvIdEv=(y,m,d,ev)=> y+"-"+m+"-"+d+"|"+ev.title;
@@ -1694,11 +1698,19 @@ async function tvLain(head,ren){
 /* fail untuk satu commit tv/: tambahan + tukar nama + manifest (gabung slaid peranti lain) + buang yang tak diperlukan */
 async function tvSusun(head,blobs,tambah){
   const ada=Object.keys(blobs), ren=tvRename(blobs), lain=await tvLain(head,ren);
+  /* pindah gambar kecil lama (dalam data) ke fail tvkecil/, kemudian buang dari data */
+  const kecil=await ghBlobs(SYNC.pubRepo,head,"tvkecil/"), pindah=[];
+  tvAll().forEach(e=>{ if(e.thumb && e.ver && /^data:image\/jpeg;base64,/.test(e.thumb)){
+    if(!kecil["tvkecil/"+e.ver+".jpg"]) pindah.push({ path:"tvkecil/"+e.ver+".jpg", b64:e.thumb.split(",")[1] }); delete e.thumb; } });
+  const verGuna=new Set(tvAll().map(e=>e.ver).concat(lain.map(x=>(x.fail.match(/-([a-z0-9]{1,6})\.jpg$/)||[])[1])).filter(Boolean));
+  const buangKecil=Object.keys(kecil).filter(k=>{ const v=(k.match(/^tvkecil\/([a-z0-9]{1,6})\.jpg$/)||[])[1];
+    return v && !verGuna.has(v) && !(tambah||[]).some(f=>f.path===k); }).map(k=>({path:k,del:true}));
+  tambah=(tambah||[]).concat(pindah);
   const man=tvManifest(); man.slaid=man.slaid.concat(lain.map(x=>({ fail:x.fail, url:TV_BASE+x.fail, mula:x.mula||"", tamat:x.tamat||"", tajuk:x.tajuk||"" })));
   const simpan=new Set(tvAll().map(e=>"tv/"+e.fail).concat(lain.map(x=>"tv/"+x.fail)).concat(["tv/manifest.json"]).concat((tambah||[]).map(f=>f.path)));
   if(lain.length) console.warn("Saluran TV: "+lain.length+" slaid dari peranti lain dikekalkan",lain.map(x=>x.fail));
   return (tambah||[]).concat(ren).concat([{ path:"tv/manifest.json", b64:b64enc(JSON.stringify(man,null,1)) }])
-    .concat(ada.filter(x=>!simpan.has(x)).map(x=>({path:x,del:true})));
+    .concat(ada.filter(x=>!simpan.has(x)).map(x=>({path:x,del:true}))).concat(buangKecil);
 }
 /* satu commit: gambar baru + manifest; buang fail tv/ yang tiada lagi dalam senarai */
 async function tvCommit(add,msg){
@@ -1738,7 +1750,7 @@ function tvLoadForm(id,ctx){
   const dd=ctx&&ctx.ev?tvDefaultDates(ctx.y,ctx.m,ctx.d):{mula:isoOfD(new Date()),tamat:""};
   $("tvMula").value=e?e.mula:dd.mula; $("tvTamat").value=e?e.tamat:dd.tamat;
   $("tvPosSlaid").value=e&&e.pos?e.pos:""; $("tvPosSlaid").disabled=!!(e&&e.jenis==="takwim");
-  $("tvPrev").src=e?e.thumb||"":""; $("tvPrev").classList.toggle("on",!!(e&&e.thumb));
+  $("tvPrev").src=tvThumb(e); $("tvPrev").classList.toggle("on",!!tvThumb(e));
   $("tvFile").value=""; $("tvFileInfo").textContent=e?"(kekal gambar sedia ada — pilih untuk ganti)":"";
   $("tvBuang").classList.toggle("hidden",!e);
   $("tvHantar").textContent=e?"💾 Simpan perubahan":"📺 Hantar ke TV";
@@ -1751,7 +1763,7 @@ function renderTvList(){
   if(!L.length){ const p=document.createElement("div"); p.className="dprev"; p.textContent="Belum ada slaid. Takwim bulanan akan masuk sendiri selepas 🌐 Terbit."; box.appendChild(p); return; }
   L.forEach(e=>{
     const r=document.createElement("div"); r.className="tvrow";
-    const im=document.createElement("img"); im.alt=""; if(e.thumb) im.src=e.thumb;
+    const im=document.createElement("img"); im.alt=""; im.loading="lazy"; if(tvThumb(e)) im.src=tvThumb(e);
     const tn=document.createElement("div"); tn.className="tn"; tn.textContent=e.tajuk||e.fail;
     const sm=document.createElement("small"); sm.textContent=tvJulat(e)+" · "+e.fail; tn.appendChild(sm);
     const [cls,lbl]=tvStatus(e), st=document.createElement("span"); st.className="tvst "+cls; st.textContent=lbl;
@@ -1797,8 +1809,8 @@ async function tvHantar(){
       if(lama && lama.fail) TV_BUANG.add(lama.fail);                    /* versi lama diganti */
       e.tgl=(e.y?(e.y+pad2(e.m)+pad2(e.d)):(mula||isoOfD(new Date())).replace(/-/g,""))+"-"+urut; e.slug=slug(tajuk).slice(0,32)||"slaid"; e.ver=hash6(b64);
       e.fail=tvNama(e);
-      e.thumb=(await imgToJpeg(F.img.url,192,108,0.6)).url;
-      add.push({ path:"tv/"+e.fail, b64 });
+      delete e.thumb;
+      add.push({ path:"tv/"+e.fail, b64 }, { path:"tvkecil/"+e.ver+".jpg", b64:(await imgToJpeg(F.img.url,192,108,0.6)).url.split(",")[1] });
     }
     if(!F.img && e.fail) e.fail=e.fail;      /* nama baru (jika kedudukan berubah) diurus tvRename */
     if(!STATE.tv) STATE.tv={}; STATE.tv[e.id]=e;
@@ -2705,12 +2717,13 @@ async function terbit(){
     const tvj=await imgToJpeg(out.toDataURL("image/png"),1920,1080,0.9), tvb=tvj.url.split(",")[1], tid="takwim|"+y+"-"+m;
     const tvE={ id:tid, jenis:"takwim", tajuk:"Takwim "+label, y:0,m:0,d:0, evTitle:"",
       ym:""+y+pad2(m), ver:hash6(tvb), fail:"", mula:y+"-"+pad2(m)+"-01", tamat:y+"-"+pad2(m)+"-"+pad2(new Date(y,m,0).getDate()),
-      thumb:(await imgToJpeg(tvj.url,192,108,0.6)).url };
+      kecil:(await imgToJpeg(tvj.url,192,108,0.6)).url };
     tvE.fail=tvNama(tvE);
+    const kecilB64=tvE.kecil.split(",")[1]; delete tvE.kecil;
     if(!STATE.tv) STATE.tv={}; STATE.tv[tid]=tvE; saveState();
     const files=[ { path:"takwim-"+BULAN_RINGKAS[m-1].toLowerCase()+"-"+y+".png", b64:png },
                   { path:"takwim-data.json", b64:b64enc(JSON.stringify(webData(),null,1)) },
-                  { path:"tv/"+tvE.fail, b64:tvb } ];
+                  { path:"tv/"+tvE.fail, b64:tvb }, { path:"tvkecil/"+tvE.ver+".jpg", b64:kecilB64 } ];
     setStatus("Menghantar ke laman masjid…",true);
     for(let attempt=0;;attempt++){
       try{ const head=await ghHead(SYNC.pubRepo,SYNC.branch), blobs=await ghBlobs(SYNC.pubRepo,head,"tv/"), kini=isoOfD(new Date());
