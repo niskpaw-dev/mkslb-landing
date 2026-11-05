@@ -2474,6 +2474,7 @@ function localDoc(){
 }
 function applyDoc(doc){
   const view={}; VIEW_KEYS.forEach(k=> view[k]=STATE[k]);
+  doc=JSON.parse(JSON.stringify(doc));                  /* jangan kongsi objek dengan BASE / remote */
   STATE=Object.assign(defaultState(), doc.state||{}, view);
   PHOTOS=doc.photos||{}; SOLAT_EXTRA=doc.solat||{};
   simpanState();
@@ -2572,7 +2573,10 @@ async function syncNow(reason){
                       photos:merge3(base.photos||{},local.photos,remote.photos||{},"local"),
                       solat:merge3(base.solat||{},local.solat,remote.solat||{},"local") };
         if(jstr(merged)!==jstr(local)){ applyDoc(merged); if(migrateLegacy()){ simpanState(); merged.state=localDoc().state; } renderAll(); }
-        BASE={ head, doc: empty?{state:undefined,photos:undefined,solat:undefined}:{state:remote.state,photos:remote.photos||{},solat:remote.solat||{}} };
+        /* salinan berasingan: STATE boleh berkongsi objek dengan `remote` selepas applyDoc — jika BASE juga
+           merujuk objek yang sama, perubahan setempat (STATE.tv[..]=, STATE.tg[..]=) turut mengubah BASE,
+           tak dikesan sebagai perubahan, tak dihantar, dan hilang senyap bila awan bergerak. */
+        BASE={ head, doc: empty?{state:undefined,photos:undefined,solat:undefined}:JSON.parse(JSON.stringify({state:remote.state,photos:remote.photos||{},solat:remote.solat||{}})) };
       }
       const changed=Object.keys(DOC_FILES).filter(k=> jstr(merged[k])!==jstr(BASE.doc[k]));
       let acaraLama=false; try{ acaraLama = Date.now()-(+localStorage.getItem(LS_ACARA)||0) > 6*3600e3; }catch(e){}
