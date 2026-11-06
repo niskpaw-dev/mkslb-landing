@@ -806,7 +806,8 @@ function setStatus(msg,sticky){
    Peraturan keselamatan: asas sync yang disimpan TIDAK boleh lebih baru daripada STATE yang disimpan —
    jika STATE gagal disimpan, asas sync dibuang supaya buka seterusnya ambil data awan sepenuhnya. */
 let LS_STATE_OK=true;
-const LS_BASE_KEY="takwim-mkslb-syncbase-v1", LS_VER="takwim-mkslb-state-ver";
+const LS_BASE_KEY="takwim-mkslb-syncbase-v2", LS_VER="takwim-mkslb-state-ver";
+try{ localStorage.removeItem("takwim-mkslb-syncbase-v1"); }catch(e){}   /* v1 mungkin tercemar (pepijat berkongsi objek, sebelum 5 Nov) → awan menang sekali */
 let STATE_VER=0; try{ STATE_VER=+localStorage.getItem(LS_VER)||0; }catch(e){}
 const STATE_VER_DISIMPAN=STATE_VER;              /* versi STATE yang benar-benar ada dalam storan semasa dibuka */
 function simpanState(){
@@ -2451,7 +2452,7 @@ async function exportPng(){
    Dokumen yang di-sync: state.json (tetapan takwim, tanpa pilihan paparan peranti),
    photos.json (foto custom), solat.json (waktu solat yang di-import).
    Konflik antara peranti diselesaikan dengan gabungan 3-hala ikut medan. */
-const LS_SYNC="takwim-mkslb-sync-v1", LS_BASE="takwim-mkslb-syncbase-v1";
+const LS_SYNC="takwim-mkslb-sync-v1", LS_BASE="takwim-mkslb-syncbase-v2";
 const GH_API="https://api.github.com";
 const SYNC_DEF={ token:"", dataRepo:"niskpaw-dev/mkslb-takwim-data", pubRepo:"niskpaw-dev/mkslb-landing", branch:"main" };
 let SYNC=Object.assign({},SYNC_DEF); try{ Object.assign(SYNC, JSON.parse(localStorage.getItem(LS_SYNC)||"{}")); }catch(e){}
