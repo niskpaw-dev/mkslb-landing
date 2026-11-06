@@ -2596,13 +2596,19 @@ async function syncNow(reason){
     return true;
   }catch(e){
     console.error(e);
-    const msg = e.status===401?"Token tidak sah": e.status===403?"Token tiada akses": e.status===404?"Repo tidak dijumpai": (!navigator.onLine?"Luar talian — akan cuba lagi":"Gagal sync");
-    setSyncUI("err",msg); return false;
+    /* 403/429 dengan "rate limit" = had kadar GitHub sementara (bukan token rosak) → cuba semula sendiri */
+    const hadKadar = (e.status===403||e.status===429) && /rate limit|abuse|secondary/i.test(e.message||"");
+    const msg = hadKadar?"Had GitHub sementara — cuba semula dalam 1 minit": e.status===401?"Token tidak sah": e.status===403?"Token tiada akses": e.status===404?"Repo tidak dijumpai": (!navigator.onLine?"Luar talian — akan cuba lagi":"Gagal sync");
+    setSyncUI(hadKadar?"busy":"err",msg);
+    try{ const el=$("btnSync"); if(el) el.title=String(e.message||"").slice(0,200); }catch(_){}
+    if(hadKadar){ clearTimeout(syncHadTimer); syncHadTimer=setTimeout(()=>syncNow("had-kadar"),60e3); }
+    return false;
   }finally{
     syncBusy=false;
     if(syncAgain){ syncAgain=false; setTimeout(()=>syncNow("ulang"),300); }
   }
 }
+let syncHadTimer=null;
 function queueSync(){ if(!syncReady()) return; clearTimeout(syncTimer); setSyncUI("busy","Menunggu simpan…"); syncTimer=setTimeout(()=>syncNow("ubah"),1500); }
 
 /* ── modal sync ── */
