@@ -818,11 +818,25 @@ function simpanState(){
   LS_STATE_OK=false; try{ localStorage.removeItem(LS_BASE_KEY); }catch(e){}
   return false;
 }
+/* ── tanda suntingan pengguna: STATE._at (dan _atFoto) ──
+   Sync hanya menerima perubahan setempat jika _at lebih baru daripada asas (sync terakhir). Storan peranti yang
+   penuh/beku boleh menyimpan salinan lama bersama asas lebih baru (tablet, 6–8 Nov) — tanpa tanda ini, beza itu
+   disangka suntingan lalu ditolak ke awan. Tukar paparan (VIEW_KEYS) dan kerja automatik tidak ditanda. */
+let INPUT_AT=0, SIG_STATE=null;
+["pointerdown","keydown","input","change"].forEach(ev=>document.addEventListener(ev,()=>{ INPUT_AT=Date.now(); },true));
+function sigState(){ let vk=[]; try{ vk=VIEW_KEYS; }catch(e){} const st={}; Object.keys(STATE).forEach(k=>{ if(!vk.includes(k) && k!=="_at" && k!=="_atFoto") st[k]=STATE[k]; }); return JSON.stringify(st); }
+function tandaUbah(foto){
+  let ba=0, bf=0; try{ const s=BASE&&BASE.doc&&BASE.doc.state; ba=+(s&&s._at)||0; bf=+(s&&s._atFoto)||0; }catch(e){}
+  STATE._at=Math.max(Date.now(), ba+1, +(STATE._at)||0); if(foto) STATE._atFoto=Math.max(Date.now(), bf+1, +(STATE._atFoto)||0);
+}
 function saveState(){
+  const sg=sigState();
+  if(SIG_STATE!==null && sg!==SIG_STATE && Date.now()-INPUT_AT<10*60e3) tandaUbah();
+  SIG_STATE=sg;
   if(simpanState()) setStatus("Disimpan ✓"); else setStatus("⚠️ Storan pelayar penuh — perubahan disegerak ke awan sahaja",true);
   if(typeof queueSync==="function") queueSync();
 }
-function savePhotos(){ try{ localStorage.setItem(LS_PHOTOS,JSON.stringify(PHOTOS)); if(typeof queueSync==="function") queueSync(); }
+function savePhotos(){ tandaUbah(true); simpanState(); try{ localStorage.setItem(LS_PHOTOS,JSON.stringify(PHOTOS)); if(typeof queueSync==="function") queueSync(); }
   catch(e){ alert("Storan browser penuh — foto tidak dapat disimpan."); } }
 
 const ovKey=(y,m)=> y+"-"+m;
@@ -1684,6 +1698,7 @@ function tvManifest(){
    tetapi belum sampai ke sini) dikekalkan — hanya slaid yang tamat, dibuang dengan sengaja, atau diganti versi baru dibuang. */
 const TV_BUANG=new Set();
 async function syncPasti(sebab){
+  tandaUbah(); simpanState(); SIG_STATE=sigState();
   for(let i=0;i<40 && syncBusy;i++) await new Promise(r=>setTimeout(r,250));
   if(!(await syncNow(sebab))) throw new Error("sync gagal — semak sambungan internet, kemudian cuba lagi");
 }
@@ -2126,7 +2141,7 @@ async function tgJadual(){
 }
 /* simpan jadual → sync state → commit gambar/penanda ke tg/ (mencetus bot serta-merta) */
 async function tgHantarKeBot(q, img, label){
-  saveState(); clearTimeout(syncTimer);
+  tandaUbah(); saveState(); clearTimeout(syncTimer);
   if(!(await syncNow("tg"))) throw new Error("sync gagal");
   for(let attempt=0;;attempt++){
     try{ const head=await ghHead(SYNC.dataRepo,SYNC.branch);
@@ -2400,7 +2415,7 @@ function wireSettingsIO(){
       const j=JSON.parse(r.result), days=(j&&j.days)||[]; let n=0;
       days.forEach(x=>{ if(x&&/^\d{4}-\d{2}-\d{2}$/.test(x.date)&&/^\d{2}:\d{2}$/.test(x.subuh)&&/^\d{2}:\d{2}$/.test(x.maghrib)){ SOLAT_EXTRA[x.date]=[x.subuh,x.maghrib].concat(/^\d{2}:\d{2}$/.test(x.zohor||"")?[x.zohor]:[]); n++; } });
       if(!n) throw 0;
-      localStorage.setItem(LS_SOLAT,JSON.stringify(SOLAT_EXTRA)); queueSync();
+      localStorage.setItem(LS_SOLAT,JSON.stringify(SOLAT_EXTRA)); tandaUbah(); simpanState(); queueSync();
       setStatus("Waktu solat diimport ✓ — "+n+" hari ("+(j.zone||"")+" "+(j.year||"")+")");
     }catch(err){ alert("Fail waktu solat tidak sah (perlu format sgr03-YYYY.json)."); } };
     r.readAsText(f); e.target.value="";
@@ -2478,7 +2493,7 @@ function applyDoc(doc){
   doc=JSON.parse(JSON.stringify(doc));                  /* jangan kongsi objek dengan BASE / remote */
   STATE=Object.assign(defaultState(), doc.state||{}, view);
   PHOTOS=doc.photos||{}; SOLAT_EXTRA=doc.solat||{};
-  simpanState();
+  simpanState(); try{ SIG_STATE=sigState(); }catch(e){}
   try{ localStorage.setItem(LS_PHOTOS,JSON.stringify(PHOTOS)); }catch(e){ try{ localStorage.removeItem(LS_BASE_KEY); }catch(_){} }
   try{ localStorage.setItem(LS_SOLAT,JSON.stringify(SOLAT_EXTRA)); }catch(e){}
 }
@@ -2563,16 +2578,25 @@ async function syncNow(reason){
       const head=await ghHead(SYNC.dataRepo,SYNC.branch);
       const local=localDoc();
       let merged=local, base=(BASE&&BASE.doc)||null;
-      if(!BASE || BASE.head!==head || BASE.nophotos){
+      const atL=+(local.state&&local.state._at)||0, atB=+(base&&base.state&&base.state._at)||0;
+      const fotoL=+(local.state&&local.state._atFoto)||0, fotoB=+(base&&base.state&&base.state._atFoto)||0;
+      const ubahSetempat = !base || atL>atB;                     // ada suntingan pengguna selepas sync terakhir?
+      const basi = !!base && !ubahSetempat && (jstr(local.state)!==jstr(base.state) || (!BASE.nophotos && jstr(local.photos)!==jstr(base.photos)));
+      if(basi) console.warn("Data peranti berbeza dengan asas tanpa suntingan — awan menang");
+      if(!BASE || BASE.head!==head || BASE.nophotos || basi){
         const remote=await remoteDoc(head);
         const empty=remote.state===undefined;
         if(empty) merged=local;                                   // repo baru: data peranti ini jadi asas
         else if(!base) merged={ state:remote.state,                                    // peranti baru / asas tiada: awan menang sepenuhnya
                                 photos:merge3({},local.photos,remote.photos||{},"remote"),
                                 solat:merge3({},local.solat,remote.solat||{},"remote") };
-        else merged={ state:merge3(base.state,local.state,remote.state,"local"),
-                      photos:merge3(base.photos||{},local.photos,remote.photos||{},"local"),
-                      solat:merge3(base.solat||{},local.solat,remote.solat||{},"local") };
+        else if(!ubahSetempat) merged={ state:remote.state, photos:remote.photos||{}, solat:remote.solat||{} };   // tiada suntingan sejak asas → awan menang
+        else { const fotoAsas = BASE.nophotos ? (fotoL>fotoB ? {} : (remote.photos||{})) : (base.photos||{});   // asas tanpa foto: foto setempat sah hanya jika disunting
+               merged={ state:merge3(base.state,local.state,remote.state,"local"),
+                        photos:merge3(fotoAsas,local.photos,remote.photos||{},"local"),
+                        solat:merge3(base.solat||{},local.solat,remote.solat||{},"local") };
+               merged.state._at=Math.max(atL, +(remote.state&&remote.state._at)||0);
+               const fm=Math.max(fotoL, +(remote.state&&remote.state._atFoto)||0); if(fm) merged.state._atFoto=fm; }
         if(jstr(merged)!==jstr(local)){ applyDoc(merged); if(migrateLegacy()){ simpanState(); merged.state=localDoc().state; } renderAll(); }
         /* salinan berasingan: STATE boleh berkongsi objek dengan `remote` selepas applyDoc — jika BASE juga
            merujuk objek yang sama, perubahan setempat (STATE.tv[..]=, STATE.tg[..]=) turut mengubah BASE,
@@ -2754,8 +2778,9 @@ async function terbit(){
 /* ── Mula ── */
 wireEditbar(); wireModal(); wirePhotoModal(); wireSettingsIO(); wireSync(); wireUmum(); wireTg(); wireStudio(); wireUpcoming(); wireData(); wireTv();
 rebuildReg();
-if(migrateLegacy()) saveState();
+if(migrateLegacy()) simpanState();
 renderAll();
+SIG_STATE=sigState();
 window.addEventListener("resize",fitPreview);
 $("btnPng").addEventListener("click",exportPng);
 $("btnTerbit").addEventListener("click",terbit);
