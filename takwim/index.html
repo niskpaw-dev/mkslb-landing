@@ -2756,14 +2756,23 @@ async function terbit(){
     tvE.fail=tvNama(tvE);
     const kecilB64=tvE.kecil.split(",")[1]; delete tvE.kecil;
     if(!STATE.tv) STATE.tv={}; STATE.tv[tid]=tvE; saveState();
-    const files=[ { path:"takwim-"+BULAN_RINGKAS[m-1].toLowerCase()+"-"+y+".png", b64:png },
+    /* poster laman: WebP (≈10× lebih kecil); pelayar yang tak sokong WebP (cth. Safari) kekal PNG */
+    const webp=out.toDataURL("image/webp",0.86), namaP="takwim-"+BULAN_RINGKAS[m-1].toLowerCase()+"-"+y;
+    const poster=webp.startsWith("data:image/webp") ? { path:namaP+".webp", b64:webp.split(",")[1] } : { path:namaP+".png", b64:png };
+    const files=[ poster,
                   { path:"takwim-data.json", b64:b64enc(JSON.stringify(webData(),null,1)) },
                   { path:"tv/"+tvE.fail, b64:tvb }, { path:"tvkecil/"+tvE.ver+".jpg", b64:kecilB64 } ];
     setStatus("Menghantar ke laman masjid…",true);
     for(let attempt=0;;attempt++){
       try{ const head=await ghHead(SYNC.pubRepo,SYNC.branch), blobs=await ghBlobs(SYNC.pubRepo,head,"tv/"), kini=isoOfD(new Date());
         Object.values(STATE.tv||{}).forEach(e=>{ if(e.tamat && e.tamat<kini) delete STATE.tv[e.id]; });
-        const fx=files.slice(0,2).concat(await tvSusun(head,blobs,files.slice(2)));
+        /* bersih poster: buang bulan yang dah lepas + format lain bagi bulan yang sama */
+        const n0=new Date(), nowYm=n0.getFullYear()*12+n0.getMonth(), pubYm=y*12+m-1;
+        const buangPoster=Object.keys(await ghBlobs(SYNC.pubRepo,head,"takwim-")).filter(k=>{
+          const r=/^takwim-([a-z]{3})-(\d{4})\.(png|webp)$/.exec(k); if(!r || k===poster.path) return false;
+          const mi=BULAN_RINGKAS.findIndex(b=>b.toLowerCase()===r[1]); if(mi<0) return false;
+          const ym=(+r[2])*12+mi; return ym<nowYm || ym===pubYm; }).map(k=>({path:k,del:true}));
+        const fx=files.slice(0,2).concat(buangPoster).concat(await tvSusun(head,blobs,files.slice(2)));
         await ghCommit(SYNC.pubRepo,SYNC.branch,head,fx,"Terbit takwim "+label); break; }
       catch(e){ if((e.status===422||e.status===409) && attempt<3) continue; throw e; }
     }

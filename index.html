@@ -968,10 +968,12 @@
     }
     function renderPoster(){
       const box=document.getElementById('kulPoster'), img=document.getElementById('kulPosterImg'); if(!box||!img)return;
-      const t=klToday(), file="takwim-"+BLN[t.m-1].toLowerCase()+"-"+t.y+".png";
+      const t=klToday(), base="takwim-"+BLN[t.m-1].toLowerCase()+"-"+t.y, ext=[".webp",".png"]; let i=0;
       img.onload=()=>{ if(img.naturalWidth>0) box.classList.remove('empty'); };
-      img.onerror=()=>box.classList.add('empty');
-      img.src=file+"?t="+Date.now();   // cache-buster unik setiap muat — elak cache 404 lama
+      img.onerror=()=>{ if(++i<ext.length) img.src=base+ext[i]; else box.classList.add('empty'); };
+      // tiada cache-buster: Vercel hidang max-age=0 + ETag → pelayar semak setiap kali,
+      // tapi muat turun semula hanya bila poster berubah (dulu: 3MB setiap lawatan)
+      img.src=base+ext[0];
     }
 
     /* Khutbah & Solat Jumaat — Jumaat terdekat (hari ini jika Jumaat) */
