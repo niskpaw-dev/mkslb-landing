@@ -481,7 +481,7 @@
         <span class="ac-glow" aria-hidden="true"></span>
         <span class="ac-ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
         <h3>Waktu Solat</h3>
-        <p>Jadual waktu solat harian untuk zon Kuala Langat (SGR03), dikemas kini automatik setiap hari.</p>
+        <p>Jadual waktu solat harian untuk Daerah Kuala Langat, dikemas kini automatik setiap hari.</p>
         <span class="go">Lihat jadual penuh
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
         </span>
@@ -827,7 +827,7 @@
 
         // Tarikh Hijri berubah selepas Maghrib (hari Islam bermula waktu Maghrib)
         const hs = (n >= times[6].ts) ? hijMaghrib : hijToday; // times[6] = Maghrib
-        hijEl.textContent = hs ? `${hs} · Zon SGR03` : 'Zon SGR03';
+        hijEl.textContent = hs ? `${hs} · Kuala Langat` : 'Kuala Langat';
 
         let idx = times.findIndex(p=>p.ts > n);
         [...grid.children].forEach((c,i)=>c.classList.toggle('next', i===idx));
