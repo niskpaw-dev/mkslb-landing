@@ -2143,13 +2143,20 @@ async function tgJadual(){
 async function tgHantarKeBot(q, img, label){
   tandaUbah(); saveState(); clearTimeout(syncTimer);
   if(!(await syncNow("tg"))) throw new Error("sync gagal");
+  /* Mula dari head yang syncNow baru tulis (BASE.head). Selepas commit, GET ref GitHub boleh pulangkan
+     head lama beberapa saat (replika belum segar) → commit atas induk basi → 422 "not a fast forward".
+     Jadi: guna BASE.head dulu; bila 422, tunggu sekejap & baca semula. */
+  const files=img&&q.gambar?[{ path:q.gambar, b64:img.url.split(",")[1] }]:[{ path:"tg/jadual.txt", b64:b64enc(q.id+" "+q.v+"\n") }];
+  let head=BASE&&BASE.head;
   for(let attempt=0;;attempt++){
-    try{ const head=await ghHead(SYNC.dataRepo,SYNC.branch);
-      const files=img&&q.gambar?[{ path:q.gambar, b64:img.url.split(",")[1] }]:[{ path:"tg/jadual.txt", b64:b64enc(q.id+" "+q.v+"\n") }];
-      await ghCommit(SYNC.dataRepo,SYNC.branch,head,files,"Telegram: jadual "+label); return; }
-    catch(e){ if((e.status===422||e.status===409) && attempt<3) continue; throw e; }
+    try{ if(!head) head=await ghHead(SYNC.dataRepo,SYNC.branch);
+      const nh=await ghCommit(SYNC.dataRepo,SYNC.branch,head,files,"Telegram: jadual "+label);
+      if(BASE && BASE.head===head){ BASE.head=nh; saveBase(); }   // fail tg/ sahaja — doc tak berubah
+      return; }
+    catch(e){ if((e.status===422||e.status===409) && attempt<5){ head=null; await tidurMs(1500*(attempt+1)); continue; } throw e; }
   }
 }
+function tidurMs(ms){ return new Promise(r=>setTimeout(r,ms)); }
 function tgPrune(){ if(!STATE.tg) STATE.tg={}; const lim=Date.now()-30*864e5; Object.values(STATE.tg).forEach(x=>{ if(new Date(x.y,x.m-1,x.d).getTime()<lim) delete STATE.tg[x.id]; }); }
 /* ── posting bebas (notis / hebahan bukan program) ── */
 let TGB={ id:null, img:null, tanpaGambar:false };
@@ -2522,7 +2529,13 @@ async function gh(method,path,body){
   if(!r.ok){ let msg=""; try{ msg=(await r.json()).message||""; }catch(e){} const er=new Error(r.status+" "+msg); er.status=r.status; throw er; }
   return r.status===204?null:r.json();
 }
-const ghHead=async(repo,br)=> (await gh("GET",`/repos/${repo}/git/ref/heads/${br}`)).object.sha;
+/* GET ref boleh pulangkan head lama beberapa saat selepas kita sendiri commit (replika GitHub belum segar).
+   Commit atas head lama = 422 "not a fast forward" (13 Nov 11:18). Head yang kita tahu dah diganti → tunggu & baca semula. */
+const GH_LAMA=new Set();
+async function ghHead(repo,br){
+  for(let i=0;;i++){ const sha=(await gh("GET",`/repos/${repo}/git/ref/heads/${br}`)).object.sha;
+    if(!GH_LAMA.has(sha) || i>=10) return sha; await tidurMs(1000); }
+}
 async function ghRead(repo,commit,paths){
   const c=await gh("GET",`/repos/${repo}/git/commits/${commit}`);
   const t=await gh("GET",`/repos/${repo}/git/trees/${c.tree.sha}?recursive=1`);
@@ -2552,6 +2565,7 @@ async function ghCommit(repo,br,parent,files,message){
   const nt=await gh("POST",`/repos/${repo}/git/trees`,{ base_tree:pc.tree.sha, tree });
   const nc=await gh("POST",`/repos/${repo}/git/commits`,{ message, tree:nt.sha, parents:[parent] });
   await gh("PATCH",`/repos/${repo}/git/refs/heads/${br}`,{ sha:nc.sha, force:false });
+  GH_LAMA.add(parent);
   return nc.sha;
 }
 async function remoteDoc(head){
@@ -2574,7 +2588,8 @@ async function syncNow(reason){
   if(syncBusy){ syncAgain=true; return false; }
   syncBusy=true; setSyncUI("busy","Menyegerak…");
   try{
-    for(let attempt=0; attempt<4; attempt++){
+    let siap=false, galatAkhir=null;
+    for(let attempt=0; attempt<5; attempt++){
       const head=await ghHead(SYNC.dataRepo,SYNC.branch);
       const local=localDoc();
       let merged=local, base=(BASE&&BASE.doc)||null;
@@ -2605,17 +2620,18 @@ async function syncNow(reason){
       }
       const changed=Object.keys(DOC_FILES).filter(k=> jstr(merged[k])!==jstr(BASE.doc[k]));
       let acaraLama=false; try{ acaraLama = Date.now()-(+localStorage.getItem(LS_ACARA)||0) > 6*3600e3; }catch(e){}
-      if(!changed.length && !acaraLama){ BASE.head=head; saveBase(); break; }
+      if(!changed.length && !acaraLama){ BASE.head=head; saveBase(); siap=true; break; }
       try{
         const files=changed.map(k=>({ path:DOC_FILES[k], b64:b64enc(JSON.stringify(merged[k],null,1)) }));
         if(changed.includes("state") || acaraLama){ try{ rebuildReg(); files.push({ path:"acara.json", b64:b64enc(JSON.stringify(acaraData(),null,1)) }); }catch(e){ console.warn("acara.json",e); } }
-        if(!files.length){ BASE.head=head; saveBase(); break; }
+        if(!files.length){ BASE.head=head; saveBase(); siap=true; break; }
         const nh=await ghCommit(SYNC.dataRepo,SYNC.branch,head,files,"Takwim: kemas kini "+(changed.length?changed.join(", "):"acara")+" ("+(navigator.userAgentData&&navigator.userAgentData.mobile?"telefon":"peranti")+")");
         BASE={ head:nh, doc:JSON.parse(JSON.stringify(merged)) }; saveBase();
         if(files.some(f=>f.path==="acara.json")){ try{ localStorage.setItem(LS_ACARA,String(Date.now())); }catch(e){} }
-        break;
-      }catch(e){ if(e.status===422||e.status===409){ BASE.head=null; continue; } throw e; }   // branch bergerak → tarik semula
+        siap=true; break;
+      }catch(e){ if(e.status===422||e.status===409){ galatAkhir=e; BASE.head=null; await tidurMs(1200*(attempt+1)); continue; } throw e; }   // branch bergerak (atau ref basi) → tunggu, tarik semula
     }
+    if(!siap) throw galatAkhir||new Error("sync tidak selesai");   // dulu: 4× 422 tetap lapor "Disegerak"
     lastSyncAt=Date.now(); setSyncUI("ok","Disegerak "+hhmm(lastSyncAt));
     return true;
   }catch(e){
