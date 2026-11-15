@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Takwim Pengimarahan — MKSLB</title>
 <meta name="robots" content="noindex,nofollow">
+<meta name="takwim-versi" content="20261115.1030">
 
 <!-- ════════════════════════════════════════════════════════════════════════
      TAKWIM PENGIMARAHAN — Masjid Kampung Sungai Lang Baru  ·  v3
@@ -286,6 +287,10 @@ button.danger{ background:#6e2b2b; color:#f7dcdc; border:1px solid #8a3a3a; }
 /* ── MODAL (sama untuk dua mod) ──────────────────────────────── */
 .modal{ position:fixed; inset:0; z-index:100; background:rgba(0,0,0,.6); display:flex; align-items:center; justify-content:center; }
 .modal.hidden{ display:none; }
+#versiBaru{ position:fixed; left:50%; bottom:18px; transform:translateX(-50%); z-index:200; display:flex; align-items:center; gap:12px;
+  max-width:calc(100% - 32px); padding:10px 12px 10px 16px; border-radius:14px; background:var(--ink2); color:var(--paper);
+  border:1px solid var(--gold); box-shadow:0 8px 28px rgba(0,0,0,.45); font-size:14px; white-space:nowrap; }
+#versiBaru.hidden{ display:none; }
 .mbox{ background:var(--ink2); color:var(--paper); border:1px solid var(--line); border-radius:16px;
   width:560px; max-width:94vw; max-height:88vh; overflow:auto; padding:22px; font-size:14px; box-shadow:0 18px 60px rgba(0,0,0,.5); }
 .mbox h3{ font-size:17px; margin-bottom:4px; }
@@ -412,6 +417,7 @@ button.danger{ background:#6e2b2b; color:#f7dcdc; border:1px solid #8a3a3a; }
 </style>
 </head>
 <body>
+<div id="versiBaru" class="hidden" role="status"><span>🔄 Takwim ada versi baru</span><button id="btnVersiBaru">Muat semula</button></div>
 
 <div class="topbars">
   <div class="toolbar">
@@ -2648,6 +2654,22 @@ async function syncNow(reason){
     if(syncAgain){ syncAgain=false; setTimeout(()=>syncNow("ulang"),300); }
   }
 }
+/* ── versi kod ── deploy menulis takwim/versi.json dan cop meta takwim-versi yang sama */
+const VERSI_KOD=((document.querySelector('meta[name="takwim-versi"]')||{}).content)||"dev";
+let versiSemakAt=0;
+async function semakVersi(){
+  if(VERSI_KOD==="dev" || location.protocol==="file:") return false;
+  try{ const r=await fetch("versi.json?t="+Date.now(),{cache:"no-store"}); versiSemakAt=Date.now(); if(!r.ok) return false;
+    const v=String((await r.json()).versi||"");
+    if(v && v!==VERSI_KOD){ $("versiBaru").classList.remove("hidden"); return true; } }
+  catch(e){}
+  return false;
+}
+function adaModalTerbuka(){ return !!document.querySelector(".modal:not(.hidden)"); }
+/* elak gelung muat semula jika HTML dari cache masih lama: auto paling kerap sekali / 10 minit */
+function bolehAutoMuat(){ try{ const t=+sessionStorage.getItem("takwim-automuat")||0; if(Date.now()-t<10*60e3) return false;
+  sessionStorage.setItem("takwim-automuat",String(Date.now())); }catch(e){} return true; }
+function muatSemula(){ try{ simpanState(); }catch(e){} location.reload(); }
 let syncHadTimer=null;
 function queueSync(){ if(!syncReady()) return; clearTimeout(syncTimer); setSyncUI("busy","Menunggu simpan…"); syncTimer=setTimeout(()=>syncNow("ubah"),1500); }
 
@@ -2684,7 +2706,17 @@ function wireSync(){
     try{ localStorage.removeItem(LS_SYNC); localStorage.removeItem(LS_BASE); }catch(e){}
     $("sToken").value=""; $("sResult").textContent="Diputuskan."; setSyncUI("off","Sync belum disetup");
   });
-  document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible" && Date.now()-lastSyncAt>15000) syncNow("fokus"); });
+  /* Tab lama (telefon/tablet) terus jalan kod lama dan boleh tolak data lama / dapat 422 (6 & 14 Nov).
+     Bila kembali ke tab: semak versi dulu. Versi baru + tiada tetingkap terbuka → muat semula serta-merta (data dah dalam storan
+     peranti; sync berjalan dengan kod baru). Ada tetingkap terbuka → papar butang, jangan ganggu kerja. */
+  document.addEventListener("visibilitychange",async()=>{
+    if(document.visibilityState!=="visible") return;
+    if(Date.now()-versiSemakAt>60e3 && await semakVersi() && !adaModalTerbuka() && bolehAutoMuat()) return muatSemula();
+    if(Date.now()-lastSyncAt>15000) syncNow("fokus");
+  });
+  setInterval(()=>{ if(document.visibilityState==="visible") semakVersi(); },10*60e3);
+  setTimeout(semakVersi,20e3);
+  $("btnVersiBaru").addEventListener("click",muatSemula);
   setInterval(()=>{ if(document.visibilityState==="visible") syncNow("berkala"); }, 60000);
   window.addEventListener("online",()=> syncNow("online"));
 }
@@ -2772,23 +2804,14 @@ async function terbit(){
     tvE.fail=tvNama(tvE);
     const kecilB64=tvE.kecil.split(",")[1]; delete tvE.kecil;
     if(!STATE.tv) STATE.tv={}; STATE.tv[tid]=tvE; saveState();
-    /* poster laman: WebP (≈10× lebih kecil); pelayar yang tak sokong WebP (cth. Safari) kekal PNG */
-    const webp=out.toDataURL("image/webp",0.86), namaP="takwim-"+BULAN_RINGKAS[m-1].toLowerCase()+"-"+y;
-    const poster=webp.startsWith("data:image/webp") ? { path:namaP+".webp", b64:webp.split(",")[1] } : { path:namaP+".png", b64:png };
-    const files=[ poster,
+    const files=[ { path:"takwim-"+BULAN_RINGKAS[m-1].toLowerCase()+"-"+y+".png", b64:png },
                   { path:"takwim-data.json", b64:b64enc(JSON.stringify(webData(),null,1)) },
                   { path:"tv/"+tvE.fail, b64:tvb }, { path:"tvkecil/"+tvE.ver+".jpg", b64:kecilB64 } ];
     setStatus("Menghantar ke laman masjid…",true);
     for(let attempt=0;;attempt++){
       try{ const head=await ghHead(SYNC.pubRepo,SYNC.branch), blobs=await ghBlobs(SYNC.pubRepo,head,"tv/"), kini=isoOfD(new Date());
         Object.values(STATE.tv||{}).forEach(e=>{ if(e.tamat && e.tamat<kini) delete STATE.tv[e.id]; });
-        /* bersih poster: buang bulan yang dah lepas + format lain bagi bulan yang sama */
-        const n0=new Date(), nowYm=n0.getFullYear()*12+n0.getMonth(), pubYm=y*12+m-1;
-        const buangPoster=Object.keys(await ghBlobs(SYNC.pubRepo,head,"takwim-")).filter(k=>{
-          const r=/^takwim-([a-z]{3})-(\d{4})\.(png|webp)$/.exec(k); if(!r || k===poster.path) return false;
-          const mi=BULAN_RINGKAS.findIndex(b=>b.toLowerCase()===r[1]); if(mi<0) return false;
-          const ym=(+r[2])*12+mi; return ym<nowYm || ym===pubYm; }).map(k=>({path:k,del:true}));
-        const fx=files.slice(0,2).concat(buangPoster).concat(await tvSusun(head,blobs,files.slice(2)));
+        const fx=files.slice(0,2).concat(await tvSusun(head,blobs,files.slice(2)));
         await ghCommit(SYNC.pubRepo,SYNC.branch,head,fx,"Terbit takwim "+label); break; }
       catch(e){ if((e.status===422||e.status===409) && attempt<3) continue; throw e; }
     }
