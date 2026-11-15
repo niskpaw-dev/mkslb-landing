@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Takwim Pengimarahan — MKSLB</title>
 <meta name="robots" content="noindex,nofollow">
-<meta name="takwim-versi" content="20261115.1804">
+<meta name="takwim-versi" content="20261115.1828">
 
 <!-- ════════════════════════════════════════════════════════════════════════
      TAKWIM PENGIMARAHAN — Masjid Kampung Sungai Lang Baru  ·  v3
@@ -1738,6 +1738,10 @@ function tvNama(e){                      /* nama fail ikut kedudukan semasa; ver
   if(!e.ym){ const mm=f.match(/takwim-(\d{6})-/); if(mm) e.ym=mm[1]; }                      /* format nama lama */
   if(!e.tgl){ const mm=f.match(/mkslb-(\d{8})-(.+)-[a-z0-9]{1,6}\.jpg$/); if(mm){ e.tgl=mm[1]; e.slug=e.slug||mm[2]; } }
   if(e.jenis==="takwim") return P.takwim+"-mkslb-takwim-"+(e.ym||"")+"-"+ver+".jpg";
+  /* urutan dalam hari ikut susunan program SEMASA (15 Nov: Perdana dihantar sebelum Talaqqi wujud → kedua-dua "1",
+     abjad letak Perdana dulu). Dikira semula setiap kali, jadi slaid lama pun disusun semula pada hantaran TV berikutnya. */
+  if(e.y && e.tgl){ const t=e.evTitle||((e.id||"").split("|")[1]||"");
+    if(t){ const i=eventsFor(e.y,e.m,e.d).findIndex(x=>x.title===t); if(i>=0) e.tgl=e.tgl.replace(/-\d+$/,"-"+(i+1)); } }
   return (tvPosOk(e.pos)?e.pos:P.poster)+"-mkslb-"+(e.tgl||"")+"-"+(e.slug||"slaid")+"-"+ver+".jpg";
 }
 function hash6(str){ let h=5381; for(let i=0;i<str.length;i+=7) h=((h<<5)+h+str.charCodeAt(i))|0; return (h>>>0).toString(36).slice(0,6); }
