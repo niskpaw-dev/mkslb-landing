@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Takwim Pengimarahan — MKSLB</title>
 <meta name="robots" content="noindex,nofollow">
-<meta name="takwim-versi" content="20261115.1400">
+<meta name="takwim-versi" content="20261115.1758">
 
 <!-- ════════════════════════════════════════════════════════════════════════
      TAKWIM PENGIMARAHAN — Masjid Kampung Sungai Lang Baru  ·  v3
@@ -2689,7 +2689,7 @@ async function syncNow(reason){
       }catch(e){ if(e.status===422||e.status===409){ galatAkhir=e; BASE.head=null; await tidurMs(1200*(attempt+1)); continue; } throw e; }   // branch bergerak (atau ref basi) → tunggu, tarik semula
     }
     if(!siap) throw galatAkhir||new Error("sync tidak selesai");   // dulu: 4× 422 tetap lapor "Disegerak"
-    lastSyncAt=Date.now(); setSyncUI("ok","Disegerak "+hhmm(lastSyncAt));
+    lastSyncAt=Date.now(); SYNC_RALAT=null; setSyncUI("ok","Disegerak "+hhmm(lastSyncAt));
     return true;
   }catch(e){
     console.error(e);
@@ -2697,6 +2697,7 @@ async function syncNow(reason){
     const hadKadar = (e.status===403||e.status===429) && /rate limit|abuse|secondary/i.test(e.message||"");
     const msg = hadKadar?"Had GitHub sementara — cuba semula dalam 1 minit": e.status===401?"Token tidak sah": e.status===403?"Token tiada akses": e.status===404?"Repo tidak dijumpai": (!navigator.onLine?"Luar talian — akan cuba lagi":"Gagal sync");
     setSyncUI(hadKadar?"busy":"err",msg);
+  SYNC_RALAT={ at:Date.now(), status:e.status||"", msg:String(e.message||e).slice(0,300) };
     try{ const el=$("btnSync"); if(el) el.title=String(e.message||"").slice(0,200); }catch(_){}
     if(hadKadar){ clearTimeout(syncHadTimer); syncHadTimer=setTimeout(()=>syncNow("had-kadar"),60e3); }
     return false;
@@ -2721,13 +2722,15 @@ function adaModalTerbuka(){ return !!document.querySelector(".modal:not(.hidden)
 function bolehAutoMuat(){ try{ const t=+sessionStorage.getItem("takwim-automuat")||0; if(Date.now()-t<10*60e3) return false;
   sessionStorage.setItem("takwim-automuat",String(Date.now())); }catch(e){} return true; }
 function muatSemula(){ try{ simpanState(); }catch(e){} location.reload(); }
-let syncHadTimer=null;
+let syncHadTimer=null, SYNC_RALAT=null;   /* ralat sync terakhir — dipapar dalam tetingkap ☁️ supaya tak perlu screenshot */
 function queueSync(){ if(!syncReady()) return; clearTimeout(syncTimer); setSyncUI("busy","Menunggu simpan…"); syncTimer=setTimeout(()=>syncNow("ubah"),1500); }
 
 /* ── modal sync ── */
 function openSync(){
   $("sToken").value=SYNC.token||""; $("sDataRepo").value=SYNC.dataRepo; $("sPubRepo").value=SYNC.pubRepo; $("sBranch").value=SYNC.branch;
-  $("sResult").textContent = syncReady() ? ("Disambung. Sync terakhir: "+(lastSyncAt?hhmm(lastSyncAt):"—")) : "Belum disambung.";
+  $("sResult").textContent = (syncReady() ? ("Disambung. Sync terakhir: "+(lastSyncAt?hhmm(lastSyncAt):"—")) : "Belum disambung.")
+    + (SYNC_RALAT ? "\n⚠️ Ralat terakhir "+hhmm(SYNC_RALAT.at)+" — "+SYNC_RALAT.msg : "");
+  $("sResult").style.whiteSpace="pre-wrap";
   $("syncModal").classList.remove("hidden");
 }
 function wireSync(){
