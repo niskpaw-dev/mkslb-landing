@@ -1,11 +1,11 @@
 {
  "v": 1,
- "dikemaskini": "2026-11-15T10:10:12.398Z",
+ "dikemaskini": "2026-11-15T10:31:48.138Z",
  "folder": "C:\\mysolatime\\17playlist\\0UMUM",
  "slaid": [
   {
-   "fail": "10-11-mkslb-takwim-202611-1soaty.jpg",
-   "url": "https://masjidkslb.com/tv/10-11-mkslb-takwim-202611-1soaty.jpg",
+   "fail": "10-11-mkslb-takwim-202611-1b8s8u.jpg",
+   "url": "https://masjidkslb.com/tv/10-11-mkslb-takwim-202611-1b8s8u.jpg",
    "mula": "2026-11-01",
    "tamat": "2026-11-30",
    "tajuk": "Takwim November 2026"
@@ -60,18 +60,18 @@
    "tajuk": "Kuliah Maghrib — Ust Aiman"
   },
   {
-   "fail": "10-12-mkslb-20261121-1-kuliah-perdana-ust-syafiq-liow-4o7hei.jpg",
-   "url": "https://masjidkslb.com/tv/10-12-mkslb-20261121-1-kuliah-perdana-ust-syafiq-liow-4o7hei.jpg",
-   "mula": "2026-11-15",
-   "tamat": "2026-11-21",
-   "tajuk": "Kuliah Perdana — Ust Syafiq Liow"
-  },
-  {
    "fail": "10-12-mkslb-20261121-1-talaqqi-al-quran-muslimat-ustaza-1cgti8.jpg",
    "url": "https://masjidkslb.com/tv/10-12-mkslb-20261121-1-talaqqi-al-quran-muslimat-ustaza-1cgti8.jpg",
    "mula": "2026-11-15",
    "tamat": "2026-11-21",
    "tajuk": "Talaqqi Al-Quran Muslimat — Ustazah Hanis"
+  },
+  {
+   "fail": "10-12-mkslb-20261121-2-kuliah-perdana-ust-syafiq-liow-4o7hei.jpg",
+   "url": "https://masjidkslb.com/tv/10-12-mkslb-20261121-2-kuliah-perdana-ust-syafiq-liow-4o7hei.jpg",
+   "mula": "2026-11-15",
+   "tamat": "2026-11-21",
+   "tajuk": "Kuliah Perdana — Ust Syafiq Liow"
   },
   {
    "fail": "10-12-mkslb-20261122-1-kuliah-subuh-ust-ramli-17121l.jpg",
