@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Takwim Pengimarahan — MKSLB</title>
 <meta name="robots" content="noindex,nofollow">
-<meta name="takwim-versi" content="20261115.1758">
+<meta name="takwim-versi" content="20261115.1804">
 
 <!-- ════════════════════════════════════════════════════════════════════════
      TAKWIM PENGIMARAHAN — Masjid Kampung Sungai Lang Baru  ·  v3
@@ -488,7 +488,8 @@ button.danger{ background:#6e2b2b; color:#f7dcdc; border:1px solid #8a3a3a; }
       <span class="lbl">Talaqqi Muslimat · Sabtu</span>
       <span class="mchips" id="talMinggu" title="Pilih minggu (boleh lebih dari satu)"></span>
       <input class="gelaran" id="inpTalGelaran" placeholder="Ustazah">
-      <input class="nama" id="inpTalNama" placeholder="Nama penceramah">
+      <input class="nama" id="inpTalNama" placeholder="Nama ringkas (sel)" title="Nama ringkas untuk sel takwim, cth Hanis">
+      <input class="nama" id="inpTalPenuh" placeholder="Nama penuh (poster)" title="Nama penuh untuk poster, pengumuman, Telegram & Facebook, cth Hanis Humaira">
       <select id="selTalFoto"></select>
       <span class="taltajuk" id="talTajuk"></span>
     </div>
@@ -905,7 +906,7 @@ function rebuildReg(){
 const ZOHOR_KOSONG={jumaat:0,gelaran:"Ust",nama:"",photo:""};
 const PERDANA_KOSONG={sabtu:0,gelaran:"Ust",ceramah:"",photo:""};
 /* Talaqqi Al-Quran Muslimat (15 Nov): Sabtu, boleh lebih dari satu minggu sebulan; tajuk berbeza setiap sesi (ikut tarikh) */
-const TALAQQI_KOSONG={minggu:[],gelaran:"Ustazah",nama:"",photo:"",tajuk:{}};
+const TALAQQI_KOSONG={minggu:[],gelaran:"Ustazah",nama:"",penuh:"",photo:"",tajuk:{}};
 /* Perdana & Zohor Muslimat berubah setiap bulan → bulan tanpa tetapan = tiada (elak nama/minggu bulan lain terbawa).
    Dhuha kekal guna lalai lama (minggu 3) seperti sejak awal. */
 function cfgFor(y,m){
@@ -1059,7 +1060,8 @@ function fridayExtras(y,m,d){
 function saturdayExtras(y,m,d){
   const t=cfgFor(y,m).talaqqi;
   if(!t || !(t.minggu||[]).includes(occurrenceOf(d)) || !(t.nama||t.photo)) return [];
-  return [{ title:"Talaqqi", name:((t.gelaran||"Ustazah")+" "+(t.nama||"")).trim(), photo:t.photo||"", sub:((t.tajuk||{})[d]||"").trim(), extra:true }];
+  return [{ title:"Talaqqi", name:((t.gelaran||"Ustazah")+" "+(t.nama||"")).trim(), photo:t.photo||"", sub:((t.tajuk||{})[d]||"").trim(), extra:true,
+           penuh:t.penuh?((t.gelaran||"Ustazah")+" "+t.penuh).trim():"" }];   /* nama penuh: poster & pengumuman; sel guna nama ringkas */
 }
 function resolveCellFor(y,m,d,ignoreOv){
   const base=baseCellFor(y,m,d,ignoreOv), wd=new Date(y,m-1,d).getDay();
@@ -1226,7 +1228,7 @@ function syncEditbar(){
 function talSabtu(y,m){ const n=new Date(y,m,0).getDate(), out=[]; for(let d=1; d<=n; d++) if(new Date(y,m-1,d).getDay()===6) out.push(d); return out; }
 function talSync(T){
   $("talMinggu").querySelectorAll("button").forEach(b=> b.classList.toggle("on",(T.minggu||[]).includes(+b.dataset.w)));
-  $("inpTalGelaran").value=T.gelaran||"Ustazah"; $("inpTalNama").value=T.nama||"";
+  $("inpTalGelaran").value=T.gelaran||"Ustazah"; $("inpTalNama").value=T.nama||""; $("inpTalPenuh").value=T.penuh||"";
   fillPhotoSelect($("selTalFoto"),T.photo||"");
   const box=$("talTajuk"), aktif=document.activeElement&&box.contains(document.activeElement)?document.activeElement.dataset.d:null;
   box.replaceChildren();
@@ -1274,6 +1276,7 @@ function wireEditbar(){
     $("talMinggu").append(b); });
   $("inpTalGelaran").addEventListener("change",e=>{ cfgEdit("talaqqi").gelaran=e.target.value.trim()||"Ustazah"; saveState(); renderAll(); });
   $("inpTalNama").addEventListener("change",e=>{ cfgEdit("talaqqi").nama=e.target.value.trim(); saveState(); renderAll(); });
+  $("inpTalPenuh").addEventListener("change",e=>{ cfgEdit("talaqqi").penuh=e.target.value.trim(); saveState(); renderAll(); });
   $("selTalFoto").addEventListener("change",e=>{ cfgEdit("talaqqi").photo=e.target.value; saveState(); renderAll(); });
 
   $("wkDate").addEventListener("change",e=>{ if(e.target.value){ STATE.weekAnchor=e.target.value; saveState(); renderAll(); } });
@@ -1434,7 +1437,7 @@ function eventsFor(y,m,d){
     const isKuliahName=/^(kuliah|tazkirah|talaqqi)\b/i.test(full);
     const prof=profileByName(p.name);
     const kitab=prof?((p.title==="K. Dhuha" && prof.kitabDhuha)||prof.kitab||""):"";
-    return { title:full, name:p.name, photo:p.photo||"", penuh:prof&&prof.penuh||"",
+    return { title:full, name:p.name, photo:p.photo||"", penuh:prof&&prof.penuh||p.penuh||"",
       tajuk:isKuliahName?full:(slot==="subuh"?"Kuliah Subuh":"Kuliah Maghrib"),
       sub:p.sub||(isKuliahName?kitab:(kitab||full)),
       waktu:WAKTU_TITLE[p.title]||jamKuliah(y,m,d,slot)||(slot==="subuh"?"Selepas Subuh":"Selepas Maghrib"),
