@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Takwim Pengimarahan — MKSLB</title>
 <meta name="robots" content="noindex,nofollow">
-<meta name="takwim-versi" content="20261115.1247">
+<meta name="takwim-versi" content="20261115.1400">
 
 <!-- ════════════════════════════════════════════════════════════════════════
      TAKWIM PENGIMARAHAN — Masjid Kampung Sungai Lang Baru  ·  v3
@@ -1807,10 +1807,11 @@ function tvRename(blobs){
   return out;
 }
 let TVF=null;      /* borang semasa: {id, y,m,d, ev, img:{url,w,h}|null} */
-/* Amalan MKSLB: poster seminggu ditayang mulai Ahad minggu program (bermula Kuliah Subuh Ahad) hingga hari program */
+/* Amalan MKSLB: poster seminggu ditayang mulai Ahad minggu program hingga hari program.
+   Program hari Ahad (Kuliah Subuh) mula Sabtu sebelumnya, supaya jemaah sempat lihat (dan Sabtu tak kosong). */
 function tvDefaultDates(y,m,d){
   const ev=new Date(y,m-1,d), t=new Date(); t.setHours(0,0,0,0);
-  const mula=new Date(ev); mula.setDate(mula.getDate()-mula.getDay());      /* Ahad minggu tersebut */
+  const mula=new Date(ev); mula.setDate(mula.getDate()-(ev.getDay()===0?1:mula.getDay()));   /* Ahad → Sabtu sebelum; lain → Ahad minggu itu */
   return { mula:isoOfD(mula<t?t:mula), tamat:isoOfD(ev) };
 }
 function tvLoadForm(id,ctx){
