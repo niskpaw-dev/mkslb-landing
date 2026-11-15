@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Takwim Pengimarahan — MKSLB</title>
 <meta name="robots" content="noindex,nofollow">
-<meta name="takwim-versi" content="20261115.1100">
+<meta name="takwim-versi" content="20261115.1247">
 
 <!-- ════════════════════════════════════════════════════════════════════════
      TAKWIM PENGIMARAHAN — Masjid Kampung Sungai Lang Baru  ·  v3
@@ -344,6 +344,9 @@ button.danger{ background:#6e2b2b; color:#f7dcdc; border:1px solid #8a3a3a; }
 .tvrow img{ width:96px; height:54px; object-fit:cover; border-radius:6px; background:#0006; flex:none; }
 .tvrow .tn{ flex:1; min-width:0; font-size:13px; font-weight:700; }
 .tvrow .tn small{ display:block; font-weight:500; color:var(--paper-dim); font-size:11.5px; }
+@media (max-width:640px){   /* telefon: status + butang turun ke baris kedua supaya tajuk tak terhimpit */
+  .tvrow{ flex-wrap:wrap; } .tvrow .tn{ flex:1 1 calc(100% - 110px); } .tvrow .tvst{ margin-left:106px; }
+  .tgrow .tn{ flex-basis:calc(100% - 68px); } .tgrow .tvst{ margin-left:64px; } }
 .tgrow img{ width:54px; height:54px; } .tgrow .tgnoimg{ width:54px; height:54px; border-radius:6px; background:#0004; display:grid; place-items:center; font-size:22px; flex:none; }
 #tgForm .hidden, #tgForm.hidden, #tgModal .row.hidden{ display:none; }
 .tvst.tunggu{ background:#4a3a14; color:#ffe3a3; } .tvst.ubah{ background:#4a3a14; color:#ffe3a3; }
@@ -441,7 +444,7 @@ button.danger{ background:#6e2b2b; color:#f7dcdc; border:1px solid #8a3a3a; }
     <input type="file" id="fileSolat" accept=".json" style="display:none">
     <button id="btnPng" class="ghost">⬇️ PNG</button>
     <button id="btnTv" class="ghost" title="Saluran TV masjid (mySolatime)">📺 TV</button>
-    <button id="btnTg" class="ghost" title="Posting kumpulan Telegram (bot Imarah MKSLB)">✈️ Telegram</button>
+    <button id="btnTg" class="ghost" title="Posting kumpulan Telegram + Page Facebook (bot Imarah MKSLB)">✈️ Telegram</button>
     <button id="btnTerbit">🌐 Terbit</button>
   </div>
 
@@ -638,8 +641,8 @@ button.danger{ background:#6e2b2b; color:#f7dcdc; border:1px solid #8a3a3a; }
 <!-- MODAL: Posting Telegram -->
 <div id="tgModal" class="modal hidden">
   <div class="mbox tvbox">
-    <h3>✈️ Posting kumpulan Telegram</h3>
-    <div class="ctx">Bot <b>Imarah MKSLB</b> hantar poster + teks ke kumpulan masjid: 8.00 pagi hari program (Kuliah Subuh &amp; Dhuha Muslimat: 9.00 malam sebelumnya), selang 2 minit dengan divider, khutbah sentiasa dulu pada hari Jumaat. Jadualkan dari 📣 Pengumuman setiap program.</div>
+    <h3>✈️ Posting Telegram &amp; Facebook</h3>
+    <div class="ctx">Bot <b>Imarah MKSLB</b> hantar poster + teks ke kumpulan Telegram dan Page Facebook masjid serentak: 8.00 pagi hari program (Kuliah Subuh, Dhuha Muslimat &amp; Talaqqi Muslimat: 9.00 malam sebelumnya), selang 2 minit dengan divider, khutbah sentiasa dulu pada hari Jumaat. Jadualkan dari 📣 Pengumuman setiap program.</div>
     <div class="row"><button class="ghost" id="tgbBuka" type="button">＋ Notis berjadual</button><small style="color:var(--paper-dim)">notis &amp; hebahan bukan program, cth gotong-royong — untuk dijadualkan awal</small></div>
     <div class="msec hidden" id="tgForm">
       <div class="tvfhead" id="tgFormHead">Notis berjadual <small style="color:var(--paper-dim);font-weight:500">— notis &amp; hebahan bukan program (program → guna 📣 dalam takwim)</small></div>
@@ -695,10 +698,10 @@ button.danger{ background:#6e2b2b; color:#f7dcdc; border:1px solid #8a3a3a; }
       <input id="uKhTajuk" placeholder="Taip / tampal tajuk khutbah" autocomplete="off"></div>
     <div class="seg" id="uGaya"><button type="button" data-g="ringkas">Ringkas</button><button type="button" data-g="santai">Santai</button><button type="button" data-g="rasmi">Rasmi</button></div>
     <div class="ububble" id="uPreview"></div>
-    <div class="umeta"><span id="uCount"></span><span id="uStatus">Salin untuk WhatsApp · Telegram ikut jadual ✈️ di bawah</span></div>
+    <div class="umeta"><span id="uCount"></span><span id="uStatus">Salin untuk WhatsApp · Telegram &amp; Facebook ikut jadual ✈️ di bawah</span></div>
     <textarea id="uFallback" readonly hidden aria-label="Teks pengumuman untuk disalin"></textarea>
     <div class="utg" id="uTg">
-      <div class="utg-h">✈️ Kumpulan Telegram <small id="uTgSt"></small></div>
+      <div class="utg-h">✈️ Telegram + 📘 Facebook <small id="uTgSt"></small></div>
       <div class="utg-r">
         <img id="uTgThumb" alt="" hidden>
         <span class="filebtn"><button class="ghost" type="button" id="uTgPilih">🖼️ Pilih poster</button><input type="file" id="uTgFile" accept="image/*"></span>
@@ -1626,7 +1629,7 @@ function renderUmum(){
 function openUmum(y,m,d,evs){
   UMUM={...UMUM,y,m,d,evs};
   $("uCtx").textContent=uTarikh(y,m,d,evs)+" · "+evs.map(e=>e.tajuk).join(" + ");
-  $("uStatus").textContent="Salin untuk WhatsApp · Telegram ikut jadual ✈️ di bawah";
+  $("uStatus").textContent="Salin untuk WhatsApp · Telegram & Facebook ikut jadual ✈️ di bawah";
   const kev=evs.find(e=>e.khutbah);
   $("uKhRow").classList.toggle("hidden",!kev);
   $("uKhTajuk").value=kev?(kev.sub||""):"";
@@ -2259,7 +2262,7 @@ async function tgBatal(){
 }
 function tgStatusQ(q){                 /* [kelas, label] untuk satu jadual */
   const h=TG_HANTAR[q.id], evs=eventsFor(q.y,q.m,q.d).filter(e=>q.titles.includes(e.title));
-  if(h && h.v===q.v && h.status==="ok") return ["aktif","✅ Dihantar "+tgFmt(h.at).split(",")[0]];
+  if(h && h.v===q.v && h.status==="ok") return ["aktif","✅ Dihantar "+tgFmt(h.at).split(",")[0]+(h.fb?(h.fb.status==="ok"?" · 📘":" · 📘✗"):"")];
   if(h && h.v===q.v && h.status==="tahan") return ["tamat","⏸ Ditahan"];
   if(q.jenis==="bebas") return ["akan","🕗 Dijadual"];
   if(evs.length!==q.titles.length) return ["tamat","⚠️ Program tiada"];
