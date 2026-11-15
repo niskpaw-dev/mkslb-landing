@@ -33,6 +33,13 @@
      "nama": "",
      "photo": ""
     },
+    "talaqqi": {
+     "minggu": [],
+     "gelaran": "Ustazah",
+     "nama": "",
+     "photo": "",
+     "tajuk": {}
+    },
     "tpl": {
      "0": {
       "j": "subuh",
@@ -105,6 +112,17 @@
      "gelaran": "Ustazah",
      "nama": "Shamsiah",
      "photo": "shamsiah"
+    },
+    "talaqqi": {
+     "minggu": [
+      3
+     ],
+     "gelaran": "Ustazah",
+     "nama": "Hanis",
+     "photo": "hanis",
+     "tajuk": {
+      "21": "Makhraj & Sifat Huruf"
+     }
     },
     "tpl": {
      "0": {
@@ -179,6 +197,13 @@
      "nama": "",
      "photo": ""
     },
+    "talaqqi": {
+     "minggu": [],
+     "gelaran": "Ustazah",
+     "nama": "",
+     "photo": "",
+     "tajuk": {}
+    },
     "tpl": {
      "0": {
       "j": "subuh",
@@ -251,6 +276,13 @@
      "gelaran": "Ust",
      "nama": "",
      "photo": ""
+    },
+    "talaqqi": {
+     "minggu": [],
+     "gelaran": "Ustazah",
+     "nama": "",
+     "photo": "",
+     "tajuk": {}
     },
     "tpl": {
      "0": {
@@ -325,6 +357,13 @@
      "nama": "",
      "photo": ""
     },
+    "talaqqi": {
+     "minggu": [],
+     "gelaran": "Ustazah",
+     "nama": "",
+     "photo": "",
+     "tajuk": {}
+    },
     "tpl": {
      "0": {
       "j": "subuh",
@@ -397,6 +436,13 @@
      "gelaran": "Ust",
      "nama": "",
      "photo": ""
+    },
+    "talaqqi": {
+     "minggu": [],
+     "gelaran": "Ustazah",
+     "nama": "",
+     "photo": "",
+     "tajuk": {}
     },
     "tpl": {
      "0": {
@@ -471,6 +517,13 @@
      "nama": "",
      "photo": ""
     },
+    "talaqqi": {
+     "minggu": [],
+     "gelaran": "Ustazah",
+     "nama": "",
+     "photo": "",
+     "tajuk": {}
+    },
     "tpl": {
      "0": {
       "j": "subuh",
@@ -543,6 +596,13 @@
      "gelaran": "Ust",
      "nama": "",
      "photo": ""
+    },
+    "talaqqi": {
+     "minggu": [],
+     "gelaran": "Ustazah",
+     "nama": "",
+     "photo": "",
+     "tajuk": {}
     },
     "tpl": {
      "0": {
@@ -617,6 +677,13 @@
      "nama": "",
      "photo": ""
     },
+    "talaqqi": {
+     "minggu": [],
+     "gelaran": "Ustazah",
+     "nama": "",
+     "photo": "",
+     "tajuk": {}
+    },
     "tpl": {
      "0": {
       "j": "subuh",
@@ -689,6 +756,13 @@
      "gelaran": "Ust",
      "nama": "",
      "photo": ""
+    },
+    "talaqqi": {
+     "minggu": [],
+     "gelaran": "Ustazah",
+     "nama": "",
+     "photo": "",
+     "tajuk": {}
     },
     "tpl": {
      "0": {
@@ -763,6 +837,13 @@
      "nama": "",
      "photo": ""
     },
+    "talaqqi": {
+     "minggu": [],
+     "gelaran": "Ustazah",
+     "nama": "",
+     "photo": "",
+     "tajuk": {}
+    },
     "tpl": {
      "0": {
       "j": "subuh",
@@ -835,6 +916,13 @@
      "gelaran": "Ust",
      "nama": "",
      "photo": ""
+    },
+    "talaqqi": {
+     "minggu": [],
+     "gelaran": "Ustazah",
+     "nama": "",
+     "photo": "",
+     "tajuk": {}
     },
     "tpl": {
      "0": {
@@ -909,6 +997,13 @@
      "nama": "",
      "photo": ""
     },
+    "talaqqi": {
+     "minggu": [],
+     "gelaran": "Ustazah",
+     "nama": "",
+     "photo": "",
+     "tajuk": {}
+    },
     "tpl": {
      "0": {
       "j": "subuh",
@@ -981,6 +1076,13 @@
      "gelaran": "Ust",
      "nama": "",
      "photo": ""
+    },
+    "talaqqi": {
+     "minggu": [],
+     "gelaran": "Ustazah",
+     "nama": "",
+     "photo": "",
+     "tajuk": {}
     },
     "tpl": {
      "0": {
