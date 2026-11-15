@@ -862,11 +862,11 @@
       4:{j:"kahfi"},5:{j:"halaqah",t:"Halaqah",p:{1:"aiman",2:"aiman",3:"aiman",4:"aiman"}},6:{j:"sabtu"}};
     const HARI=["Ahad","Isnin","Selasa","Rabu","Khamis","Jumaat","Sabtu"];
     const BLN=["Jan","Feb","Mac","Apr","Mei","Jun","Jul","Ogo","Sep","Okt","Nov","Dis"];
-    const WAKTU={subuh:"Selepas Subuh",maghrib:"Selepas Maghrib",halaqah:"Selepas Maghrib",kahfi:"Malam Jumaat",dhuha:"9.00 Pagi",perdana:"Selepas Maghrib",tazkirah:"Sebelum Solat Jumaat",zohor:"2.30 Petang"};
+    const WAKTU={subuh:"Selepas Subuh",maghrib:"Selepas Maghrib",halaqah:"Selepas Maghrib",kahfi:"Malam Jumaat",dhuha:"9.00 Pagi",perdana:"Selepas Maghrib",talaqqi:"9.00 hingga 11.00 Pagi",tazkirah:"Sebelum Solat Jumaat",zohor:"2.30 Petang"};
     const occ=d=>Math.floor((d-1)/7)+1;
     let TK_S={perdana:{sabtu:3,gelaran:"Ust",ceramah:"",photo:""},dhuha:{rabu:3},zohor:{jumaat:0,gelaran:"Ust",nama:""},bulanan:{},overrides:{},tazkirah:{}};
     /* tetapan bulanan (Perdana/Dhuha/Zohor) ikut bulan; fallback ke medan lama */
-    const cfg=(y,m)=>{ const b=(TK_S.bulanan||{})[y+"-"+m]||{}; return {perdana:b.perdana||TK_S.perdana, dhuha:b.dhuha||TK_S.dhuha, zohor:b.zohor||TK_S.zohor}; };
+    const cfg=(y,m)=>{ const b=(TK_S.bulanan||{})[y+"-"+m]||{}; return {perdana:b.perdana||TK_S.perdana, dhuha:b.dhuha||TK_S.dhuha, zohor:b.zohor||TK_S.zohor, talaqqi:b.talaqqi||null}; };
     const esc=t=>String(t==null?"":t).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
     const ovFor=(y,m)=>TK_S.overrides[y+"-"+m]||{};
 
@@ -903,8 +903,16 @@
     /* Tazkirah Jumaat (per tarikh): Tazkirah dulu, kuliah Maghrib selepasnya */
     /* Jumaat ikut urutan masa: Tazkirah (sebelum Jumaat) → Zohor Muslimat → kuliah Maghrib */
     function resolve(y,m,d){
-      const base=baseResolve(y,m,d);
-      if(new Date(Date.UTC(y,m-1,d)).getUTCDay()!==5) return base;
+      const base=baseResolve(y,m,d), wd=new Date(Date.UTC(y,m-1,d)).getUTCDay();
+      /* Sabtu: Talaqqi Al-Quran Muslimat (pagi, minggu dipilih) berkongsi kad dengan Kuliah Perdana (malam) */
+      if(wd===6){ const t=cfg(y,m).talaqqi;
+        if(!t||!(t.minggu||[]).includes(occ(d))||!(t.nama||t.photo)||base.kind==="khas") return base;
+        const parts=[{title:"Talaqqi Al-Quran Muslimat",name:((t.gelaran||"Ustazah")+" "+(t.nama||"")).trim(),waktu:WAKTU.talaqqi,jenis:"talaqqi"}];
+        if(base.kind==="lec") parts.push({title:base.title,name:base.name,waktu:WAKTU[base.jenis]||"",jenis:base.jenis,utama:true});
+        if(base.kind==="tangguh") parts.push({title:"Ditangguhkan",name:lecShort(base.asal),waktu:"",tangguh:true});
+        if(parts.length===1) return{kind:"lec",jenis:"talaqqi",title:parts[0].title,name:parts[0].name};
+        return{kind:"split",parts}; }
+      if(wd!==5) return base;
       const parts=[], tz=((TK_S.tazkirah||{})[y+"-"+m]||{})[d], z=cfg(y,m).zohor;
       if(tz) parts.push({title:"Tazkirah Jumaat",name:((tz.gelaran||"Ust")+" "+(tz.nama||"")).trim(),waktu:WAKTU.tazkirah,jenis:"tazkirah"});
       if(z&&z.jumaat&&z.jumaat===occ(d)&&(z.nama||z.photo)) parts.push({title:"Kuliah Zohor Muslimat",name:((z.gelaran||"Ust")+" "+(z.nama||"")).trim(),waktu:WAKTU.zohor,jenis:"zohor"});
