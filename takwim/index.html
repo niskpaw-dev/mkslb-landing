@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Takwim Pengimarahan — MKSLB</title>
 <meta name="robots" content="noindex,nofollow">
-<meta name="takwim-versi" content="20261115.1828">
+<meta name="takwim-versi" content="20261115.1835">
 
 <!-- ════════════════════════════════════════════════════════════════════════
      TAKWIM PENGIMARAHAN — Masjid Kampung Sungai Lang Baru  ·  v3
@@ -1802,7 +1802,7 @@ async function tvCommit(add,msg){
     try{
       const head=await ghHead(SYNC.pubRepo,SYNC.branch), blobs=await ghBlobs(SYNC.pubRepo,head,"tv/");
       const files=await tvSusun(head,blobs,add);
-      await ghCommit(SYNC.pubRepo,SYNC.branch,head,files,msg); return;
+      await ghCommit(SYNC.pubRepo,SYNC.branch,head,files,msg); tandaUbah(); saveState(); return;
     }catch(e){ if((e.status===422||e.status===409) && attempt<3) continue; throw e; }
   }
 }
@@ -1810,6 +1810,7 @@ async function tvCommit(add,msg){
 function tvRename(blobs){
   const out=[];
   tvAll().forEach(e=>{ const baru=tvNama(e); if(baru===e.fail) return;
+    if(!blobs["tv/"+e.fail] && blobs["tv/"+baru]){ e.fail=baru; return; }   /* peranti lain dah tukar nama — ikut, jangan rujuk fail lama yang dah tiada */
     const lama="tv/"+e.fail; if(blobs[lama]){ out.push({ path:"tv/"+baru, sha:blobs[lama], dari:e.fail }); e.fail=baru; } });
   return out;
 }
@@ -2885,7 +2886,7 @@ async function terbit(){
         await ghCommit(SYNC.pubRepo,SYNC.branch,head,fx,"Terbit takwim "+label); break; }
       catch(e){ if((e.status===422||e.status===409) && attempt<3) continue; throw e; }
     }
-    saveState();
+    tandaUbah(); saveState();
     setStatus("✓ Takwim "+label+" diterbitkan — laman & TV masjid dikemas kini (laman ~1 minit, TV ~5–10 minit).",true);
   }catch(e){
     console.error(e);
