@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Takwim Pengimarahan — MKSLB</title>
 <meta name="robots" content="noindex,nofollow">
-<meta name="takwim-versi" content="20261115.2155">
+<meta name="takwim-versi" content="20261116.0819">
 
 <!-- ════════════════════════════════════════════════════════════════════════
      TAKWIM PENGIMARAHAN — Masjid Kampung Sungai Lang Baru  ·  v3
@@ -669,13 +669,13 @@ button.danger{ background:#6e2b2b; color:#f7dcdc; border:1px solid #8a3a3a; }
 <div id="tvModal" class="modal hidden">
   <div class="mbox tvbox">
     <h3>📺 Saluran TV masjid</h3>
-    <div class="ctx">Slaid masuk ke TV mySolatime melalui skrip di mini PC (setiap 5 minit) dan dibuang sendiri selepas tarikh tamat. Takwim bulanan masuk sendiri setiap kali 🌐 Terbit.</div>
+    <div class="ctx">Slaid masuk ke TV mySolatime melalui skrip di mini PC (setiap 5 minit) dan dibuang sendiri selepas tarikh &amp; masa tamat (program pagi/petang: masa tamat lalai, cth Kuliah Subuh 8.00 pagi; kosong = tengah malam). Takwim bulanan masuk sendiri setiap kali 🌐 Terbit.</div>
     <div class="msec" id="tvForm">
       <div class="tvfhead" id="tvFormHead">Slaid baru</div>
       <div class="row"><span class="lbl">Tajuk</span><input id="tvTajuk" style="flex:1" placeholder="cth: Kuliah Maghrib — Ust Naudi"></div>
       <div class="row"><span class="lbl">Poster</span><span class="filebtn"><button class="ghost" type="button" id="tvPilihBtn">🖼️ Pilih gambar 16:9</button><input type="file" id="tvFile" accept="image/*"></span><small id="tvFileInfo" style="color:var(--paper-dim)"></small></div>
       <div class="tvprev"><img id="tvPrev" alt=""></div>
-      <div class="row"><span class="lbl">Mula</span><input id="tvMula" type="date"><span class="lbl" style="width:auto">Tamat</span><input id="tvTamat" type="date"></div>
+      <div class="row"><span class="lbl">Mula</span><input id="tvMula" type="date"><span class="lbl" style="width:auto">Tamat</span><input id="tvTamat" type="date"><input id="tvTamatJam" type="time" title="Masa slaid dibuang dari TV pada hari tamat. Kosong = tengah malam"></div>
       <div class="row"><span class="lbl">Kedudukan</span><input id="tvPosSlaid" style="width:90px" inputmode="numeric" placeholder="auto"><small style="color:var(--paper-dim)">pilihan — kosong = ikut tarikh program. cth 10-14 = selit sebelum 10-14 (selepas 10-13)</small></div>
       <div class="row" id="tvFormMsg" style="color:var(--paper-dim);font-size:12.5px"></div>
       <div class="mactions"><button class="danger hidden" id="tvBuang" type="button">Buang dari TV</button><button class="ghost" id="tvBaru" type="button">＋ Slaid lain</button><button id="tvHantar" type="button">📺 Hantar ke TV</button></div>
@@ -1753,9 +1753,11 @@ function tvNama(e){                      /* nama fail ikut kedudukan semasa; ver
   return (tvPosOk(e.pos)?e.pos:P.poster)+"-mkslb-"+(e.tgl||"")+"-"+(e.slug||"slaid")+"-"+ver+".jpg";
 }
 function hash6(str){ let h=5381; for(let i=0;i<str.length;i+=7) h=((h<<5)+h+str.charCodeAt(i))|0; return (h>>>0).toString(36).slice(0,6); }
-function tvStatus(e){ const t=isoOfD(new Date()); if(e.tamat && t>e.tamat) return ["tamat","Tamat"]; if(e.mula && t<e.mula) return ["akan","Akan datang"]; return ["aktif","Di TV"]; }
+function tvStatus(e){ const t=isoOfD(new Date()), j=e.jenis==="takwim"?"":tvJam(e);
+  if(e.tamat && (t>e.tamat || (t===e.tamat && j && new Date().toTimeString().slice(0,5)>=j))) return ["tamat","Tamat"]; if(e.mula && t<e.mula) return ["akan","Akan datang"]; return ["aktif","Di TV"]; }
 function tvJulat(e){ const f=x=>{ if(!x) return ""; const [a,b,c]=x.split("-").map(Number); return c+" "+BULAN_TITLE[b-1].slice(0,3); };
-  return e.mula||e.tamat ? (f(e.mula)||"…")+" – "+(f(e.tamat)||"…") : "Sentiasa"; }
+  const j=e.jenis==="takwim"?"":tvJam(e), jam=j?" "+(+j.slice(0,2)%12||12)+"."+j.slice(3)+(+j.slice(0,2)<12?" pg":" ptg"):"";
+  return e.mula||e.tamat ? (f(e.mula)||"…")+" – "+(f(e.tamat)||"…")+jam : "Sentiasa"; }
 function imgToJpeg(src,maxW,maxH,q){
   return new Promise((ok,ng)=>{ const im=new Image(); im.onload=()=>{ const r=Math.min(1,maxW/im.width,maxH/im.height), w=Math.round(im.width*r), h=Math.round(im.height*r);
       const c=document.createElement("canvas"); c.width=w; c.height=h; const x=c.getContext("2d"); x.fillStyle="#000"; x.fillRect(0,0,w,h); x.imageSmoothingQuality="high"; x.drawImage(im,0,0,w,h);
@@ -1763,7 +1765,7 @@ function imgToJpeg(src,maxW,maxH,q){
 }
 function tvManifest(){
   return { v:1, dikemaskini:new Date().toISOString(), folder:"C:\\mysolatime\\17playlist\\0UMUM",
-    slaid:tvAll().map(e=>({ fail:e.fail, url:TV_BASE+e.fail, mula:e.mula||"", tamat:e.tamat||"", tajuk:e.tajuk||"" })) };
+    slaid:tvAll().map(e=>({ fail:e.fail, url:TV_BASE+e.fail, mula:e.mula||"", tamat:e.tamat||"", tamatJam:e.jenis==="takwim"?"":tvJam(e), tajuk:e.tajuk||"" })) };
 }
 /* Perlindungan antara peranti: slaid dalam manifest awan yang peranti ini TIDAK kenal (dihantar dari peranti lain
    tetapi belum sampai ke sini) dikekalkan — hanya slaid yang tamat, dibuang dengan sengaja, atau diganti versi baru dibuang. */
@@ -1830,6 +1832,15 @@ function tvDefaultDates(y,m,d){
   const mula=new Date(ev); mula.setDate(mula.getDate()-(ev.getDay()===0?1:mula.getDay()));   /* Ahad → Sabtu sebelum; lain → Ahad minggu itu */
   return { mula:isoOfD(mula<t?t:mula), tamat:isoOfD(ev) };
 }
+/* masa tamat lalai ikut program (dipersetujui 15 Nov) — program malam kekal hingga tengah malam ("") */
+function tvJamLalai(t){ t=t||"";
+  if(/subuh/i.test(t)) return "08:00";
+  if(/dhuha/i.test(t)) return "11:00";
+  if(/talaqqi/i.test(t)) return "11:30";
+  if(/tazkirah jumaat|khutbah/i.test(t)) return "14:00";
+  if(/zohor muslimat/i.test(t)) return "16:00";
+  return ""; }
+const tvJam=e=> e.tamatJam!==undefined ? e.tamatJam : tvJamLalai(e.evTitle);   /* belum pernah diset → lalai */
 function tvLoadForm(id,ctx){
   const e=id?(STATE.tv||{})[id]:null;
   TVF={ id:id||null, img:null, ...(ctx||{}) };
@@ -1838,6 +1849,7 @@ function tvLoadForm(id,ctx){
   $("tvTajuk").value=e?e.tajuk:(ctx&&ctx.ev?[ctx.ev.tajuk||ctx.ev.title,ctx.ev.name].filter(Boolean).join(" — "):"");
   const dd=ctx&&ctx.ev?tvDefaultDates(ctx.y,ctx.m,ctx.d):{mula:isoOfD(new Date()),tamat:""};
   $("tvMula").value=e?e.mula:dd.mula; $("tvTamat").value=e?e.tamat:dd.tamat;
+  $("tvTamatJam").value=e?(e.jenis==="takwim"?"":tvJam(e)):(ctx&&ctx.ev?tvJamLalai(ctx.ev.title):""); $("tvTamatJam").disabled=!!(e&&e.jenis==="takwim");
   $("tvPosSlaid").value=e&&e.pos?e.pos:""; $("tvPosSlaid").disabled=!!(e&&e.jenis==="takwim");
   $("tvPrev").src=tvThumb(e); $("tvPrev").classList.toggle("on",!!tvThumb(e));
   $("tvFile").value=""; $("tvFileInfo").textContent=e?"(kekal gambar sedia ada — pilih untuk ganti)":"";
@@ -1889,7 +1901,7 @@ async function tvHantar(){
   btn.disabled=true; msg.textContent="Menghantar ke saluran TV…";
   try{
     const add=[]; let e=lama?{...lama}:{ id:F.id||(F.ev?tvIdEv(F.y,F.m,F.d,F.ev):"x"+Date.now().toString(36)), y:F.y||0, m:F.m||0, d:F.d||0, evTitle:F.ev?F.ev.title:"", jenis:"poster" };
-    e.tajuk=tajuk; e.mula=mula; e.tamat=tamat;
+    e.tajuk=tajuk; e.mula=mula; e.tamat=tamat; if(e.jenis!=="takwim") e.tamatJam=$("tvTamatJam").value||"";
     const pos=$("tvPosSlaid").value.trim(); if(pos && !tvPosOk(pos)){ msg.textContent="Kedudukan khas: guna nombor & sengkang sahaja, cth 10-13."; btn.disabled=false; return; }
     if(pos) e.pos=pos; else delete e.pos;
     if(F.img){
