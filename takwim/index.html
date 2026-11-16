@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Takwim Pengimarahan — MKSLB</title>
 <meta name="robots" content="noindex,nofollow">
-<meta name="takwim-versi" content="20261116.0819">
+<meta name="takwim-versi" content="20261116.0838">
 
 <!-- ════════════════════════════════════════════════════════════════════════
      TAKWIM PENGIMARAHAN — Masjid Kampung Sungai Lang Baru  ·  v3
@@ -344,6 +344,7 @@ button.danger{ background:#6e2b2b; color:#f7dcdc; border:1px solid #8a3a3a; }
 .tvrow img{ width:96px; height:54px; object-fit:cover; border-radius:6px; background:#0006; flex:none; }
 .tvrow .tn{ flex:1; min-width:0; font-size:13px; font-weight:700; }
 .tvrow .tn small{ display:block; font-weight:500; color:var(--paper-dim); font-size:11.5px; }
+.tvrow img.tiada{ background:var(--ink) linear-gradient(135deg,transparent 48%,var(--line) 49% 51%,transparent 52%); border:1px dashed var(--line); }
 @media (max-width:640px){   /* telefon: status + butang turun ke baris kedua supaya tajuk tak terhimpit */
   .tvrow{ flex-wrap:wrap; } .tvrow .tn{ flex:1 1 calc(100% - 110px); } .tvrow .tvst{ margin-left:106px; }
   .tgrow .tn{ flex-basis:calc(100% - 68px); } .tgrow .tvst{ margin-left:64px; } }
@@ -1786,6 +1787,7 @@ async function tvLain(head,ren){
 }
 /* fail untuk satu commit tv/: tambahan + tukar nama + manifest (gabung slaid peranti lain) + buang yang tak diperlukan */
 async function tvSusun(head,blobs,tambah){
+  { const kini=isoOfD(new Date()); Object.values(STATE.tv||{}).forEach(e=>{ if(e.tamat && e.tamat<kini) delete STATE.tv[e.id]; }); }   /* slaid tamat keluar dari senarai setiap hantaran TV */
   const ada=Object.keys(blobs), ren=tvRename(blobs), lain=await tvLain(head,ren);
   /* pindah gambar kecil lama (dalam data) ke fail tvkecil/, kemudian buang dari data */
   const kecil=await ghBlobs(SYNC.pubRepo,head,"tvkecil/"), pindah=[];
@@ -1795,7 +1797,7 @@ async function tvSusun(head,blobs,tambah){
   const buangKecil=Object.keys(kecil).filter(k=>{ const v=(k.match(/^tvkecil\/([a-z0-9]{1,6})\.jpg$/)||[])[1];
     return v && !verGuna.has(v) && !(tambah||[]).some(f=>f.path===k); }).map(k=>({path:k,del:true}));
   tambah=(tambah||[]).concat(pindah);
-  const man=tvManifest(); man.slaid=man.slaid.concat(lain.map(x=>({ fail:x.fail, url:TV_BASE+x.fail, mula:x.mula||"", tamat:x.tamat||"", tajuk:x.tajuk||"" })));
+  const man=tvManifest(); man.slaid=man.slaid.concat(lain.map(x=>({ fail:x.fail, url:TV_BASE+x.fail, mula:x.mula||"", tamat:x.tamat||"", tamatJam:x.tamatJam||"", tajuk:x.tajuk||"" })));
   const simpan=new Set(tvAll().map(e=>"tv/"+e.fail).concat(lain.map(x=>"tv/"+x.fail)).concat(["tv/manifest.json"]).concat((tambah||[]).map(f=>f.path)));
   if(lain.length) console.warn("Saluran TV: "+lain.length+" slaid dari peranti lain dikekalkan",lain.map(x=>x.fail));
   return (tambah||[]).concat(ren).concat([{ path:"tv/manifest.json", b64:b64enc(JSON.stringify(man,null,1)) }])
@@ -1865,6 +1867,7 @@ function renderTvList(){
   L.forEach(e=>{
     const r=document.createElement("div"); r.className="tvrow";
     const im=document.createElement("img"); im.alt=""; im.loading="lazy"; if(tvThumb(e)) im.src=tvThumb(e);
+    im.onerror=()=>{ im.removeAttribute("src"); im.classList.add("tiada"); };   /* slaid tamat: gambar kecil dah dibersihkan */
     const tn=document.createElement("div"); tn.className="tn"; tn.textContent=e.tajuk||e.fail;
     const sm=document.createElement("small"); sm.textContent=tvJulat(e)+" · "+e.fail; tn.appendChild(sm);
     const [cls,lbl]=tvStatus(e), st=document.createElement("span"); st.className="tvst "+cls; st.textContent=lbl;
