@@ -5,7 +5,8 @@
    "sabtu": 3,
    "gelaran": "Ust",
    "ceramah": "Syafiq Liow",
-   "photo": "syafiq"
+   "photo": "syafiq",
+   "penuh": "Syafiq Raffiqin Liow bin Liow For Sen"
   },
   "dhuha": {
    "rabu": 3
@@ -14,7 +15,8 @@
    "jumaat": 4,
    "gelaran": "Ustazah",
    "nama": "Shamsiah",
-   "photo": "shamsiah"
+   "photo": "shamsiah",
+   "penuh": "Shamsiah binti Husin"
   },
   "bulanan": {
    "2026-10": {
@@ -103,7 +105,8 @@
      "sabtu": 3,
      "gelaran": "Ust",
      "ceramah": "Syafiq Liow",
-     "photo": "syafiq"
+     "photo": "syafiq",
+     "penuh": "Syafiq Raffiqin Liow bin Liow For Sen"
     },
     "dhuha": {
      "rabu": 3
@@ -112,7 +115,8 @@
      "jumaat": 4,
      "gelaran": "Ustazah",
      "nama": "Shamsiah",
-     "photo": "shamsiah"
+     "photo": "shamsiah",
+     "penuh": "Shamsiah binti Husin"
     },
     "talaqqi": {
      "minggu": [
@@ -3471,6 +3475,11 @@
     "g": "Ustazah",
     "n": "Shamsiah",
     "s": "K. Zohor Muslimat"
+   },
+   "hanis": {
+    "g": "Ustazah",
+    "n": "Hanis",
+    "s": "Talaqqi"
    }
   },
   "sesi": {}
