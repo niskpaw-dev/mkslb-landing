@@ -200,15 +200,19 @@
     "zohor": {
      "jumaat": 0,
      "gelaran": "Ust",
-     "nama": "",
-     "photo": ""
+     "nama": "Shamsiah",
+     "photo": "shamsiah",
+     "penuh": "Shamsiah binti Husin"
     },
     "talaqqi": {
-     "minggu": [],
+     "minggu": [
+      2,
+      3
+     ],
      "gelaran": "Ustazah",
-     "nama": "",
-     "penuh": "",
-     "photo": "",
+     "nama": "Hanis",
+     "penuh": "Hanis Humaira",
+     "photo": "hanis",
      "tajuk": {}
     },
     "tpl": {
@@ -3472,14 +3476,26 @@
     "s": "Halaqah"
    },
    "shamsiah": {
-    "g": "Ustazah",
+    "g": "Usth",
     "n": "Shamsiah",
-    "s": "K. Zohor Muslimat"
+    "s": "K. Zohor"
    },
    "hanis": {
     "g": "Ustazah",
     "n": "Hanis",
     "s": "Talaqqi"
+   },
+   "shahril": {
+    "g": "Ust",
+    "n": "Shahril"
+   },
+   "khairulanwar": {
+    "g": "Daie",
+    "n": "Khairulanwar"
+   },
+   "aiman2": {
+    "g": "Daie",
+    "n": "Asyraf"
    }
   },
   "sesi": {}
