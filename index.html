@@ -117,7 +117,8 @@
   /* ---------- HERO ---------- */
   .hero{position:relative;min-height:92vh;display:flex;align-items:flex-end;overflow:hidden;margin-top:-72px;padding-top:72px}
   .hero-photo{position:absolute;inset:0;z-index:0}
-  .hero-photo img{width:100%;height:100%;object-fit:cover;object-position:center 38%}
+  .hero-photo picture{display:block;width:100%;height:100%}
+  .hero-photo img{width:100%;height:100%;object-fit:cover;object-position:54% 100%}
   .hero-scrim{position:absolute;inset:0;z-index:1;
     background:
       linear-gradient(180deg, rgba(3,37,27,.55) 0%, rgba(3,37,27,.15) 32%, rgba(3,37,27,.72) 72%, var(--green-800) 100%),
@@ -406,7 +407,7 @@
 <main>
   <!-- HERO -->
   <section class="hero">
-    <div class="hero-photo"><img src="hero_mkslb.jpg" alt="Pemandangan Masjid Kampung Sungai Lang Baru" fetchpriority="high"></div>
+    <div class="hero-photo"><picture><source srcset="hero_mkslb.webp" type="image/webp"><img src="hero_mkslb.jpg" alt="Pemandangan udara Masjid Kampung Sungai Lang Baru" width="1920" height="1440" fetchpriority="high"></picture></div>
     <div class="hero-scrim" aria-hidden="true"></div>
     <div class="hero-inner">
       <div class="bismillah reveal" id="bism">بِسْمِ ٱللّٰهِ ٱلرَّحْمٰنِ ٱلرَّحِيمِ</div>
