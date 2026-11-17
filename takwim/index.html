@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Takwim Pengimarahan — MKSLB</title>
 <meta name="robots" content="noindex,nofollow">
-<meta name="takwim-versi" content="20261116.0838">
+<meta name="takwim-versi" content="20261117.2138">
 
 <!-- ════════════════════════════════════════════════════════════════════════
      TAKWIM PENGIMARAHAN — Masjid Kampung Sungai Lang Baru  ·  v3
@@ -81,6 +81,8 @@ button.danger{ background:#6e2b2b; color:#f7dcdc; border:1px solid #8a3a3a; }
 .editbar input[type=date]{ width:150px; }
 .editbar input.nama{ width:150px; }
 .editbar input.gelaran{ width:64px; }
+.editbar select.penceramah{ max-width:190px; }
+.editbar .grp.terpaut .manual{ display:none; }
 .mchips{ display:inline-flex; gap:3px; }
 .mchips button{ padding:5px 9px; font-size:12px; min-width:30px; background:var(--ink); color:var(--paper-dim); border:1px solid var(--line); }
 .mchips button.on{ background:linear-gradient(135deg,var(--gold),#e0bd45); color:var(--ink); border-color:transparent; }
@@ -479,13 +481,14 @@ button.danger{ background:#6e2b2b; color:#f7dcdc; border:1px solid #8a3a3a; }
       <span class="lbl">Dhuha · Rabu</span>
       <select id="selDhuhaMinggu"></select>
     </div>
-    <div class="grp">
+    <div class="grp" id="grpZohor">
       <span class="lbl">Zohor Muslimat · Jumaat</span>
       <select id="selZohorMinggu"></select>
-      <input class="gelaran" id="inpZohorGelaran" placeholder="Ust">
-      <input class="nama" id="inpZohorNama" placeholder="Nama ringkas (sel)" title="Nama ringkas untuk sel takwim">
-      <input class="nama" id="inpZohorPenuh" placeholder="Nama penuh (poster)" title="Nama penuh untuk poster, pengumuman, Telegram & Facebook">
-      <select id="selZohorFoto"></select>
+      <select class="penceramah" id="selZohorUstaz" title="Pilih dari Data penceramah — gelaran, nama, label takwim & foto ikut kad penceramah"></select>
+      <input class="gelaran manual" id="inpZohorGelaran" placeholder="Ust">
+      <input class="nama manual" id="inpZohorNama" placeholder="Nama ringkas (sel)" title="Nama ringkas untuk sel takwim">
+      <input class="nama manual" id="inpZohorPenuh" placeholder="Nama penuh (poster)" title="Nama penuh untuk poster, pengumuman, Telegram & Facebook">
+      <select class="manual" id="selZohorFoto"></select>
     </div>
     <div class="grp" id="grpTalaqqi">
       <span class="lbl">Talaqqi Muslimat · Sabtu</span>
@@ -1054,13 +1057,29 @@ function baseCellFor(y,m,d,ignoreOv){
    2) Kuliah Zohor Muslimat (selepas Zohor · sebulan sekali, minggu dipilih)
    3) Kuliah Maghrib (Halaqah, dari template) */
 /* gelaran ringkas dalam sel → penuh untuk poster ("Ust" → "Ustaz") */
-const gelaranPenuh=g=> /^ust\.?$/i.test(g)?"Ustaz":/^ustzh\.?$/i.test(g)?"Ustazah":g;
+const gelaranPenuh=g=> /^ust\.?$/i.test(g)?"Ustaz":/^(ustzh?|usth)\.?$/i.test(g)?"Ustazah":g;
+/* Zohor Muslimat (17 Nov): penceramah dipaut ke Data penceramah (z.key). Gelaran, nama, nama penuh, foto & label sel ikut kad penceramah.
+   Tetapan lama tanpa key: dipaut sendiri jika nama + foto sepadan satu kad. key "__manual" = taip manual (cara lama).
+   Tajuk dalaman kekal "K. Zohor Muslimat" (kunci poster, waktu, siar, TV); label hanya untuk paparan sel. */
+function zohorKey(z){
+  if(!z) return "";
+  if(z.key!==undefined) return (z.key!=="__manual" && USTAZ[z.key])?z.key:"";
+  const k=Object.keys(USTAZ).find(k=>{ const u=USTAZ[k]; return u.nama && u.nama===z.nama && (z.photo===k || z.photo===u.photo); });
+  return k||"";
+}
+function zohorInfo(z){
+  const k=zohorKey(z);
+  if(k){ const u=USTAZ[k], g=u.gelaran||"Ust";
+    return { key:k, gelaran:g, nama:u.nama||"", photo:u.photo||k, penuh:(u.penuh||(gelaranPenuh(g)+" "+(u.nama||""))).trim(), label:u.subjek||"K. Zohor Muslimat" }; }
+  return { key:"", gelaran:z.gelaran||"Ust", nama:z.nama||"", photo:z.photo||"",
+           penuh:z.penuh?(gelaranPenuh(z.gelaran||"Ust")+" "+z.penuh).trim():"", label:"K. Zohor Muslimat" };
+}
 function fridayExtras(y,m,d){
   const out=[], tz=getTzFor(y,m)[d], z=cfgFor(y,m).zohor;
   if(tz) out.push({ title:"Taz. Jumaat", name:((tz.gelaran||"Ust")+" "+(tz.nama||"")).trim(), photo:tz.photo||"", extra:true });
-  if(z && z.jumaat && z.jumaat===occurrenceOf(d) && (z.nama||z.photo))
-    out.push({ title:"K. Zohor Muslimat", name:((z.gelaran||"Ust")+" "+(z.nama||"")).trim(), photo:z.photo||"", extra:true,
-               penuh:z.penuh?(gelaranPenuh(z.gelaran||"Ust")+" "+z.penuh).trim():"" });
+  if(z && z.jumaat && z.jumaat===occurrenceOf(d) && (z.nama||z.photo||zohorKey(z))){
+    const I=zohorInfo(z);
+    out.push({ title:"K. Zohor Muslimat", label:I.label, name:(I.gelaran+" "+I.nama).trim(), photo:I.photo, extra:true, penuh:I.penuh }); }
   return out;
 }
 /* Lapisan Sabtu: Talaqqi Muslimat (pagi) berkongsi sel dengan Kuliah Perdana (malam) — seperti Dhuha + Maghrib hari Rabu */
@@ -1084,7 +1103,7 @@ const resolveCell=(d,ig)=> resolveCellFor(STATE.tahun,STATE.bulan,d,ig);
 
 function describeShort(c){
   if(!c) return "";
-  if(c.kind==="lecture") return [c.title,c.name].filter(Boolean).join(" · ");
+  if(c.kind==="lecture") return [c.label||c.title,c.name].filter(Boolean).join(" · ");
   if(c.kind==="split") return c.parts.filter(p=>!p.extra).map(p=>[p.title,p.name].filter(Boolean).join(" · ")).join(" + ")||c.parts.map(p=>p.title).join(" + ");
   if(c.kind==="kahfi") return "Malam Mustajab Doa";
   return "";
@@ -1092,9 +1111,9 @@ function describeShort(c){
 function describeContent(c){
   if(!c) return "";
   if(c.kind==="tangguh") return "Ditangguhkan — "+describeShort(c.asal)+(c.sebab?" ("+c.sebab+")":"");
-  if(c.kind==="lecture") return (c.title?c.title+" — ":"")+c.name;
+  if(c.kind==="lecture") return ((c.label||c.title)?(c.label||c.title)+" — ":"")+c.name;
   if(c.kind==="kahfi")   return "Bacaan Kahfi / Yasin (يس)";
-  if(c.kind==="split")   return c.parts.map(p=>p.title+" — "+p.name).join("  +  ");
+  if(c.kind==="split")   return c.parts.map(p=>(p.label||p.title)+" — "+p.name).join("  +  ");
   if(c.kind==="khas")    return "Hari khas: "+c.text;
   return "Kosong";
 }
@@ -1127,14 +1146,14 @@ function renderCell(slot){
   switch(content.kind){
     case "kahfi": return `<div class="cell kahfi" ${dd}>${date}<div class="yasin">يس</div></div>`;
     case "split":{
-      const half=(h)=> `<div class="half">${photoTag(h.photo)}<div class="cap"><div class="title">${h.title}</div><div class="name">${h.name}</div></div></div>`;
+      const half=(h)=> `<div class="half">${photoTag(h.photo)}<div class="cap"><div class="title">${h.label||h.title}</div><div class="name">${h.name}</div></div></div>`;
       if(content.parts.length>2){   /* 3 acara: senarai bertindan, tanpa foto — kekal terbaca di TV */
-        const it=(h)=> `<div class="sitem"><div class="title">${h.title}</div><div class="name">${h.name}</div></div>`;
+        const it=(h)=> `<div class="sitem"><div class="title">${h.label||h.title}</div><div class="name">${h.name}</div></div>`;
         return `<div class="cell split maghrib split3" ${dd}>${date}<div class="stack">${content.parts.map(it).join("")}</div></div>`; }
       return `<div class="cell split maghrib" ${dd}>${date}<div class="halves">${content.parts.map(half).join("")}</div></div>`; }
     case "lecture":{
       const cls=content.jenis==="perdana"?"perdana":content.jenis==="subuh"?"subuh":"maghrib";
-      return `<div class="cell ${cls}" ${dd}>${date}${photoTag(content.photo)}<div class="body"><div class="title">${content.title}</div><div class="name">${content.name}</div></div></div>`; }
+      return `<div class="cell ${cls}" ${dd}>${date}${photoTag(content.photo)}<div class="body"><div class="title">${content.label||content.title}</div><div class="name">${content.name}</div></div></div>`; }
     case "khas": return `<div class="cell khas" ${dd}>${date}<div class="khas-teks">${content.text}</div></div>`;
     case "tangguh": return `<div class="cell khas tangguh" ${dd}>${date}<div class="khas-teks">Ditangguhkan<small>${describeShort(content.asal)}</small></div></div>`;
     default: return `<div class="cell empty" ${dd}>${date}</div>`;
@@ -1176,7 +1195,7 @@ function wphoto(key){ const src=photoSrc(key); if(!src) return "";
 function wmini(h){ if(!h) return `<div class="mini"></div>`;
   const src=photoSrc(h.photo);
   const img=src?`<img class="miniphoto" src="${src}" alt="" onerror="this.closest('.mini').classList.add('no-photo')">`:"";
-  return `<div class="mini">${img}<div class="mtext"><div class="title">${h.title}</div><div class="name">${h.name}</div></div></div>`; }
+  return `<div class="mini">${img}<div class="mtext"><div class="title">${h.label||h.title}</div><div class="name">${h.name}</div></div></div>`; }
 
 function weekRowHTML(dt){
   const y=dt.getFullYear(), m=dt.getMonth()+1, d=dt.getDate(), wd=dt.getDay();
@@ -1190,7 +1209,7 @@ function weekRowHTML(dt){
     case "tangguh": return `<div class="wk-row khas tangguh" ${meta}>${tab}<div class="content"><div class="ktext">Ditangguhkan</div><div class="name">${describeShort(c.asal)}</div></div></div>`;
     case "lecture":{
       const cls=c.jenis==="perdana"?"perdana":c.jenis==="subuh"?"subuh":"maghrib";
-      return `<div class="wk-row ${cls}" ${meta}>${tab}<div class="content"><div class="title">${c.title}</div><div class="name">${c.name}</div></div>${wphoto(c.photo)}</div>`; }
+      return `<div class="wk-row ${cls}" ${meta}>${tab}<div class="content"><div class="title">${c.label||c.title}</div><div class="name">${c.name}</div></div>${wphoto(c.photo)}</div>`; }
     default: return `<div class="wk-row empty" ${meta}>${tab}<div class="content"><div class="title">Tiada kuliah</div></div></div>`;
   }
 }
@@ -1222,6 +1241,9 @@ function syncEditbar(){
   fillPhotoSelect($("selPerdanaFoto"),CF.perdana.photo||"");
   $("selDhuhaMinggu").value=CF.dhuha.rabu||0;
   $("selZohorMinggu").value=CF.zohor.jumaat||0;
+  const zk=zohorKey(CF.zohor);
+  fillSelect($("selZohorUstaz"),[["__manual","— taip manual —"]].concat(Object.keys(USTAZ).sort((a,b)=>(USTAZ[a].nama||"").localeCompare(USTAZ[b].nama||"")).map(k=>[k,USTAZ[k].gelaran+" "+USTAZ[k].nama])));
+  $("selZohorUstaz").value=zk||"__manual"; $("grpZohor").classList.toggle("terpaut",!!zk);
   $("inpZohorGelaran").value=CF.zohor.gelaran||"Ust";
   $("inpZohorNama").value=CF.zohor.nama||""; $("inpZohorPenuh").value=CF.zohor.penuh||"";
   fillPhotoSelect($("selZohorFoto"),CF.zohor.photo||"");
@@ -1275,6 +1297,12 @@ function wireEditbar(){
   $("selPerdanaFoto").addEventListener("change",e=>{ cfgEdit("perdana").photo=e.target.value; saveState(); renderAll(); });
   $("selDhuhaMinggu").addEventListener("change",e=>{ cfgEdit("dhuha").rabu=+e.target.value; saveState(); renderAll(); });
   $("selZohorMinggu").addEventListener("change",e=>{ cfgEdit("zohor").jumaat=+e.target.value; saveState(); renderAll(); });
+  $("selZohorUstaz").addEventListener("change",e=>{ const z=cfgEdit("zohor"), k=e.target.value;
+    if(k==="__manual"||!USTAZ[k]){ z.key="__manual"; }
+    else { const u=USTAZ[k], g=u.gelaran||"Ust", gp=gelaranPenuh(g);   /* salinan nama disimpan juga — sandaran jika kad dipadam */
+      z.key=k; z.gelaran=g; z.nama=u.nama||""; z.photo=u.photo||k;
+      z.penuh=(u.penuh||"").replace(new RegExp("^("+gp+"|"+g+")\\.?\\s+","i"),"").trim(); }
+    saveState(); renderAll(); });
   $("inpZohorGelaran").addEventListener("change",e=>{ cfgEdit("zohor").gelaran=e.target.value.trim()||"Ust"; saveState(); renderAll(); });
   $("inpZohorNama").addEventListener("change",e=>{ cfgEdit("zohor").nama=e.target.value.trim(); saveState(); renderAll(); });
   $("inpZohorPenuh").addEventListener("change",e=>{ cfgEdit("zohor").penuh=e.target.value.trim(); saveState(); renderAll(); });
@@ -1479,7 +1507,7 @@ function eventsFor(y,m,d){
   return out;
 }
 const UP=s=>(s||"").toLocaleUpperCase("ms-MY");
-function namaPenuh(ev){ return UP(ev.penuh || (ev.name||"").replace(/^Ust\s+/i,"Ustaz ")); }
+function namaPenuh(ev){ return UP(ev.penuh || (ev.name||"").replace(/^(\S+)\s+/,(x,g)=>gelaranPenuh(g)+" ")); }
 function hasPhoto(ev){ const ph=photoSrc(ev.photo); return !!(ph && ph.startsWith("data:")); }
 function studioPayload(y,m,d,ev){
   const wd=new Date(y,m-1,d).getDay(), lines=[];
@@ -1570,7 +1598,7 @@ const UMUM_BUKA_GABUNG={santai:"Jom penuhkan hari ini dengan majlis ilmu di masj
 let UMUM={y:0,m:0,d:0,evs:[],gaya:"santai",msg:""};
 try{ const g=localStorage.getItem(LS_GAYA); if(["ringkas","santai","rasmi"].includes(g)) UMUM.gaya=g; }catch(e){}
 const uClean=s=>String(s||"").replace(/[\r\n*_~`]/g," ").replace(/\s+/g," ").trim();
-const uPenceramah=ev=> uClean(ev.penuh || (ev.name||"").replace(/^Ust\s+/i,"Ustaz ").replace(/^Ustzh?\s+/i,"Ustazah "));
+const uPenceramah=ev=> uClean(ev.penuh || (ev.name||"").replace(/^(\S+)\s+/,(x,g)=>gelaranPenuh(g)+" "));
 const uMasa=w=> /^\d/.test(w||"") ? w.toLocaleLowerCase("ms-MY") : (w||"");
 const isDoa=ev=> ev.tajuk==="Malam Mustajab Doa";
 function umumEvents(y,m,d){ return eventsFor(y,m,d).filter(ev=> ev.name || isDoa(ev) || ev.khas || ev.tangguh); }
