@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Takwim Pengimarahan — MKSLB</title>
 <meta name="robots" content="noindex,nofollow">
-<meta name="takwim-versi" content="20261117.2138">
+<meta name="takwim-versi" content="20261117.2150">
 
 <!-- ════════════════════════════════════════════════════════════════════════
      TAKWIM PENGIMARAHAN — Masjid Kampung Sungai Lang Baru  ·  v3
@@ -469,13 +469,14 @@ button.danger{ background:#6e2b2b; color:#f7dcdc; border:1px solid #8a3a3a; }
       <button id="wkNext" class="ghost">▶</button>
       <button id="wkToday" class="ghost">Minggu ini</button>
     </div>
-    <div class="grp">
+    <div class="grp" id="grpPerdana">
       <span class="lbl">Perdana · Sabtu</span>
       <select id="selPerdanaMinggu"></select>
-      <input class="gelaran" id="inpPerdanaGelaran" placeholder="Ust">
-      <input class="nama" id="inpPerdanaNama" placeholder="Nama ringkas (sel)" title="Nama ringkas untuk sel takwim, cth Syafiq Liow">
-      <input class="nama" id="inpPerdanaPenuh" placeholder="Nama penuh (poster)" title="Nama penuh untuk poster, pengumuman, Telegram & Facebook">
-      <select id="selPerdanaFoto"></select>
+      <select class="penceramah" id="selPerdanaUstaz" title="Pilih dari Data penceramah — gelaran, nama, nama penuh & foto ikut kad penceramah"></select>
+      <input class="gelaran manual" id="inpPerdanaGelaran" placeholder="Ust">
+      <input class="nama manual" id="inpPerdanaNama" placeholder="Nama ringkas (sel)" title="Nama ringkas untuk sel takwim, cth Syafiq Liow">
+      <input class="nama manual" id="inpPerdanaPenuh" placeholder="Nama penuh (poster)" title="Nama penuh untuk poster, pengumuman, Telegram & Facebook">
+      <select class="manual" id="selPerdanaFoto"></select>
     </div>
     <div class="grp">
       <span class="lbl">Dhuha · Rabu</span>
@@ -493,10 +494,11 @@ button.danger{ background:#6e2b2b; color:#f7dcdc; border:1px solid #8a3a3a; }
     <div class="grp" id="grpTalaqqi">
       <span class="lbl">Talaqqi Muslimat · Sabtu</span>
       <span class="mchips" id="talMinggu" title="Pilih minggu (boleh lebih dari satu)"></span>
-      <input class="gelaran" id="inpTalGelaran" placeholder="Ustazah">
-      <input class="nama" id="inpTalNama" placeholder="Nama ringkas (sel)" title="Nama ringkas untuk sel takwim, cth Hanis">
-      <input class="nama" id="inpTalPenuh" placeholder="Nama penuh (poster)" title="Nama penuh untuk poster, pengumuman, Telegram & Facebook, cth Hanis Humaira">
-      <select id="selTalFoto"></select>
+      <select class="penceramah" id="selTalUstaz" title="Pilih dari Data penceramah — gelaran, nama, label takwim & foto ikut kad penceramah"></select>
+      <input class="gelaran manual" id="inpTalGelaran" placeholder="Ustazah">
+      <input class="nama manual" id="inpTalNama" placeholder="Nama ringkas (sel)" title="Nama ringkas untuk sel takwim, cth Hanis">
+      <input class="nama manual" id="inpTalPenuh" placeholder="Nama penuh (poster)" title="Nama penuh untuk poster, pengumuman, Telegram & Facebook, cth Hanis Humaira">
+      <select class="manual" id="selTalFoto"></select>
       <span class="taltajuk" id="talTajuk"></span>
     </div>
     <span class="grow"></span>
@@ -1042,10 +1044,10 @@ function baseCellFor(y,m,d,ignoreOv){
   }
   if(wd===6){
     const p=CF.perdana;
-    if(p && p.sabtu===occ && (p.ceramah||p.photo))
-      return {kind:"lecture",jenis:"perdana",title:"K. Perdana",
-        name:((p.gelaran||"Ust")+" "+(p.ceramah||"")).trim(), photo:p.photo||"",
-        penuh:p.penuh?(gelaranPenuh(p.gelaran||"Ust")+" "+p.penuh).trim():""};   /* nama penuh: poster & pengumuman */
+    if(p && p.sabtu===occ && (p.ceramah||p.photo||slotKey(p,"perdana"))){
+      const I=slotInfo(p,"perdana");
+      return {kind:"lecture",jenis:"perdana",title:"K. Perdana",label:I.label,
+        name:(I.gelaran+" "+I.nama).trim(), photo:I.photo, penuh:I.penuh}; }   /* nama penuh: poster & pengumuman */
     return {kind:"empty"};
   }
   if(t.pool){ const key=t.pool[occ]; if(!key) return {kind:"empty"};
@@ -1058,36 +1060,45 @@ function baseCellFor(y,m,d,ignoreOv){
    3) Kuliah Maghrib (Halaqah, dari template) */
 /* gelaran ringkas dalam sel → penuh untuk poster ("Ust" → "Ustaz") */
 const gelaranPenuh=g=> /^ust\.?$/i.test(g)?"Ustaz":/^(ustzh?|usth)\.?$/i.test(g)?"Ustazah":g;
-/* Zohor Muslimat (17 Nov): penceramah dipaut ke Data penceramah (z.key). Gelaran, nama, nama penuh, foto & label sel ikut kad penceramah.
+/* Slot bulanan dipaut ke Data penceramah (17 Nov): Zohor Muslimat · Talaqqi · Perdana simpan c.key = kunci kad.
+   Gelaran, nama, nama penuh & foto ikut kad (semua bulan). Label sel ikut "Label takwim" kad untuk Zohor & Talaqqi;
+   Perdana kekal "K. Perdana" (penceramah jemputan — label kad biasanya subjek kuliah tetapnya).
    Tetapan lama tanpa key: dipaut sendiri jika nama + foto sepadan satu kad. key "__manual" = taip manual (cara lama).
-   Tajuk dalaman kekal "K. Zohor Muslimat" (kunci poster, waktu, siar, TV); label hanya untuk paparan sel. */
-function zohorKey(z){
-  if(!z) return "";
-  if(z.key!==undefined) return (z.key!=="__manual" && USTAZ[z.key])?z.key:"";
-  const k=Object.keys(USTAZ).find(k=>{ const u=USTAZ[k]; return u.nama && u.nama===z.nama && (z.photo===k || z.photo===u.photo); });
+   Tajuk dalaman (K. Zohor Muslimat / Talaqqi / K. Perdana) kekal sebagai kunci poster, waktu, siar, TV; label hanya paparan sel. */
+const SLOT_PAUT={ zohor:{nama:"nama",gel:"Ust",label:"K. Zohor Muslimat",labelKad:true},
+                  talaqqi:{nama:"nama",gel:"Ustazah",label:"Talaqqi",labelKad:true},
+                  perdana:{nama:"ceramah",gel:"Ust",label:"K. Perdana",labelKad:false} };
+function slotKey(c,jenis){
+  if(!c) return "";
+  if(c.key!==undefined) return (c.key!=="__manual" && USTAZ[c.key])?c.key:"";
+  const nm=c[SLOT_PAUT[jenis].nama];
+  const k=Object.keys(USTAZ).find(k=>{ const u=USTAZ[k]; return u.nama && u.nama===nm && (c.photo===k || c.photo===u.photo); });
   return k||"";
 }
-function zohorInfo(z){
-  const k=zohorKey(z);
-  if(k){ const u=USTAZ[k], g=u.gelaran||"Ust";
-    return { key:k, gelaran:g, nama:u.nama||"", photo:u.photo||k, penuh:(u.penuh||(gelaranPenuh(g)+" "+(u.nama||""))).trim(), label:u.subjek||"K. Zohor Muslimat" }; }
-  return { key:"", gelaran:z.gelaran||"Ust", nama:z.nama||"", photo:z.photo||"",
-           penuh:z.penuh?(gelaranPenuh(z.gelaran||"Ust")+" "+z.penuh).trim():"", label:"K. Zohor Muslimat" };
+function slotInfo(c,jenis){
+  const S=SLOT_PAUT[jenis], k=slotKey(c,jenis);
+  if(k){ const u=USTAZ[k], g=u.gelaran||S.gel;
+    return { key:k, gelaran:g, nama:u.nama||"", photo:u.photo||k, penuh:(u.penuh||(gelaranPenuh(g)+" "+(u.nama||""))).trim(),
+             label:(S.labelKad&&u.subjek)||S.label }; }
+  const g=c.gelaran||S.gel;
+  return { key:"", gelaran:g, nama:c[S.nama]||"", photo:c.photo||"", penuh:c.penuh?(gelaranPenuh(g)+" "+c.penuh).trim():"", label:S.label };
 }
+const zohorKey=z=>slotKey(z,"zohor");
 function fridayExtras(y,m,d){
   const out=[], tz=getTzFor(y,m)[d], z=cfgFor(y,m).zohor;
   if(tz) out.push({ title:"Taz. Jumaat", name:((tz.gelaran||"Ust")+" "+(tz.nama||"")).trim(), photo:tz.photo||"", extra:true });
   if(z && z.jumaat && z.jumaat===occurrenceOf(d) && (z.nama||z.photo||zohorKey(z))){
-    const I=zohorInfo(z);
+    const I=slotInfo(z,"zohor");
     out.push({ title:"K. Zohor Muslimat", label:I.label, name:(I.gelaran+" "+I.nama).trim(), photo:I.photo, extra:true, penuh:I.penuh }); }
   return out;
 }
 /* Lapisan Sabtu: Talaqqi Muslimat (pagi) berkongsi sel dengan Kuliah Perdana (malam) — seperti Dhuha + Maghrib hari Rabu */
 function saturdayExtras(y,m,d){
   const t=cfgFor(y,m).talaqqi;
-  if(!t || !(t.minggu||[]).includes(occurrenceOf(d)) || !(t.nama||t.photo)) return [];
-  return [{ title:"Talaqqi", name:((t.gelaran||"Ustazah")+" "+(t.nama||"")).trim(), photo:t.photo||"", sub:((t.tajuk||{})[d]||"").trim(), extra:true,
-           penuh:t.penuh?(gelaranPenuh(t.gelaran||"Ustazah")+" "+t.penuh).trim():"" }];   /* nama penuh: poster & pengumuman; sel guna nama ringkas */
+  if(!t || !(t.minggu||[]).includes(occurrenceOf(d)) || !(t.nama||t.photo||slotKey(t,"talaqqi"))) return [];
+  const I=slotInfo(t,"talaqqi");
+  return [{ title:"Talaqqi", label:I.label, name:(I.gelaran+" "+I.nama).trim(), photo:I.photo, sub:((t.tajuk||{})[d]||"").trim(), extra:true,
+           penuh:I.penuh }];   /* nama penuh: poster & pengumuman; sel guna nama ringkas */
 }
 function resolveCellFor(y,m,d,ignoreOv){
   const base=baseCellFor(y,m,d,ignoreOv), wd=new Date(y,m-1,d).getDay();
@@ -1241,9 +1252,9 @@ function syncEditbar(){
   fillPhotoSelect($("selPerdanaFoto"),CF.perdana.photo||"");
   $("selDhuhaMinggu").value=CF.dhuha.rabu||0;
   $("selZohorMinggu").value=CF.zohor.jumaat||0;
-  const zk=zohorKey(CF.zohor);
-  fillSelect($("selZohorUstaz"),[["__manual","— taip manual —"]].concat(Object.keys(USTAZ).sort((a,b)=>(USTAZ[a].nama||"").localeCompare(USTAZ[b].nama||"")).map(k=>[k,USTAZ[k].gelaran+" "+USTAZ[k].nama])));
-  $("selZohorUstaz").value=zk||"__manual"; $("grpZohor").classList.toggle("terpaut",!!zk);
+  pautSync("selZohorUstaz","grpZohor",CF.zohor,"zohor");
+  pautSync("selPerdanaUstaz","grpPerdana",CF.perdana,"perdana");
+  pautSync("selTalUstaz","grpTalaqqi",CF.talaqqi,"talaqqi");
   $("inpZohorGelaran").value=CF.zohor.gelaran||"Ust";
   $("inpZohorNama").value=CF.zohor.nama||""; $("inpZohorPenuh").value=CF.zohor.penuh||"";
   fillPhotoSelect($("selZohorFoto"),CF.zohor.photo||"");
@@ -1253,6 +1264,20 @@ function syncEditbar(){
   const tzd=Object.keys(getTzFor(STATE.tahun,STATE.bulan)).map(Number).sort((a,b)=>a-b);
   const info=[]; if(days.length) info.push("⚠️ Override: "+days.join(", ")); if(tzd.length) info.push("🕌 Tazkirah Jumaat: "+tzd.join(", "));
   $("ovInfo").textContent=info.join("  ·  ");
+}
+function pautSync(selId,grpId,c,jenis){
+  const k=slotKey(c,jenis);
+  fillSelect($(selId),[["__manual","— taip manual —"]].concat(Object.keys(USTAZ).sort((a,b)=>(USTAZ[a].nama||"").localeCompare(USTAZ[b].nama||"")).map(x=>[x,USTAZ[x].gelaran+" "+USTAZ[x].nama])));
+  $(selId).value=k||"__manual"; $(grpId).classList.toggle("terpaut",!!k);
+}
+/* pilih penceramah dari dropdown: simpan key + salinan nama (sandaran jika kad dipadam, dan untuk tab versi lama) */
+function pautPilih(jenis,k){
+  const S=SLOT_PAUT[jenis], c=cfgEdit(jenis);
+  if(k==="__manual"||!USTAZ[k]){ c.key="__manual"; }
+  else { const u=USTAZ[k], g=u.gelaran||S.gel, gp=gelaranPenuh(g);
+    c.key=k; c.gelaran=g; c[S.nama]=u.nama||""; c.photo=u.photo||k;
+    c.penuh=(u.penuh||"").replace(new RegExp("^("+gp+"|"+g+")\\.?\\s+","i"),"").trim(); }
+  saveState(); renderAll();
 }
 function talSabtu(y,m){ const n=new Date(y,m,0).getDate(), out=[]; for(let d=1; d<=n; d++) if(new Date(y,m-1,d).getDay()===6) out.push(d); return out; }
 function talSync(T){
@@ -1297,12 +1322,9 @@ function wireEditbar(){
   $("selPerdanaFoto").addEventListener("change",e=>{ cfgEdit("perdana").photo=e.target.value; saveState(); renderAll(); });
   $("selDhuhaMinggu").addEventListener("change",e=>{ cfgEdit("dhuha").rabu=+e.target.value; saveState(); renderAll(); });
   $("selZohorMinggu").addEventListener("change",e=>{ cfgEdit("zohor").jumaat=+e.target.value; saveState(); renderAll(); });
-  $("selZohorUstaz").addEventListener("change",e=>{ const z=cfgEdit("zohor"), k=e.target.value;
-    if(k==="__manual"||!USTAZ[k]){ z.key="__manual"; }
-    else { const u=USTAZ[k], g=u.gelaran||"Ust", gp=gelaranPenuh(g);   /* salinan nama disimpan juga — sandaran jika kad dipadam */
-      z.key=k; z.gelaran=g; z.nama=u.nama||""; z.photo=u.photo||k;
-      z.penuh=(u.penuh||"").replace(new RegExp("^("+gp+"|"+g+")\\.?\\s+","i"),"").trim(); }
-    saveState(); renderAll(); });
+  $("selZohorUstaz").addEventListener("change",e=> pautPilih("zohor",e.target.value));
+  $("selPerdanaUstaz").addEventListener("change",e=> pautPilih("perdana",e.target.value));
+  $("selTalUstaz").addEventListener("change",e=> pautPilih("talaqqi",e.target.value));
   $("inpZohorGelaran").addEventListener("change",e=>{ cfgEdit("zohor").gelaran=e.target.value.trim()||"Ust"; saveState(); renderAll(); });
   $("inpZohorNama").addEventListener("change",e=>{ cfgEdit("zohor").nama=e.target.value.trim(); saveState(); renderAll(); });
   $("inpZohorPenuh").addEventListener("change",e=>{ cfgEdit("zohor").penuh=e.target.value.trim(); saveState(); renderAll(); });
