@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Takwim Pengimarahan — MKSLB</title>
 <meta name="robots" content="noindex,nofollow">
-<meta name="takwim-versi" content="20261117.2150">
+<meta name="takwim-versi" content="20261119.1822">
 
 <!-- ════════════════════════════════════════════════════════════════════════
      TAKWIM PENGIMARAHAN — Masjid Kampung Sungai Lang Baru  ·  v3
@@ -2355,7 +2355,11 @@ function tgStatusQ(q){                 /* [kelas, label] untuk satu jadual */
 function renderTgList(){
   const akan=$("tgListAkan"), lepas=$("tgListLepas"); akan.innerHTML=""; lepas.innerHTML="";
   const kini=Date.now(), had=kini-14*864e5;
-  const L=Object.values(STATE.tg||{}).sort((a,b)=> a.bila-b.bila);
+  /* masa hantar sama → ikut bot: khutbah dulu, kemudian susunan program hari itu, notis bebas di hujung */
+  const urutQ=q=>{ if(q.jenis==="bebas") return 999; const ev=eventsFor(q.y,q.m,q.d);
+    if(ev.some(e=>e.khutbah && q.titles.includes(e.title))) return -1;
+    const i=ev.findIndex(e=>e.title===q.titles[0]); return i<0?99:i; };
+  const L=Object.values(STATE.tg||{}).sort((a,b)=> a.bila-b.bila || urutQ(a)-urutQ(b));
   const baris=(q,box)=>{
     const [cls,lbl]=tgStatusQ(q), h=TG_HANTAR[q.id];
     const r=document.createElement("div"); r.className="tvrow tgrow";
