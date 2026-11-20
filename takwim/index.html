@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Takwim Pengimarahan — MKSLB</title>
 <meta name="robots" content="noindex,nofollow">
-<meta name="takwim-versi" content="20261119.1822">
+<meta name="takwim-versi" content="20261120.1516">
 
 <!-- ════════════════════════════════════════════════════════════════════════
      TAKWIM PENGIMARAHAN — Masjid Kampung Sungai Lang Baru  ·  v3
@@ -1889,7 +1889,7 @@ function tvJamLalai(t){ t=t||"";
   if(/subuh/i.test(t)) return "08:00";
   if(/dhuha/i.test(t)) return "11:00";
   if(/talaqqi/i.test(t)) return "11:30";
-  if(/tazkirah jumaat|khutbah/i.test(t)) return "14:00";
+  if(/tazkirah jumaat|khutbah/i.test(t)) return "15:00";   /* 3.00 ptg — keputusan Adib 20 Nov: selepas itu tiada jemaah */
   if(/zohor muslimat/i.test(t)) return "16:00";
   return ""; }
 const tvJam=e=> e.tamatJam!==undefined ? e.tamatJam : tvJamLalai(e.evTitle);   /* belum pernah diset → lalai */
