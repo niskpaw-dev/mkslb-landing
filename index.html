@@ -395,6 +395,40 @@
   .dacts{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
   .dacts .af-btn{padding:11px 16px;font-size:.78rem;flex:1 1 auto}
   .dfoot{padding:13px 24px;border-top:1px solid rgba(212,175,55,.14);font-size:.78rem;font-style:italic;color:var(--ink-muted);text-align:center}
+
+  /* ---------- SIARAN LANGSUNG (status dari Worker siaran-langsung-mkslb) ---------- */
+  .siaran{padding-top:64px}
+  .siaran[hidden]{display:none}
+  .live-tag{display:inline-flex;align-items:center;gap:9px;font-size:.66rem;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:#fff;
+    background:rgba(191,59,43,.16);border:1px solid rgba(191,59,43,.55);border-radius:999px;padding:6px 13px 6px 11px;margin-bottom:16px}
+  .live-dot{width:8px;height:8px;border-radius:50%;background:#e0503d;box-shadow:0 0 0 0 rgba(224,80,61,.6);animation:livePulse 1.8s ease-out infinite}
+  @keyframes livePulse{0%{box-shadow:0 0 0 0 rgba(224,80,61,.55)}70%{box-shadow:0 0 0 9px rgba(224,80,61,0)}100%{box-shadow:0 0 0 0 rgba(224,80,61,0)}}
+  .scard{position:relative;overflow:hidden;border-radius:20px;margin-top:26px;
+    background:linear-gradient(155deg,var(--green-700),var(--green-900));border:1px solid rgba(212,175,55,.3);
+    box-shadow:0 24px 60px -34px rgba(0,0,0,.75);animation:dukaIn .8s var(--ease) both}
+  .scard::before{content:"";position:absolute;left:0;right:0;top:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);opacity:.7;z-index:2}
+  .sgrid{display:grid}
+  @media(min-width:860px){.sgrid{grid-template-columns:1.55fr 1fr}}
+  .svid{position:relative;aspect-ratio:16/9;background:#000;overflow:hidden}
+  @media(min-width:860px){.svid{border-right:1px solid rgba(212,175,55,.14)}}
+  .svid iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+  .sfacade{position:absolute;inset:0;width:100%;height:100%;padding:0;border:0;cursor:pointer;background:#000;display:block}
+  .sfacade img{width:100%;height:100%;object-fit:cover;display:block;opacity:.88;transition:opacity .4s var(--ease),transform .9s var(--ease)}
+  .sfacade:hover img,.sfacade:focus-visible img{opacity:1;transform:scale(1.02)}
+  .sfacade .splay{position:absolute;left:50%;top:50%;width:74px;height:74px;margin:-37px 0 0 -37px;border-radius:50%;
+    background:rgba(3,37,27,.72);border:1.5px solid var(--gold);display:grid;place-items:center;backdrop-filter:blur(4px);transition:transform .4s var(--ease),background .4s var(--ease)}
+  .sfacade:hover .splay,.sfacade:focus-visible .splay{transform:scale(1.06);background:rgba(3,37,27,.88)}
+  .sfacade .splay svg{width:26px;height:26px;margin-left:4px;fill:var(--gold-bright)}
+  .sfacade:focus-visible{outline:2px solid var(--gold-bright);outline-offset:-4px}
+  .sinfo{padding:24px 24px 26px;display:flex;flex-direction:column;justify-content:center}
+  @media(min-width:860px){.sinfo{padding:30px 30px}}
+  .sprog{font-family:var(--display);font-weight:600;font-size:clamp(1.7rem,4.6vw,2.2rem);line-height:1.08;color:#fff;letter-spacing:-.005em}
+  .stgl{font-size:.84rem;color:var(--gold-soft);margin-top:6px;letter-spacing:.02em}
+  .sdesc{font-size:.86rem;color:var(--ink-muted);margin-top:14px;line-height:1.6;max-width:40ch}
+  .sacts{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px}
+  .sacts .af-btn{padding:11px 16px;font-size:.78rem;flex:1 1 auto}
+  .sdemo{font-size:.62rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-muted);margin-top:14px}
+  @media(prefers-reduced-motion:reduce){.live-dot{animation:none}.scard{animation:none}.sfacade img,.sfacade .splay{transition:none}}
 </style>
 </head>
 <body>
@@ -457,6 +491,13 @@
     <div class="istirja">إِنَّا لِلّٰهِ وَإِنَّا إِلَيْهِ رَاجِعُونَ</div>
     <p class="duka-sub">Kariah dijemput menziarahi, menyempurnakan solat jenazah dan mendoakan arwah.</p>
     <div class="duka-list" id="dukaList" aria-live="polite"></div>
+  </section>
+
+  <!-- SIARAN LANGSUNG — dari Worker siaran-langsung-mkslb (/status); tersembunyi bila tiada siaran YT -->
+  <section class="siaran wrap" id="siaran" hidden aria-labelledby="siaranTitle">
+    <div class="live-tag"><span class="live-dot" aria-hidden="true"></span>Sedang Bersiaran</div>
+    <h2 class="h-sec" id="siaranTitle">Siaran Langsung dari Masjid</h2>
+    <div id="siaranKad" aria-live="polite"></div>
   </section>
 
   <!-- TAKWIM KULIAH -->
@@ -1190,6 +1231,69 @@
     }
     muat();
     setInterval(muat, 300000);   // semak semula setiap 5 minit untuk halaman yang dibiar terbuka
+  })();
+
+  /* ===== SIARAN LANGSUNG — status dari Worker siaran-langsung-mkslb (KV sahaja, tiada kuota YT) ===== */
+  (function(){
+    const AKTIF=false;            // SUIS: true = kad dipapar bila ada siaran YT. false = disembunyikan (kecuali ?siaran=1 / ?siaran=demo)
+    const STATUS='https://siaran-langsung-mkslb.madib-wasit.workers.dev/status';
+    const sec=document.getElementById('siaran'), kad=document.getElementById('siaranKad');
+    if(!sec||!kad) return;
+    const q=new URLSearchParams(location.search).get('siaran');
+    const demo=q==='demo', paksa=q==='1'||demo;
+    if(!AKTIF&&!paksa) return;
+    const esc=t=>String(t==null?'':t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const tajukKes=s=>String(s||'').toLowerCase().replace(/(^|[\s,(-])(\p{L})/gu,(m,a,b)=>a+b.toUpperCase());
+    const ID=/^[A-Za-z0-9_-]{6,20}$/;
+    const ico={
+      yt:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M23 7.2a3 3 0 0 0-2.1-2.1C19 4.6 12 4.6 12 4.6s-7 0-8.9.5A3 3 0 0 0 1 7.2 31 31 0 0 0 .5 12a31 31 0 0 0 .5 4.8 3 3 0 0 0 2.1 2.1c1.9.5 8.9.5 8.9.5s7 0 8.9-.5a3 3 0 0 0 2.1-2.1 31 31 0 0 0 .5-4.8 31 31 0 0 0-.5-4.8zM9.7 15.1V8.9l5.8 3.1-5.8 3.1z"/></svg>',
+      fb:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M24 12a12 12 0 1 0-13.9 11.9v-8.4H7.1V12h3V9.4c0-3 1.8-4.7 4.5-4.7 1.3 0 2.7.2 2.7.2v2.9h-1.5c-1.5 0-2 .9-2 1.9V12h3.4l-.5 3.5h-2.9v8.4A12 12 0 0 0 24 12z"/></svg>'
+    };
+    let semasa='';               // ID YT yang sedang dipapar
+    function bina(s){
+      const id=s.yt.id, bah=String(s.yt.tajuk||'').split(/\s+-\s+/);
+      const prog=tajukKes(bah[0]||'Siaran Langsung'), tgl=tajukKes(bah.slice(1).join(' - '));
+      const fb=s.fb&&s.fb.link&&/^https:\/\/www\.facebook\.com\//.test(s.fb.link)?s.fb.link:'';
+      kad.innerHTML='<article class="scard"><div class="sgrid">'+
+        '<div class="svid"><button type="button" class="sfacade" aria-label="Tonton siaran langsung '+esc(prog)+' di sini">'+
+          '<img src="https://i.ytimg.com/vi/'+id+'/maxresdefault.jpg" alt="" loading="lazy" onerror="this.onerror=null;this.src=\'https://i.ytimg.com/vi/'+id+'/hqdefault.jpg\'">'+
+          '<span class="splay" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span></button></div>'+
+        '<div class="sinfo">'+
+          '<h3 class="sprog">'+esc(prog)+'</h3>'+(tgl?'<div class="stgl">'+esc(tgl)+'</div>':'')+
+          '<p class="sdesc">Ikuti secara langsung dari Masjid Kampung Sungai Lang Baru, di mana sahaja anda berada.</p>'+
+          '<div class="sacts">'+
+            '<a class="af-btn primary" href="https://www.youtube.com/live/'+id+'" target="_blank" rel="noopener">'+ico.yt+'Tonton di YouTube</a>'+
+            (fb?'<a class="af-btn ghost" href="'+esc(fb)+'" target="_blank" rel="noopener">'+ico.fb+'Tonton di Facebook</a>':'')+
+          '</div>'+(demo?'<div class="sdemo">Pratonton reka bentuk · bukan siaran sebenar</div>':'')+
+        '</div></div></article>';
+      kad.querySelector('.sfacade').addEventListener('click',function(){   // muat pemain hanya bila ditekan
+        const f=document.createElement('iframe');
+        f.src='https://www.youtube-nocookie.com/embed/'+id+'?autoplay=1&rel=0&modestbranding=1&playsinline=1';
+        f.title='Siaran langsung '+prog; f.allow='autoplay; encrypted-media; picture-in-picture; fullscreen'; f.allowFullscreen=true;
+        this.replaceWith(f);
+      });
+      semasa=id;
+    }
+    function papar(s){
+      const ada=s&&s.yt&&ID.test(s.yt.id||'');
+      if(!ada){ sec.hidden=true; kad.innerHTML=''; semasa=''; return; }
+      if(s.yt.id!==semasa) bina(s);          // siaran baru / sambung semula: ganti kad; jika sama, jangan ganggu pemain
+      sec.hidden=false;
+    }
+    async function muat(){
+      if(demo){ papar({yt:{id:'H0P_KR1PmfU',tajuk:'KULIAH MAGHRIB - SELASA, 17 NOVEMBER 2026'},fb:{link:'https://www.facebook.com/mkslbpro.official/videos/1700835021487733'}}); return; }
+      try{
+        const r=await fetch(STATUS,{cache:'no-store'});
+        if(!r.ok) throw new Error('http');
+        papar(await r.json());
+      }catch(e){ /* senyap: kad kekal seperti sebelumnya */ }
+    }
+    muat();
+    let t=setInterval(muat,60000);           // semak setiap minit bila halaman dilihat
+    document.addEventListener('visibilitychange',()=>{
+      if(document.hidden){ clearInterval(t); t=null; }
+      else if(!t){ muat(); t=setInterval(muat,60000); }
+    });
   })();
 </script>
 </body>
