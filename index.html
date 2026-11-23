@@ -1235,7 +1235,7 @@
 
   /* ===== SIARAN LANGSUNG — status dari Worker siaran-langsung-mkslb (KV sahaja, tiada kuota YT) ===== */
   (function(){
-    const AKTIF=false;            // SUIS: true = kad dipapar bila ada siaran YT. false = disembunyikan (kecuali ?siaran=1 / ?siaran=demo)
+    const AKTIF=true;             // SUIS: true = kad dipapar bila ada siaran YT. false = disembunyikan (kecuali ?siaran=1 / ?siaran=demo)
     const STATUS='https://siaran-langsung-mkslb.madib-wasit.workers.dev/status';
     const sec=document.getElementById('siaran'), kad=document.getElementById('siaranKad');
     if(!sec||!kad) return;
