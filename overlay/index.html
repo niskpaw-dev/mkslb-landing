@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="robots" content="noindex">
-<meta name="overlay-versi" content="20261123.2">
+<meta name="overlay-versi" content="20261123.3">
 <title>Overlay Siaran MKSLB</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -97,7 +97,7 @@ body{background:transparent;color:var(--krim);font-family:var(--sans);-webkit-fo
 
 <div id="kanvas" aria-hidden="true">
   <div class="identiti" id="el-logo">
-    <div class="lencana"><img src="logo.png" alt=""></div>
+    <div class="lencana"><img src="/overlay/logo.png" alt=""></div>
     <div class="plat-nama">
       <div class="langsung"><span class="titik"></span>SIARAN LANGSUNG</div>
       <div class="nama-masjid">Masjid Kampung Sungai Lang Baru</div>
@@ -121,7 +121,7 @@ body{background:transparent;color:var(--krim);font-family:var(--sans);-webkit-fo
   <div class="qr" id="el-qr">
     <div class="qr-tajuk">INFAQ ONLINE</div>
     <div class="qr-sub">Imbas dengan aplikasi bank anda</div>
-    <img src="qr-infaq.webp" alt="">
+    <img src="/overlay/qr-infaq.webp" alt="">
   </div>
 </div>
 
@@ -243,7 +243,10 @@ body{background:transparent;color:var(--krim);font-family:var(--sans);-webkit-fo
     $('jam-masa').textContent = jam12(t);
     $('jam-tempoh').textContent = tempoh(b.h);
     if (data) {
-      try { $('jam-hijri').textContent = data.W.parseHijri(data.W.hijriNow(data.hari, t)).formatted; } catch(e) {}
+      try {
+        var hj = data.W.hijriNow(data.hari, t);   /* API: objek { formatted, raw, ... } */
+        $('jam-hijri').textContent = (hj && hj.formatted) || (typeof hj === 'string' ? data.W.parseHijri(hj).formatted : '');
+      } catch(e) {}
     }
     var st = $('seterusnya');
     if (!k || !k.w) { st.classList.add('kosong'); return; }
