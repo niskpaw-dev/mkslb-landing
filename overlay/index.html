@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex">
+<meta name="overlay-versi" content="20261123.2">
+<title>Overlay Siaran MKSLB</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Plus+Jakarta+Sans:wght@500;600;700&family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --hijau:#04140E; --hijau-2:#0B2A1E; --emas:#D9B96B; --krim:#F3ECDC; --merah:#C8102E;
+  --plat:rgba(4,20,14,.9);
+  --serif:'Cormorant Garamond',Georgia,serif;
+  --sans:'Plus Jakarta Sans',system-ui,sans-serif;
+  --grot:'Space Grotesk',system-ui,sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden}
+body{background:transparent;color:var(--krim);font-family:var(--sans);-webkit-font-smoothing:antialiased}
+.nombor{font-variant-numeric:lining-nums tabular-nums}
+
+/* ============ MOD SIARAN (1920x1080) ============ */
+#kanvas{position:absolute;left:0;top:0;width:1920px;height:1080px;transform-origin:0 0}
+.mod-operator #kanvas{display:none}
+
+.identiti{position:absolute;left:56px;top:44px;display:flex;align-items:center}
+.lencana{position:relative;z-index:2;width:132px;height:132px;border-radius:50%;background:var(--krim);
+  border:3px solid var(--emas);box-shadow:0 0 0 2px var(--hijau),0 6px 18px rgba(0,0,0,.35);
+  display:flex;align-items:center;justify-content:center}
+.lencana img{width:108px;height:108px;object-fit:contain}
+.plat-nama{margin-left:-40px;padding:14px 30px 14px 60px;background:var(--plat);
+  border:1px solid rgba(217,185,107,.55);border-left:none;min-height:88px;
+  display:flex;flex-direction:column;justify-content:center;gap:5px}
+.langsung{display:flex;align-items:center;gap:12px;font-family:var(--serif);font-weight:700;
+  font-size:30px;letter-spacing:.06em;color:var(--krim);line-height:1}
+.titik{width:13px;height:13px;border-radius:50%;background:var(--merah);
+  box-shadow:0 0 0 3px rgba(200,16,46,.28);animation:denyut 2.2s ease-in-out infinite}
+@keyframes denyut{50%{opacity:.35}}
+.nama-masjid{font-size:14px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--emas)}
+
+.jam{position:absolute;right:56px;top:52px;width:330px;background:var(--plat);
+  border:1px solid rgba(217,185,107,.55);border-top:3px solid var(--emas)}
+.jam-atas{padding:14px 24px 12px;display:flex;align-items:baseline;justify-content:space-between}
+.jam-masa{font-family:var(--serif);font-weight:700;font-size:62px;line-height:.9;color:var(--krim)}
+.jam-sisi{text-align:right;display:flex;flex-direction:column;gap:6px}
+.jam-tempoh{font-size:14px;font-weight:700;letter-spacing:.22em;color:var(--emas)}
+.jam-hijri{font-size:13px;font-weight:500;color:rgba(243,236,220,.75);white-space:nowrap}
+.seterusnya{border-top:1px solid rgba(217,185,107,.4);padding:11px 24px;display:flex;
+  align-items:baseline;justify-content:space-between;gap:12px;transition:background .6s,color .6s}
+.st-label{font-size:13px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--emas);transition:color .6s}
+.st-nilai{font-family:var(--serif);font-weight:700;font-size:26px;line-height:1;color:var(--krim);transition:color .6s;white-space:nowrap}
+.seterusnya.sorot{background:var(--emas)}
+.seterusnya.sorot .st-label,.seterusnya.sorot .st-nilai{color:var(--hijau)}
+.seterusnya.kosong{display:none}
+
+.qr{position:absolute;right:56px;bottom:150px;width:404px;background:var(--hijau);
+  border:2px solid var(--emas);padding:16px 16px 18px;text-align:center;
+  box-shadow:0 10px 30px rgba(0,0,0,.45);opacity:0;transform:translateY(28px);
+  transition:opacity .7s ease,transform .7s ease;pointer-events:none}
+.qr.papar{opacity:1;transform:none}
+.qr-tajuk{font-family:var(--serif);font-weight:700;font-size:30px;letter-spacing:.08em;color:var(--emas);line-height:1}
+.qr-sub{font-size:14px;font-weight:500;color:var(--krim);margin:6px 0 12px;opacity:.85}
+.qr img{display:block;width:368px;height:368px;border-radius:4px}
+
+.sembunyi{display:none!important}
+
+/* ============ MOD OPERATOR (dock) ============ */
+#operator{display:none}
+.mod-operator body,.mod-operator{background:var(--hijau)}
+.mod-operator #operator{display:flex;flex-direction:column;min-height:100vh;padding:clamp(10px,4vw,22px);gap:clamp(8px,3vw,16px);font-family:var(--grot)}
+.op-kepala{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.op-label{font-size:clamp(10px,3vw,13px);font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--emas)}
+.op-jam{font-family:var(--mono);font-size:clamp(12px,3.4vw,15px);color:rgba(243,236,220,.8)}
+.op-utama{border:1px solid rgba(217,185,107,.45);border-top:3px solid var(--emas);padding:clamp(10px,4vw,18px);text-align:center;transition:background .4s}
+.op-nama{font-size:clamp(18px,7vw,30px);font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.op-pada{font-size:clamp(12px,3.6vw,15px);color:rgba(243,236,220,.75);margin-top:2px}
+.op-kira{font-family:var(--mono);font-weight:700;font-size:clamp(30px,15vw,64px);line-height:1.05;margin-top:clamp(6px,2vw,10px);color:var(--krim)}
+.op-arahan{font-size:clamp(12px,3.6vw,15px);font-weight:700;padding:8px 10px;margin-top:10px;display:none}
+.op-utama.amaran .op-kira{color:var(--emas)}
+.op-utama.amaran .op-arahan{display:block;background:var(--emas);color:var(--hijau)}
+.op-utama.masuk{background:#5A0E1C}
+.op-utama.masuk .op-arahan{display:block;background:var(--krim);color:#5A0E1C}
+.op-senarai{display:grid;gap:2px}
+.op-baris{display:flex;justify-content:space-between;padding:7px 10px;font-size:clamp(13px,3.8vw,16px);background:var(--hijau-2)}
+.op-baris span:last-child{font-family:var(--mono)}
+.op-baris.lepas{opacity:.45}
+.op-baris.info{font-size:clamp(11px,3.2vw,13px);padding-top:4px;padding-bottom:4px;font-style:italic}
+.op-baris.berikut{outline:1px solid var(--emas);color:var(--emas);font-weight:700}
+.op-kaki{margin-top:auto;font-size:11px;color:rgba(243,236,220,.55);display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.op-kaki .ralat{color:#F09595}
+</style>
+</head>
+<body>
+
+<div id="kanvas" aria-hidden="true">
+  <div class="identiti" id="el-logo">
+    <div class="lencana"><img src="logo.png" alt=""></div>
+    <div class="plat-nama">
+      <div class="langsung"><span class="titik"></span>SIARAN LANGSUNG</div>
+      <div class="nama-masjid">Masjid Kampung Sungai Lang Baru</div>
+    </div>
+  </div>
+
+  <div class="jam" id="el-jam">
+    <div class="jam-atas">
+      <div class="jam-masa nombor" id="jam-masa">--.--</div>
+      <div class="jam-sisi">
+        <div class="jam-tempoh" id="jam-tempoh"></div>
+        <div class="jam-hijri" id="jam-hijri"></div>
+      </div>
+    </div>
+    <div class="seterusnya kosong" id="seterusnya">
+      <span class="st-label" id="st-label"></span>
+      <span class="st-nilai nombor" id="st-nilai"></span>
+    </div>
+  </div>
+
+  <div class="qr" id="el-qr">
+    <div class="qr-tajuk">INFAQ ONLINE</div>
+    <div class="qr-sub">Imbas dengan aplikasi bank anda</div>
+    <img src="qr-infaq.webp" alt="">
+  </div>
+</div>
+
+<main id="operator">
+  <div class="op-kepala">
+    <span class="op-label" id="op-label">Waktu seterusnya</span>
+    <span class="op-jam" id="op-jam">--:--:--</span>
+  </div>
+  <div class="op-utama" id="op-utama">
+    <div class="op-nama" id="op-nama">Memuat…</div>
+    <div class="op-pada" id="op-pada"></div>
+    <div class="op-kira" id="op-kira">--:--:--</div>
+    <div class="op-arahan" id="op-arahan"></div>
+  </div>
+  <div class="op-senarai" id="op-senarai"></div>
+  <div class="op-kaki"><span id="op-sumber"></span><span id="op-status"></span></div>
+</main>
+
+<script src="https://apiwaktusolatsgr03.vercel.app/waktu-solat-v1.js"></script>
+<script>
+(function(){
+  'use strict';
+  var P = new URLSearchParams(location.search);
+  var MOD = P.get('mod') === 'operator' ? 'operator' : 'siaran';
+  document.documentElement.className = 'mod-' + MOD;
+
+  /* Tetapan (boleh ubah melalui URL) */
+  var AMARAN_MIN = num(P.get('amaran'), 10);   /* amaran sebelum masuk waktu */
+  var MASUK_MIN  = num(P.get('masuk'), 10);    /* tempoh paparan "telah masuk waktu" */
+  var QR_MOD     = P.get('qr') || 'jadual';    /* jadual | sentiasa | 0 */
+  var QR_SELANG  = num(P.get('qrselang'), 10); /* minit */
+  var QR_TEMPOH  = num(P.get('qrtempoh'), 30); /* saat */
+  var QR_MULA    = num(P.get('qrmula'), 5);    /* minit ke-N dalam setiap selang */
+  var OP_BERSEDIA = 3;                         /* minit: arahan operator */
+  (P.get('sembunyi') || '').split(',').forEach(function(k){
+    var el = document.getElementById('el-' + k.trim()); if (el) el.classList.add('sembunyi');
+  });
+  if (QR_MOD === '0') document.getElementById('el-qr').classList.add('sembunyi');
+
+  function num(v, d){ var n = parseFloat(v); return isFinite(n) && n >= 0 ? n : d; }
+  function $(id){ return document.getElementById(id); }
+
+  /* ---------- Masa (sentiasa waktu Malaysia) ---------- */
+  var fmt = new Intl.DateTimeFormat('en-GB', { timeZone:'Asia/Kuala_Lumpur', year:'numeric', month:'2-digit',
+    day:'2-digit', hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false, weekday:'short' });
+  function bahagian(d){
+    var o = {}; fmt.formatToParts(d).forEach(function(p){ o[p.type] = p.value; });
+    o.h = +o.hour % 24; o.m = +o.minute; o.s = +o.second;
+    o.kunci = o.year + '-' + o.month + '-' + o.day; return o;
+  }
+  var anjakan = 0;   /* ?uji=HH:MM atau ?uji=2026-11-27T12:50 untuk pratonton */
+  if (P.get('uji')) {
+    var u = P.get('uji'), sasar = u.indexOf('T') > 0 ? u : bahagian(new Date()).kunci + 'T' + u;
+    var t = new Date(sasar.length === 16 ? sasar + ':00+08:00' : sasar + '+08:00');
+    if (!isNaN(t)) anjakan = t - Date.now();
+  }
+  function kini(){ return new Date(Date.now() + anjakan); }
+  function tempoh(h){ return h < 12 ? 'PAGI' : h < 19 ? 'PETANG' : 'MALAM'; }
+  function jam12(d){ var b = bahagian(d); return (b.h % 12 || 12) + '.' + String(b.m).padStart(2,'0'); }
+  function jamPenuh(d){ var b = bahagian(d); return jam12(d) + ' ' + tempoh(b.h).toLowerCase(); }
+  function hms(ms){
+    var s = Math.max(0, Math.ceil(ms/1000)), h = Math.floor(s/3600), m = Math.floor(s%3600/60);
+    return String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0') + ':' + String(s%60).padStart(2,'0');
+  }
+
+  /* ---------- Data waktu solat (helper rasmi API SGR03) ---------- */
+  var FARDU = ['subuh','syuruk','zohor','asar','maghrib','isyak'];   /* syuruk = info sahaja (tamat Subuh) */
+  var NAMA = { subuh:'Subuh', syuruk:'Syuruk', zohor:'Zohor', asar:'Asar', maghrib:'Maghrib', isyak:'Isyak' };
+  var data = null, kunciData = null, statusData = 'memuat', sedangMuat = false, akhirMuat = 0;
+
+  function tungguHelper(){
+    return new Promise(function(ok, gagal){
+      if (window.WaktuSolat) return ok(window.WaktuSolat);
+      var s = document.createElement('script');
+      s.src = 'https://apiwaktusolatsgr03.vercel.app/waktu-solat-v1.js?r=' + Date.now();
+      s.onload = function(){ window.WaktuSolat ? ok(window.WaktuSolat) : gagal(new Error('helper')); };
+      s.onerror = function(){ gagal(new Error('helper tidak dapat dimuat')); };
+      document.head.appendChild(s);
+    });
+  }
+  function muat(){
+    if (sedangMuat) return; sedangMuat = true; akhirMuat = Date.now();
+    var W, k = bahagian(kini()).kunci;
+    tungguHelper().then(function(w){
+      W = w; return Promise.all([W.date(k), W.date(W.addDays(k, 1))]);
+    }).then(function(r){
+      var senarai = [];
+      [r[0], r[1]].forEach(function(resp, i){
+        var row = resp.times, d = W.toDates(row);
+        var jumaat = new Date(row.date + 'T12:00:00+08:00').getUTCDay() === 5;
+        FARDU.forEach(function(key){
+          if (!d[key]) return;
+          if (i === 1 && key !== 'subuh') return;
+          senarai.push({ key:key, nama:(key === 'zohor' && jumaat) ? 'Jumaat' : NAMA[key], masa:d[key], esok:i === 1, info:key === 'syuruk' });
+        });
+      });
+      data = { W:W, hari:r[0], senarai:senarai }; kunciData = k; statusData = 'ok';
+    }).catch(function(e){
+      statusData = 'ralat: ' + (e && e.message || e);
+    }).then(function(){ sedangMuat = false; });
+  }
+
+  /* denganInfo: siaran ikut Syuruk sebagai "seterusnya"; operator hanya waktu azan */
+  function keadaan(t, denganInfo){
+    if (!data) return null;
+    var prev = null, next = null;
+    for (var i = 0; i < data.senarai.length; i++) {
+      var w = data.senarai[i];
+      if (w.masa <= t) { if (!w.info) prev = w; }
+      else if (denganInfo || !w.info) { next = w; break; }
+    }
+    if (prev && t - prev.masa < MASUK_MIN * 60000) return { jenis:'masuk', w:prev, next:next };
+    if (next && next.masa - t <= AMARAN_MIN * 60000) return { jenis:'amaran', w:next, next:next };
+    return { jenis:'biasa', w:next, next:next };
+  }
+
+  /* ---------- Lukis: siaran ---------- */
+  function lukisSiaran(t, b, k){
+    $('jam-masa').textContent = jam12(t);
+    $('jam-tempoh').textContent = tempoh(b.h);
+    if (data) {
+      try { $('jam-hijri').textContent = data.W.parseHijri(data.W.hijriNow(data.hari, t)).formatted; } catch(e) {}
+    }
+    var st = $('seterusnya');
+    if (!k || !k.w) { st.classList.add('kosong'); return; }
+    st.classList.remove('kosong');
+    if (k.jenis === 'biasa') {
+      st.classList.remove('sorot');
+      $('st-label').textContent = k.w.nama;
+      $('st-nilai').textContent = jamPenuh(k.w.masa);
+    } else if (k.jenis === 'amaran') {
+      st.classList.add('sorot');
+      var minit = Math.ceil((k.w.masa - t) / 60000);
+      $('st-label').textContent = k.w.nama;
+      $('st-nilai').textContent = minit <= 1 ? 'kurang seminit' : minit + ' minit lagi';
+    } else {
+      st.classList.add('sorot');
+      $('st-label').textContent = 'Telah masuk';
+      $('st-nilai').textContent = 'waktu ' + k.w.nama;
+    }
+  }
+
+  function lukisQR(b){
+    if (QR_MOD === '0') return;
+    var papar = QR_MOD === 'sentiasa' ||
+      ((b.m % QR_SELANG) === (QR_MULA % QR_SELANG) && b.s < QR_TEMPOH);
+    $('el-qr').classList.toggle('papar', papar);
+  }
+
+  /* ---------- Lukis: operator ---------- */
+  var senaraiDilukis = null;
+  function lukisOperator(t, b, k){
+    $('op-jam').textContent = String(b.h).padStart(2,'0') + ':' + String(b.m).padStart(2,'0') + ':' + String(b.s).padStart(2,'0');
+    var u = $('op-utama');
+    u.classList.remove('amaran','masuk');
+    $('op-label').textContent = k && k.jenis === 'masuk' ? 'Telah masuk waktu' : 'Waktu seterusnya';
+    if (k && k.jenis === 'masuk') {
+      u.classList.add('masuk');
+      $('op-nama').textContent = k.w.nama;
+      $('op-pada').textContent = 'Masuk ' + jamPenuh(k.w.masa);
+      $('op-kira').textContent = '+' + hms(t - k.w.masa).slice(3);
+      $('op-arahan').textContent = 'Tukar ke scene AZAN SOLAT';
+    } else if (!k || !k.next) {
+      $('op-nama').textContent = data ? '—' : 'Memuat…';
+    } else {
+      var n = k.next, baki = n.masa - t;
+      $('op-nama').textContent = n.nama + (n.esok ? ' (esok)' : '');
+      $('op-pada').textContent = jamPenuh(n.masa);
+      $('op-kira').textContent = hms(baki);
+      if (baki <= OP_BERSEDIA * 60000) {
+        u.classList.add('amaran');
+        $('op-arahan').textContent = 'Bersedia: scene AZAN SOLAT';
+      }
+    }
+    if (data) {
+      var hari = data.senarai.filter(function(w){ return !w.esok; });
+      var aktif = k ? (k.jenis === 'masuk' ? k.w : k.next) : null;
+      var sig = hari.map(function(w){ return w.key + (w.masa <= t ? 1 : 0) + (aktif === w ? 'n' : ''); }).join();
+      if (sig !== senaraiDilukis) {
+        senaraiDilukis = sig;
+        $('op-senarai').innerHTML = hari.map(function(w){
+          var cls = (aktif === w ? 'berikut' : (w.masa <= t ? 'lepas' : '')) + (w.info ? ' info' : '');
+          return '<div class="op-baris ' + cls + '"><span>' + w.nama + '</span><span>' + jamPenuh(w.masa) + '</span></div>';
+        }).join('');
+      }
+      try { $('op-sumber').textContent = data.W.label(data.hari) + ' · ' + data.W.source(data.hari, { short:true }); } catch(e) {}
+    }
+    var s = $('op-status');
+    s.textContent = statusData === 'ok' ? 'Data OK' : statusData;
+    s.className = statusData.indexOf('ralat') === 0 ? 'ralat' : '';
+  }
+
+  /* ---------- Gelung ---------- */
+  function skala(){
+    var sk = Math.min(innerWidth / 1920, innerHeight / 1080);
+    $('kanvas').style.transform = 'scale(' + sk + ')';
+  }
+  function detik(){
+    var t = kini(), b = bahagian(t);
+    if (!sedangMuat && (kunciData !== b.kunci || Date.now() - akhirMuat > (data ? 3600000 : 60000))) muat();
+    var k = keadaan(t, MOD === 'siaran');
+    if (MOD === 'operator') lukisOperator(t, b, k); else { lukisSiaran(t, b, k); lukisQR(b); }
+  }
+  addEventListener('resize', skala); skala();
+  muat(); detik();
+  setInterval(detik, 250);
+})();
+</script>
+</body>
+</html>
