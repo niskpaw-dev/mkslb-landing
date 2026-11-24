@@ -172,6 +172,16 @@
   .solat-foot a{font-size:.76rem;font-weight:600;color:var(--gold-soft);text-decoration:none;display:inline-flex;align-items:center;gap:6px;transition:gap .3s var(--ease)}
   .solat-foot a:hover{gap:11px}
 
+  /* ---------- COUNTDOWN RAMADAN (25 Nov 2026) ---------- */
+  .rmd{display:flex;align-items:center;justify-content:center;gap:12px;margin:14px auto 0;font-size:.82rem;color:var(--ink-muted);text-align:center}
+  .rmd[hidden]{display:none}
+  .rmd::before,.rmd::after{content:"";flex:0 1 46px;height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,.45))}
+  .rmd::after{transform:scaleX(-1)}
+  .rmd svg{flex:none;color:var(--gold-soft)}
+  .rmd b{font-family:var(--display);font-size:1.12rem;font-weight:600;color:var(--gold-bright);font-variant-numeric:lining-nums}
+  .rmd .an{color:var(--ink-muted);opacity:.75}
+  @media(max-width:479px){.rmd{font-size:.76rem;gap:8px}.rmd::before,.rmd::after{display:none}.rmd b{font-size:1.02rem}}
+
   /* ---------- SECTION SHELL ---------- */
   section.blk{padding:74px 0}
   .eyebrow{display:flex;align-items:center;gap:12px;font-size:.68rem;letter-spacing:.26em;text-transform:uppercase;color:var(--gold-soft);margin-bottom:14px}
@@ -482,6 +492,7 @@
         </a>
       </div>
     </div>
+    <p class="rmd" id="rmd" hidden></p>
   </div>
 
   <!-- BERITA DUKA — diisi dari e-Takziah; tersembunyi bila tiada hebahan aktif -->
@@ -983,6 +994,24 @@
     }
   }
   loadSolat();
+
+  /* ---------- COUNTDOWN RAMADAN (25 Nov 2026) ----------
+     Satu baris di bawah kad waktu solat. Tarikh anggaran hisab; tukar RMD_MULA bila tarikh rasmi diumumkan.
+     100 hari sebelum → "N hari lagi"; dalam Ramadan → "hari ke-N"; selepas 30 hari disembunyikan. */
+  const RMD_MULA = '2027-02-08', RMD_TAHUN = '1448H';
+  function rmdKira(){
+    const el = document.getElementById('rmd'); if(!el) return;
+    const baki = Math.round((Date.parse(RMD_MULA+'T00:00:00Z') - Date.parse(klKey()+'T00:00:00Z'))/86400000);
+    const bulan = '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>';
+    let t = '';
+    if(baki > 1 && baki <= 100) t = `<span><b>${baki}</b> hari lagi menjelang Ramadan ${RMD_TAHUN} <span class="an">· anggaran</span></span>`;
+    else if(baki === 1) t = `<span><b>Esok</b>, insya-Allah, Ramadan ${RMD_TAHUN} <span class="an">· anggaran</span></span>`;
+    else if(baki <= 0 && baki > -30) t = `<span>Ramadan ${RMD_TAHUN} · hari ke-<b>${1 - baki}</b></span>`;
+    el.hidden = !t;
+    if(t) el.innerHTML = bulan + t;
+  }
+  rmdKira();
+  document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) rmdKira(); });
 
   /* ===== TAKWIM KULIAH — reminder harian (live) + poster bulanan (hybrid) ===== */
   (function(){
