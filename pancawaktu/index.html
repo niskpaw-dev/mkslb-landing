@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="pancawaktu-versi" content="20261126.darurat14">
+<meta name="robots" content="noindex">
+<title>PancaWaktu · Masjid Kampung Sungai Lang Baru</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cormorant+Garamond:wght@500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* PancaWaktu — Fasa Darurat (26 Nov 2026)
+   Pentas tetap 1920×1080, diskala ikut skrin. Ukuran ikut kajian kebolehbacaan:
+   kiraan detik seterusnya ±190 px, kiraan skrin penuh ±340 px, lima waktu ±96 px. */
+:root{
+  --hijau:#04140E; --hijau2:#0A2219; --emas:#D9B96B; --emas-redup:rgba(217,185,107,.55);
+  --krim:#F3ECDC; --krim-redup:rgba(243,236,220,.62); --garis:rgba(217,185,107,.28);
+  --serif:'Cormorant Garamond',Georgia,serif; --sans:'Plus Jakarta Sans',system-ui,sans-serif; --arab:'Amiri','Traditional Arabic',serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;background:var(--hijau);overflow:hidden;cursor:none}
+body{color:var(--krim);font-family:var(--sans);-webkit-font-smoothing:antialiased}
+.num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
+
+#pentas{position:absolute;left:0;top:0;width:1920px;height:1080px;transform-origin:0 0;background:var(--hijau);overflow:hidden}
+#pentas::before{content:"";position:absolute;inset:18px;border:1px solid var(--garis);pointer-events:none;z-index:5}
+
+/* ── Paparan biasa ─────────────────────────── */
+#biasa{position:absolute;inset:0;padding:36px 36px 38px;display:grid;grid-template-columns:1296px minmax(0,1fr);grid-template-rows:729px minmax(0,1fr);column-gap:28px;row-gap:28px;transition:opacity .6s}
+#bingkai{position:relative;width:1296px;height:729px;background:#020B08;border:1px solid var(--garis);overflow:hidden}
+#bingkai img,#bingkai video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:0;transition:opacity 1s ease;background:#020B08}
+#bingkai img.aktif,#bingkai video.aktif{opacity:1}
+#kosong{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;text-align:center}
+#kosong .ar{font-family:var(--arab);font-size:92px;color:var(--emas);line-height:1.3}
+#kosong .ms{font-family:var(--serif);font-size:54px;font-weight:600;color:var(--krim)}
+
+.panel{display:flex;flex-direction:column;border-left:1px solid var(--garis);padding-left:28px;min-width:0}
+.jam{display:flex;align-items:baseline;gap:10px;line-height:1}
+#logo{margin-left:auto;align-self:center;width:80px;height:80px;object-fit:contain;flex:none}
+.jam b{font-size:118px;font-weight:700;letter-spacing:-.02em}
+.jam span{font-size:46px;font-weight:600;color:var(--krim-redup)}
+.tarikh{margin-top:22px;font-size:34px;font-weight:600;line-height:1.25;white-space:nowrap}
+.hijri{white-space:nowrap;font-size:34px;font-weight:600;color:var(--emas);line-height:1.25}
+.garisan{height:1px;background:var(--garis);margin:30px 0 26px}
+.label{font-size:34px;font-weight:700;letter-spacing:.2em;color:var(--emas);text-transform:uppercase}
+.seterusnya{display:flex;align-items:baseline;gap:28px;margin-top:6px}
+.seterusnya .n{font-family:var(--serif);font-weight:700;font-size:118px;line-height:1}
+.seterusnya .a{font-family:var(--arab);font-size:66px;color:var(--emas);line-height:1}
+.masaSeterusnya{font-size:46px;font-weight:600;color:var(--krim-redup);margin-top:8px}
+#kira{margin-top:auto;font-size:200px;white-space:nowrap;overflow:hidden;font-weight:800;color:var(--emas);line-height:.9;letter-spacing:-.03em}
+.panel.dekat #kira{animation:denyut 2s ease-in-out infinite}
+
+#jalur{grid-column:1/-1;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:16px}
+.w{border:1px solid var(--garis);background:rgba(243,236,220,.035);border-radius:4px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:4px;transition:background .6s,color .6s}
+.w .t{display:flex;align-items:baseline;gap:14px}
+.w .n{font-family:var(--serif);font-size:46px;font-weight:700}
+.w .a{font-family:var(--arab);font-size:32px;color:var(--emas)}
+.w .m{font-size:104px;font-weight:700;line-height:1;letter-spacing:-.02em}
+.w.next{background:var(--emas);color:var(--hijau);border-color:var(--emas)}
+.w.next .a{color:var(--hijau)}
+.w.next .n{-webkit-text-stroke:.7px var(--hijau)}   /* teks gelap atas emas nampak lebih nipis: tebalkan sedikit */
+.w.next .m{-webkit-text-stroke:.5px var(--hijau)}
+.w.next.dekat{animation:denyutLatar 2s ease-in-out infinite}
+
+#kaki{position:absolute;left:42px;right:42px;bottom:0;height:18px;line-height:18px;display:flex;justify-content:center;white-space:nowrap;font-size:13px;color:rgba(243,236,220,.32);z-index:6}
+#kaki .amaran{color:var(--emas)}
+
+/* ── Skrin penuh (azan, iqamah, solat, khutbah, isyraq) ── */
+#penuh{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;opacity:0;pointer-events:none;transition:opacity .6s;background:var(--hijau)}
+body.modPenuh #penuh{opacity:1}
+body.modPenuh #biasa{opacity:0}
+#penuh .kicker{font-size:52px;font-weight:700;letter-spacing:.22em;color:var(--emas);text-transform:uppercase}
+#penuh .tajuk{display:flex;align-items:baseline;gap:48px;margin-top:18px}
+#penuh .tajuk .n{font-family:var(--serif);font-weight:700;font-size:190px;line-height:1}
+#penuh .tajuk .a{font-family:var(--arab);font-size:120px;color:var(--emas);line-height:1}
+#penuh .besar{font-size:340px;white-space:nowrap;font-weight:800;line-height:1;letter-spacing:-.03em;margin-top:24px}
+#penuh .nota{font-size:46px;font-weight:600;color:var(--krim-redup);margin-top:34px}
+#penuh .bawah{position:absolute;bottom:56px;left:0;right:0;font-size:38px;font-weight:600;color:var(--krim-redup)}
+#penuh[data-mod=azan] .besar{color:var(--emas)}
+#penuh[data-mod=iqamah] .besar{color:var(--krim)}
+#penuh[data-mod=iqamah].akhir .besar{color:var(--emas);animation:denyut 1s ease-in-out infinite}
+#penuh[data-mod=isyraq] .besar{color:var(--emas)}
+#penuh[data-mod=solat]{background:#020A07}
+#penuh[data-mod=solat] .kicker,#penuh[data-mod=solat] .bawah{display:none}
+#penuh[data-mod=solat] .tajuk{flex-direction:column;align-items:center;gap:10px}
+#penuh[data-mod=solat] .tajuk .a{font-size:460px;opacity:.6;order:-1}
+#penuh[data-mod=solat] .tajuk .n{font-size:168px;color:rgba(243,236,220,.42);font-weight:600}
+#penuh[data-mod=solat] .besar,#penuh[data-mod=khutbah] .besar{display:none}
+#penuh[data-mod=khutbah] .tajuk .n{font-size:170px}
+
+@keyframes denyut{0%,100%{opacity:1}50%{opacity:.45}}
+@keyframes denyutLatar{0%,100%{background:var(--emas)}50%{background:#B89A52}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div id="pentas">
+  <section id="biasa" aria-hidden="false">
+    <div id="bingkai">
+      <img id="imgA" alt=""><img id="imgB" alt="">
+      <video id="vid" muted playsinline preload="auto"></video>
+      <div id="kosong">
+        <div class="ar">بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ</div>
+        <div class="ms">Selamat datang ke rumah Allah</div>
+      </div>
+    </div>
+    <div class="panel" id="panel">
+      <div class="jam num"><b id="jamHM">--:--</b><span id="jamS">--</span><img id="logo" src="logo-emas.png" alt="Logo Masjid Kampung Sungai Lang Baru" onerror="this.style.visibility='hidden'"></div>
+      <div class="tarikh" id="tarikhM">&nbsp;</div>
+      <div class="hijri" id="tarikhH">&nbsp;</div>
+      <div class="garisan"></div>
+      <div class="label">Selepas ini</div>
+      <div class="seterusnya"><span class="n" id="nNama">—</span><span class="a" id="nArab"></span></div>
+      <div class="masaSeterusnya num" id="nMasa">&nbsp;</div>
+      <div id="kira" class="num">--:--</div>
+    </div>
+    <div id="jalur"></div>
+  </section>
+
+  <section id="penuh" data-mod="">
+    <div class="kicker" id="pKicker"></div>
+    <div class="tajuk"><span class="n" id="pNama"></span><span class="a" id="pArab"></span></div>
+    <div class="besar num" id="pKira"></div>
+    <div class="nota" id="pNota"></div>
+    <div class="bawah num" id="pBawah"></div>
+  </section>
+
+  <div id="kaki"><span id="kakiKiri"></span><span id="kakiKanan"></span></div>
+</div>
+
+<script>
+(function () {
+'use strict';
+
+/* ══ TETAPAN ═══════════════════════════════════════════════════════
+   Nilai MKSLB sekarang (sama dengan mySolatime). Ubah di sini sahaja. */
+var TETAPAN = {
+  API: 'https://apiwaktusolatsgr03.vercel.app/api/waktu-solat',
+  MANIFEST: '/tv/manifest.json',
+  AZAN_SAAT: 60,                                                    // skrin "Sebentar lagi azan" (Syuruk tiada)
+  IQAMAH_MINIT: { subuh: 12, zohor: 12, asar: 10, maghrib: 10, isyak: 10 },
+  SOLAT_MINIT: 15,
+  JUMAAT: { khutbahMinit: 25, solatMinit: 15 },                     // sunat 5 + khutbah 20; solat 15
+  ISYRAQ: { selepasSyurukMinit: 15, tempohMinit: 5 },               // kiraan 5 minit, tamat Syuruk + 15
+  DEKAT_MINIT: 5,                                                   // denyut sebelum waktu
+  SLAID_SAAT: 15,
+  // Nilai lalai di bawah digantikan oleh pancawaktu/susunan.json (boleh diedit terus di GitHub, tanpa tukar versi)
+  VIDEO: [ { fail: '10-20-video-al-fatihah', url: 'video/al-fatihah.mp4', tajuk: 'Al-Fatihah' } ],   // tanpa bunyi; fail tiada = dilangkau
+  GAMBAR: [],                                                       // slaid gambar dari Git (sandaran jika Takwim bermasalah)
+  VIDEO_SELANG_MINIT: 10,                                           // video dimainkan paling kerap sekali setiap 10 minit
+  HARIAN_KEDUDUKAN: '10-05',                                         // zikir harian: selepas Selamat Datang (10-01), sebelum takwim bulanan (10-11). '' = matikan
+  MANIFEST_MINIT: 5,
+  API_JAM: 6,
+  NOTA_IQAMAH: 'Sila senyapkan telefon bimbit',
+  NOTA_KHUTBAH: 'Diam dan dengarlah khutbah'
+};
+
+var NAMA = { subuh: 'Subuh', syuruk: 'Syuruk', zohor: 'Zohor', jumaat: 'Jumaat', asar: 'Asar', maghrib: 'Maghrib', isyak: 'Isyak', isyraq: 'Isyraq' };
+var ARAB = { subuh: 'الصبح', syuruk: 'الشروق', zohor: 'الظهر', jumaat: 'الجمعة', asar: 'العصر', maghrib: 'المغرب', isyak: 'العشاء', isyraq: 'الإشراق', solat: 'الصلاة' };
+var ENAM = ['subuh', 'syuruk', 'zohor', 'asar', 'maghrib', 'isyak'];
+var LIMA = ['subuh', 'zohor', 'asar', 'maghrib', 'isyak'];
+var HARI = ['Ahad', 'Isnin', 'Selasa', 'Rabu', 'Khamis', 'Jumaat', 'Sabtu'];
+var BULAN = ['Januari', 'Februari', 'Mac', 'April', 'Mei', 'Jun', 'Julai', 'Ogos', 'September', 'Oktober', 'November', 'Disember'];
+var HBULAN = { Muh: 'Muharram', Saf: 'Safar', Raw: 'Rabiulawal', Rak: 'Rabiulakhir', Jaw: 'Jamadilawal', Jak: 'Jamadilakhir', Rej: 'Rejab', Syb: 'Syaaban', Ram: 'Ramadan', Syw: 'Syawal', Zkh: 'Zulkaedah', Zhj: 'Zulhijjah' };
+var dimuatPada = Date.now();
+var MIN = 60000, JAM = 3600000, HARI_MS = 86400000, MY = 8 * JAM;
+
+/* ── Parameter URL: ?uji=2026-12-04T13:05&laju=60  ?manifest=…  ?api=… ── */
+var q = new URLSearchParams(location.search);
+if (q.get('manifest')) TETAPAN.MANIFEST = q.get('manifest');
+if (q.get('api')) TETAPAN.API = q.get('api');
+var ujiMula = null, laju = Number(q.get('laju')) || 1, nyataMula = Date.now();
+if (q.get('uji')) {
+  var u = q.get('uji'); if (!/[zZ]|[+-]\d\d:?\d\d$/.test(u)) u += '+08:00';
+  ujiMula = Date.parse(u.length === 22 ? u.replace('+08:00', ':00+08:00') : u);
+  if (isNaN(ujiMula)) ujiMula = null;
+}
+function kini() { return ujiMula === null ? Date.now() : ujiMula + (Date.now() - nyataMula) * laju; }
+
+/* ── Masa Malaysia (UTC+8 tetap, bukan zon peranti) ── */
+function pad(n) { return (n < 10 ? '0' : '') + n; }
+function bahagian(ms) { var d = new Date(ms + MY); return { y: d.getUTCFullYear(), m: d.getUTCMonth() + 1, d: d.getUTCDate(), h: d.getUTCHours(), mi: d.getUTCMinutes(), s: d.getUTCSeconds(), dow: d.getUTCDay() }; }
+function kunci(ms) { var p = bahagian(ms); return p.y + '-' + pad(p.m) + '-' + pad(p.d); }
+function pada(k, hhmm) { return Date.parse(k + 'T' + hhmm + ':00+08:00'); }
+function tambahHari(k, n) { return kunci(Date.parse(k + 'T12:00:00+08:00') + n * HARI_MS); }
+function jam12(ms) { var p = bahagian(ms); return (p.h % 12 || 12) + ':' + pad(p.mi); }
+function bahagianHari(ms) { var h = bahagian(ms).h; return h < 12 ? 'pagi' : h < 14 ? 'tengah hari' : h < 19 ? 'petang' : 'malam'; }
+function kiraan(ms) {
+  var t = Math.max(0, Math.ceil(ms / 1000)), h = Math.floor(t / 3600), m = Math.floor(t % 3600 / 60), s = t % 60;
+  return h ? h + ':' + pad(m) + ':' + pad(s) : m + ':' + pad(s);
+}
+
+/* ── Storan (localStorage, selamat jika penuh/disekat) ── */
+function baca(k) { try { var r = localStorage.getItem('pw1:' + k); return r ? JSON.parse(r) : null; } catch (e) { return null; } }
+function tulis(k, v) { try { localStorage.setItem('pw1:' + k, JSON.stringify(v)); } catch (e) {} }
+
+/* ══ DATA WAKTU SOLAT: simpan 3 bulan dalam peranti ══ */
+var bulan = {};               // 'YYYY-MM' → { meta, hari: { 'YYYY-MM-DD': row } }
+var status = { api: null, apiGagal: false, manifest: baca('manifestPada'), manifestGagal: false };
+
+function muatCacheBulan(ym) {
+  if (bulan[ym]) return bulan[ym];
+  var c = baca('m:' + ym); if (c) bulan[ym] = c; return c;
+}
+function ambilBulan(y, m) {
+  var ym = y + '-' + pad(m);
+  return fetch(TETAPAN.API + '?month=' + pad(m) + '&year=' + y, { cache: 'no-store' })
+    .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    .then(function (j) {
+      if (!j || !j.days || !j.days.length) throw new Error('data kosong');
+      var o = { meta: { source_short: j.source_short || j.source || '', zone_name: j.zone_name || '' }, hari: {}, pada: Date.now() };
+      j.days.forEach(function (d) { o.hari[d.date] = d; });
+      bulan[ym] = o; tulis('m:' + ym, o); return o;
+    });
+}
+function senaraiBulan(ms) {   // bulan ini + 2 bulan seterusnya
+  var p = bahagian(ms), out = [];
+  for (var i = 0; i < 3; i++) { var mm = p.m + i, yy = p.y + Math.floor((mm - 1) / 12); mm = (mm - 1) % 12 + 1; out.push([yy, mm]); }
+  return out;
+}
+function segarkanAPI() {
+  var s = senaraiBulan(kini());
+  return Promise.all(s.map(function (b, i) {
+    return ambilBulan(b[0], b[1]).then(function () { return true; }, function () { return i > 0; }); // bulan depan belum ada = OK
+  })).then(function (r) {
+    status.apiGagal = !r[0]; if (r[0]) status.api = Date.now(); jadualBina = {};
+  });
+}
+function hari(k) { var b = muatCacheBulan(k.slice(0, 7)); return b && b.hari[k] || null; }
+
+/* ── Hijri (bertukar selepas Maghrib) ── */
+function hijri(raw) {
+  var m = /^(\d{1,2})-([A-Za-z]{3})-(\d{4})$/.exec(raw || ''); if (!m) return '';
+  return (+m[1]) + ' ' + (HBULAN[m[2]] || m[2]) + ' ' + m[3] + 'H';
+}
+
+/* ══ JADUAL SEHARI: senarai segmen skrin penuh ══ */
+var jadualBina = {};
+function jadual(k) {
+  if (jadualBina[k]) return jadualBina[k];
+  var r = hari(k); if (!r) return null;
+  var jumaat = new Date(Date.parse(k + 'T12:00:00+08:00') + MY).getUTCDay() === 5, seg = [];
+  LIMA.forEach(function (w) {
+    if (!r[w]) return;
+    var T = pada(k, r[w]);
+    if (jumaat && w === 'zohor') {
+      var K = TETAPAN.JUMAAT.khutbahMinit * MIN;
+      seg.push({ mod: 'azan', w: 'jumaat', a: T - TETAPAN.AZAN_SAAT * 1000, b: T });
+      seg.push({ mod: 'khutbah', w: 'jumaat', a: T, b: T + K });
+      seg.push({ mod: 'solat', w: 'jumaat', a: T + K, b: T + K + TETAPAN.JUMAAT.solatMinit * MIN });
+    } else {
+      var I = (TETAPAN.IQAMAH_MINIT[w] || 10) * MIN;
+      if (TETAPAN.AZAN_SAAT > 0) seg.push({ mod: 'azan', w: w, a: T - TETAPAN.AZAN_SAAT * 1000, b: T });
+      seg.push({ mod: 'iqamah', w: w, a: T, b: T + I });
+      seg.push({ mod: 'solat', w: w, a: T + I, b: T + I + TETAPAN.SOLAT_MINIT * MIN });
+    }
+  });
+  if (r.syuruk && TETAPAN.ISYRAQ) {
+    var Is = pada(k, r.syuruk) + TETAPAN.ISYRAQ.selepasSyurukMinit * MIN;
+    seg.push({ mod: 'isyraq', w: 'isyraq', a: Is - TETAPAN.ISYRAQ.tempohMinit * MIN, b: Is });
+  }
+  var o = { r: r, jumaat: jumaat, seg: seg };
+  jadualBina[k] = o; return o;
+}
+function segmenKini(t) {
+  var k = kunci(t), j = jadual(k); if (!j) return null;
+  for (var i = 0; i < j.seg.length; i++) if (t >= j.seg[i].a && t < j.seg[i].b) return j.seg[i];
+  return null;
+}
+function seterusnya(t) {
+  var k = kunci(t), j = jadual(k); if (!j) return null;
+  for (var i = 0; i < ENAM.length; i++) {
+    var w = ENAM[i], T = pada(k, j.r[w]);
+    if (T > t) return { w: (j.jumaat && w === 'zohor') ? 'jumaat' : w, kunci: w, T: T, esok: false };
+  }
+  var e = hari(tambahHari(k, 1)); if (!e) return null;
+  return { w: 'subuh', kunci: 'subuh', T: pada(e.date, e.subuh), esok: true };
+}
+
+/* ══ POSTER dari manifest Takwim ══ */
+var manifest = baca('manifest');
+function segarkanManifest() {
+  var url = TETAPAN.MANIFEST + (TETAPAN.MANIFEST.indexOf('?') < 0 ? '?' : '&') + 't=' + Date.now();
+  return fetch(url, { cache: 'no-store' }).then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    .then(function (j) { if (!j || !Array.isArray(j.slaid)) throw new Error('format'); manifest = j; tulis('manifest', j); status.manifest = Date.now(); tulis('manifestPada', status.manifest); status.manifestGagal = false; })
+    .catch(function () { status.manifestGagal = true; });
+}
+var HARI_FAIL = ['ahad', 'isnin', 'selasa', 'rabu', 'khamis', 'jumaat', 'sabtu'];
+function slaidAktif(t) {
+  var k = kunci(t), p = bahagian(t), hm = pad(p.h) + ':' + pad(p.mi);
+  var senarai = (manifest && manifest.slaid ? manifest.slaid : []).slice();
+  // Zikir harian: pancawaktu/harian/{isnin|selasa|…}.jpg, ikut hari Masihi. Fail tiada = dilangkau senyap.
+  if (TETAPAN.HARIAN_KEDUDUKAN) {
+    var h = HARI_FAIL[p.dow];
+    senarai.push({ fail: TETAPAN.HARIAN_KEDUDUKAN + '-harian-' + h, url: 'harian/' + h + '.jpg', tajuk: 'Zikir harian' });
+  }
+  // Video: hanya bila siap dimuat ke ingatan, dan tidak lebih kerap daripada VIDEO_SELANG_MINIT
+  (TETAPAN.GAMBAR || []).forEach(function (g) { senarai.push(g); });
+  (TETAPAN.VIDEO || []).forEach(function (v) {
+    if (!blobVideo[v.url]) return;
+    if (videoMain !== v.url && Date.now() - (videoTerakhir[v.url] || 0) < (v.selang || TETAPAN.VIDEO_SELANG_MINIT) * MIN) return;
+    senarai.push({ fail: v.fail, url: v.url, tajuk: v.tajuk, video: true });
+  });
+  return senarai.filter(function (s) {
+    if (!s || !s.url || rosak[s.url]) return false;
+    if (s.mula && k < s.mula) return false;
+    if (s.tamat && k > s.tamat) return false;
+    if (s.tamat && k === s.tamat && s.tamatJam && hm >= s.tamatJam) return false;
+    return true;
+  }).sort(function (a, b) {   // ikut Kedudukan (awalan nama fail, cth 10-09 < 10-11 < 10-12), sama seperti mySolatime
+    var fa = a.fail || a.url.split('/').pop(), fb = b.fail || b.url.split('/').pop();
+    return fa < fb ? -1 : fa > fb ? 1 : 0;
+  });
+}
+
+/* ── susunan.json: susunan slaid dari Git (zikir harian, video, gambar sandaran).
+   Disemak setiap 5 minit; fail tiada/rosak = guna salinan terakhir, atau nilai lalai TETAPAN. ── */
+function namaFail(u) { return String(u).split('/').pop().replace(/\.[a-z0-9]+$/i, ''); }
+function terapSusunan(j) {
+  if (!j || typeof j !== 'object') return false;
+  if (typeof j.zikirHarian === 'string') TETAPAN.HARIAN_KEDUDUKAN = j.zikirHarian;
+  if (Array.isArray(j.video)) TETAPAN.VIDEO = j.video.filter(function (v) { return v && v.fail; }).map(function (v) {
+    return { fail: (v.kedudukan || '10-20') + '-video-' + namaFail(v.fail), url: v.fail, tajuk: v.tajuk || '', selang: Number(v.selangMinit) || 0 };
+  });
+  if (Array.isArray(j.gambar)) TETAPAN.GAMBAR = j.gambar.filter(function (g) { return g && g.fail; }).map(function (g) {
+    return { fail: (g.kedudukan || '10-15') + '-git-' + namaFail(g.fail), url: g.fail, tajuk: g.tajuk || '', mula: g.mula || '', tamat: g.tamat || '', tamatJam: g.tamatJam || '' };
+  });
+  muatVideo();
+  return true;
+}
+function segarkanSusunan() {
+  return fetch('susunan.json?t=' + Date.now(), { cache: 'no-store' })
+    .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    .then(function (j) { if (terapSusunan(j)) { tulis('susunan', j); status.susunanGagal = false; } })
+    .catch(function (e) { status.susunanGagal = !(e && /HTTP 404/.test(e.message)); if (!baca('susunan')) muatVideo(); });
+}
+
+/* ── Video (tanpa bunyi): dimuat sekali ke ingatan + simpanan pelayar, jadi tidak dimuat turun
+   semula setiap kali dimainkan dan masih boleh dimainkan bila internet putus. ── */
+var vid = document.getElementById('vid'), blobVideo = {}, videoTerakhir = {}, videoMain = null, videoTamat = false;
+function muatVideo() {   // video yang sudah dalam ingatan tidak dimuat turun semula (fail diganti = diambil masa muat semula 3 pagi)
+  (TETAPAN.VIDEO || []).forEach(function (v) {
+    if (blobVideo[v.url]) return;
+    var dari = function (r) { if (!r || !r.ok) throw new Error('tiada'); return r.blob(); };
+    var simpan = function (b) {   // salinan untuk luar talian
+      try { if (window.caches) caches.open('pancawaktu-video').then(function (c) { return c.put(v.url, new Response(b, { headers: { 'Content-Type': b.type || 'video/mp4' } })); }).catch(function () {}); } catch (e) {}
+      return b;
+    };
+    fetch(v.url, { cache: 'no-cache' }).then(dari).then(simpan)
+      .catch(function () { return window.caches ? caches.open('pancawaktu-video').then(function (c) { return c.match(v.url); }).then(dari) : Promise.reject(); })
+      .then(function (b) { if (blobVideo[v.url] && videoMain !== v.url) URL.revokeObjectURL(blobVideo[v.url]); if (videoMain !== v.url) blobVideo[v.url] = URL.createObjectURL(b); })
+      .catch(function () {});   // tiada video = dilangkau senyap
+  });
+}
+vid.addEventListener('ended', function () { videoTamat = true; if (videoMain) videoTerakhir[videoMain] = Date.now(); });
+vid.addEventListener('error', function () { if (videoMain) { rosak[videoMain] = Date.now(); videoTerakhir[videoMain] = Date.now(); } videoTamat = true; });
+function hentiVideo() { vid.classList.remove('aktif'); try { vid.pause(); } catch (e) {} videoMain = null; }
+
+var rosak = {}, imgs = [document.getElementById('imgA'), document.getElementById('imgB')], lapis = 0, slaidIdx = -1, slaidSejak = 0, slaidUrl = null;
+imgs.forEach(function (im) { im.addEventListener('error', function () { if (im.dataset.src) rosak[im.dataset.src] = Date.now(); }); });
+function papar(url) {
+  var nx = imgs[1 - lapis], cur = imgs[lapis];
+  nx.onload = function () { nx.classList.add('aktif'); cur.classList.remove('aktif'); lapis = 1 - lapis; if (videoMain) hentiVideo(); };
+  nx.dataset.src = url; nx.src = url; slaidUrl = url;
+}
+function mainVideo(item) {
+  videoMain = item.url; videoTamat = false; slaidUrl = item.url;
+  if (vid.src !== blobVideo[item.url]) vid.src = blobVideo[item.url];
+  try { vid.currentTime = 0; } catch (e) {}
+  var j = vid.play(); if (j && j.catch) j.catch(function () { videoTamat = true; videoTerakhir[item.url] = Date.now(); });
+  vid.classList.add('aktif'); imgs.forEach(function (im) { im.classList.remove('aktif'); });
+}
+function kemaskiniSlaid(t, sg) {
+  var s = slaidAktif(t), kosong = document.getElementById('kosong');
+  kosong.style.display = s.length ? 'none' : 'flex';
+  if (!s.length) { imgs.forEach(function (im) { im.classList.remove('aktif'); }); hentiVideo(); slaidUrl = null; return; }
+  var masih = s.findIndex(function (x) { return x.url === slaidUrl; });
+  var kini_ = masih >= 0 ? s[masih] : null;
+  // Skrin penuh (azan/iqamah/solat): video dihentikan sementara, disambung selepas itu
+  if (kini_ && kini_.video) { if (sg) { if (!vid.paused) vid.pause(); return; } if (vid.paused && !videoTamat) vid.play().catch(function () {}); }
+  var tempoh = kini_ && kini_.video ? (videoTamat ? 0 : 5 * MIN) : TETAPAN.SLAID_SAAT * 1000;
+  if (masih < 0 || Date.now() - slaidSejak >= tempoh) {
+    if (kini_ && kini_.video && !videoTamat) videoTerakhir[kini_.url] = Date.now();
+    // slaid semasa hilang (rosak/tamat): ambil yang kini berada di kedudukan yang sama, bukan mula semula dari awal
+    slaidIdx = masih < 0 ? (slaidIdx < 0 ? 0 : slaidIdx % s.length) : (masih + 1) % s.length;
+    slaidSejak = Date.now();
+    var item = s[slaidIdx];
+    if (item.video) mainVideo(item);
+    else if (item.url !== slaidUrl || !imgs[lapis].classList.contains('aktif')) papar(item.url);
+    var nxt = s[(slaidIdx + 1) % s.length]; if (!nxt.video) { var pm = new Image(); pm.src = nxt.url; }   // pramuat
+  } else slaidIdx = masih;
+}
+setInterval(function () { var now = Date.now(); for (var u in rosak) if (now - rosak[u] > 10 * MIN) delete rosak[u]; }, MIN);
+
+/* Tiada bunyi: PancaWaktu senyap sepenuhnya (keputusan Adib 26 Nov; PC ini juga PC live OBS). */
+
+/* ══ LUKIS ══ */
+var $ = function (id) { return document.getElementById(id); };
+function set(id, v) { var el = $(id); if (el.textContent !== v) el.textContent = v; }
+// Kecilkan saiz fon jika teks melebihi lebar bekas (cth kiraan h:mm:ss)
+// Diukur semula bila panjang teks berubah, bila fon siap dimuat (fon sebenar lebih lebar
+// daripada fon sandaran), dan sekali setiap minit sebagai jaminan.
+var fonEpok = 0;
+if (document.fonts) { document.fonts.ready.then(function () { fonEpok++; }); document.fonts.addEventListener('loadingdone', function () { fonEpok++; }); }
+function muat(id, maks) {
+  var el = $(id), k = el.textContent.length + '|' + maks + '|' + fonEpok + '|' + Math.floor(Date.now() / 60000);
+  if (el.dataset.muat === k) return; el.dataset.muat = k;
+  el.style.fontSize = maks + 'px';
+  var cs = getComputedStyle(el.parentNode), lebar = el.parentNode.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight) - 8;
+  var r = document.createRange(); r.selectNodeContents(el);
+  var skalaP = el.getBoundingClientRect().width / (el.offsetWidth || 1) || 1, teks = r.getBoundingClientRect().width / skalaP;   // lebar teks sebenar, bukan lebar kotak
+  if (teks > lebar && lebar > 0) el.style.fontSize = Math.floor(maks * lebar * 0.97 / teks) + 'px';
+}
+var jalurKunci = '';
+function lukisJalur(k, j, nx) {
+  var kk = k + '|' + (nx ? nx.kunci + nx.esok : '') + '|' + (j ? j.jumaat : '');
+  if (kk === jalurKunci) return; jalurKunci = kk;
+  var html = '';
+  ENAM.forEach(function (w) {
+    var lab = (j && j.jumaat && w === 'zohor') ? 'jumaat' : w;
+    var on = nx && !nx.esok && nx.kunci === w || (nx && nx.esok && w === 'subuh');
+    html += '<div class="w' + (on ? ' next' : '') + '" data-w="' + w + '"><div class="t"><span class="n">' + NAMA[lab] + '</span><span class="a">' + ARAB[lab] + '</span></div>' +
+      '<div class="m num">' + (j && j.r[w] ? jam12(pada(k, j.r[w])) : '--:--') + '</div></div>';
+  });
+  $('jalur').innerHTML = html;
+}
+
+var akhirMod = '';
+function detik() {
+  var t = kini(), p = bahagian(t), k = kunci(t), j = jadual(k), sg = segmenKini(t), nx = seterusnya(t);
+
+  // Jam & tarikh
+  set('jamHM', (p.h % 12 || 12) + ':' + pad(p.mi)); set('jamS', pad(p.s));
+  var tm = HARI[p.dow] + ', ' + p.d + ' ' + BULAN[p.m - 1] + ' ' + p.y;
+  set('tarikhM', tm); muat('tarikhM', 34);
+  var hj = '';
+  if (j) { var lepasMaghrib = t >= pada(k, j.r.maghrib), e = lepasMaghrib ? hari(tambahHari(k, 1)) : null; hj = hijri(e ? e.hijri : j.r.hijri); if (lepasMaghrib && !e) hj = hijri(j.r.hijri); }
+  set('tarikhH', hj || ' ');
+
+  // Paparan biasa
+  if (nx) {
+    set('nNama', NAMA[nx.w]); set('nArab', ARAB[nx.w]);
+    set('nMasa', jam12(nx.T) + ' ' + bahagianHari(nx.T) + (nx.esok ? ' (esok)' : ''));
+    set('kira', kiraan(nx.T - t));
+    muat('kira', 200);
+    var dekat = nx.T - t <= TETAPAN.DEKAT_MINIT * MIN;
+    $('panel').classList.toggle('dekat', dekat);
+  } else {
+    set('nNama', '—'); set('nArab', ''); set('nMasa', 'Menunggu data waktu solat'); set('kira', '--:--'); muat('kira', 200);
+  }
+  lukisJalur(k, j, nx);
+  var tn = document.querySelector('.w.next'); if (tn) tn.classList.toggle('dekat', !!(nx && nx.T - t <= TETAPAN.DEKAT_MINIT * MIN));
+
+  // Skrin penuh
+  var pn = $('penuh');
+  if (sg) {
+    document.body.classList.add('modPenuh');
+    if (pn.dataset.mod !== sg.mod) pn.dataset.mod = sg.mod;
+    var baki = sg.b - t, kick = '', nama = NAMA[sg.w], arab = ARAB[sg.w], nota = '', besar = kiraan(baki);
+    if (sg.mod === 'azan') kick = 'Sebentar lagi azan';
+    else if (sg.mod === 'iqamah') { kick = 'Masa untuk iqamah'; nota = TETAPAN.NOTA_IQAMAH; }
+    else if (sg.mod === 'isyraq') { kick = 'Sebentar lagi masuk waktu'; }
+    else if (sg.mod === 'khutbah') { kick = ''; nama = 'Khutbah Jumaat'; nota = TETAPAN.NOTA_KHUTBAH; }
+    else if (sg.mod === 'solat') { kick = ''; nama = 'Solat ' + NAMA[sg.w]; arab = ARAB.solat; }
+    set('pKicker', kick); set('pNama', nama); set('pArab', sg.mod === 'khutbah' ? '' : arab); set('pKira', besar); set('pNota', nota); muat('pKira', 340);
+    set('pBawah', (p.h % 12 || 12) + ':' + pad(p.mi) + '   ·   ' + tm + (hj ? '   ·   ' + hj : ''));
+    pn.classList.toggle('akhir', sg.mod === 'iqamah' && baki <= MIN);
+  } else {
+    document.body.classList.remove('modPenuh');
+    if (pn.dataset.mod) pn.dataset.mod = '';
+  }
+  akhirMod = sg ? sg.mod : '';
+
+  kemaskiniSlaid(t, sg);
+  kaki(t);
+  muatSemulaHarian(t, sg);
+}
+
+/* ── Kaki: status kecil untuk operator ── */
+function umur(ms) { if (!ms) return 'tiada'; var m = Math.round((Date.now() - ms) / MIN); return m < 60 ? m + ' min lalu' : Math.round(m / 60) + ' jam lalu'; }
+function kaki(t) {
+  var b = muatCacheBulan(kunci(t).slice(0, 7)), src = b && b.meta && b.meta.source_short ? 'Waktu solat: ' + b.meta.source_short + ' · ' + (b.meta.zone_name || 'SGR03') : '';
+  var amaran = [];
+  if (!navigator.onLine) amaran.push('Luar talian');
+  if (status.apiGagal) amaran.push('API waktu gagal (guna simpanan ' + umur(b && b.pada) + ')');
+  if (status.susunanGagal) amaran.push('susunan.json rosak (guna simpanan)');
+  if (status.manifestGagal) amaran.push('Manifest gagal (simpanan ' + umur(status.manifest) + ')');
+  if (ujiMula !== null) amaran.push('MOD UJI ×' + laju);
+  set('kakiKiri', src);
+  // Versi tidak dipapar (ada dalam meta pancawaktu-versi). Amaran muncul di sebelah sumber hanya bila ada masalah.
+  // 2 minit pertama selepas dimuat: papar versi, supaya Adib tahu TV dah ambil index.html baru (juga melalui remote)
+  if (Date.now() - dimuatPada < 2 * MIN) amaran.push('Dimuat: PancaWaktu ' + (document.querySelector('meta[name=pancawaktu-versi]') || {}).content);
+  var kn = $('kakiKanan'), v = amaran.length ? '\u00a0· ' + amaran.join(' · ') : '';
+  if (kn.textContent !== v) { kn.textContent = v; kn.className = amaran.length ? 'amaran' : ''; }
+}
+
+/* ── Muat semula harian 3.00 pagi (bila dalam talian) supaya kod & ingatan segar ── */
+function muatSemulaHarian(t, sg) {
+  if (ujiMula !== null || sg) return;
+  var p = bahagian(t), k = kunci(t);
+  if (p.h === 3 && p.mi < 5 && navigator.onLine && baca('muatSemula') !== k) { tulis('muatSemula', k); location.reload(); }
+}
+
+/* ── Kemas kini sendiri: setiap 10 minit semak versi index.html di pelayan.
+   Versi berbeza → muat semula, tetapi tidak semasa skrin penuh (azan/iqamah/solat/khutbah)
+   dan tidak dalam 3 minit sebelum waktu. Tiada fail tambahan: versi dibaca dari meta pancawaktu-versi. ── */
+var VERSI = (document.querySelector('meta[name=pancawaktu-versi]') || {}).content || '';
+function semakVersi() {
+  if (ujiMula !== null || !navigator.onLine) return;
+  fetch(location.pathname + '?v=' + Date.now(), { cache: 'no-store' })
+    .then(function (r) { return r.ok ? r.text() : ''; })
+    .then(function (html) {
+      var m = /name="pancawaktu-versi" content="([^"]+)"/.exec(html || ''); if (!m || m[1] === VERSI) return;
+      var t = kini(), nx = seterusnya(t);
+      if (segmenKini(t) || (nx && nx.T - t < 3 * MIN)) return;           // cuba lagi pada semakan seterusnya
+      var cuba = baca('cubaVersi');
+      if (cuba && cuba.v === m[1] && Date.now() - cuba.pada < 30 * MIN) return;  // elak gelung jika CDN lambat
+      tulis('cubaVersi', { v: m[1], pada: Date.now() });
+      location.reload();
+    }).catch(function () {});
+}
+setInterval(semakVersi, 10 * MIN);
+
+/* ── Skala pentas ikut skrin ── */
+function skala() {
+  var s = Math.min(innerWidth / 1920, innerHeight / 1080), el = $('pentas');
+  el.style.transform = 'translate(' + ((innerWidth - 1920 * s) / 2) + 'px,' + ((innerHeight - 1080 * s) / 2) + 'px) scale(' + s + ')';
+}
+addEventListener('resize', skala); skala();
+
+/* ── Skrin sentiasa hidup ── */
+var kunciSkrin = null;
+function jagaSkrin() { if ('wakeLock' in navigator && document.visibilityState === 'visible') navigator.wakeLock.request('screen').then(function (l) { kunciSkrin = l; }, function () {}); }
+document.addEventListener('visibilitychange', jagaSkrin); jagaSkrin();
+
+/* ── Tiada kekunci pintas sendiri: desktop ini juga PC live OBS, jadi taipan yang
+   tersasar ke tetingkap TV tidak boleh mencetus apa-apa. Muat semula: Ctrl+R / F5 Chrome. ── */
+
+/* ── Mula ── */
+senaraiBulan(kini()).forEach(function (b) { muatCacheBulan(b[0] + '-' + pad(b[1])); });
+var simpananSusunan = baca('susunan'); if (simpananSusunan) terapSusunan(simpananSusunan);
+segarkanAPI(); segarkanManifest(); segarkanSusunan();
+setInterval(segarkanManifest, TETAPAN.MANIFEST_MINIT * MIN);
+setInterval(segarkanSusunan, TETAPAN.MANIFEST_MINIT * MIN);
+setInterval(segarkanAPI, TETAPAN.API_JAM * JAM);
+var kunciHari = '';
+setInterval(function () { var k = kunci(kini()); if (k !== kunciHari) { if (kunciHari) segarkanAPI(); kunciHari = k; jadualBina = {}; jalurKunci = ''; } }, 30000);
+addEventListener('online', function () { segarkanAPI(); segarkanManifest(); segarkanSusunan(); });
+function gelung() { try { detik(); } catch (e) { console.error(e); } setTimeout(gelung, 1000 - (Date.now() % 1000) + 5); }
+gelung();
+
+if ('serviceWorker' in navigator && window.isSecureContext) navigator.serviceWorker.register('sw.js').catch(function () {});
+
+window.PancaWaktu = { TETAPAN: TETAPAN, jadual: jadual, kini: kini, status: status, semakVersi: semakVersi, versi: VERSI, video: function () { return Object.keys(blobVideo); } };
+})();
+</script>
+</body>
+</html>
