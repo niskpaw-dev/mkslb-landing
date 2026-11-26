@@ -3,7 +3,7 @@
   "lebarPoster": 1440,
   "zikirHarian": "10-05",
   "video": [
-    { "kedudukan": "10-04", "fail": "video/al-fatihah.mp4", "tajuk": "Al-Fatihah", "selangMinit": 10 }
+    { "kedudukan": "10-04", "fail": "video/al-fatihah.mp4", "tajuk": "Al-Fatihah", "selangMinit": 5 }
   ],
   "gambar": [],
   "infaq": { "qr": "infaq/qr.png", "bank": "Bank Islam", "akaun": "1207 4010 0317 14", "nama": "Masjid Kampung Sungai Lang Baru" }
