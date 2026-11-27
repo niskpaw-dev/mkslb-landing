@@ -3,7 +3,7 @@
   "lebarPoster": 1440,
   "zikirHarian": "10-05",
   "video": [
-    {"kedudukan":"10-00","fail":"video/montage-mkslb.mp4","tajuk":"Montage MKSLB","selangMinit":0},
+    {"kedudukan":"10-00","fail":"video/montage-mkslb.mp4","tajuk":"Montage MKSLB","selangMinit":5 },
     { "kedudukan": "10-04", "fail": "video/al-fatihah.mp4", "tajuk": "Al-Fatihah", "selangMinit": 5 }
   ],
   "gambar": [],
