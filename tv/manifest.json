@@ -1,6 +1,6 @@
 {
  "v": 1,
- "dikemaskini": "2026-11-26T13:03:23.309Z",
+ "dikemaskini": "2026-11-27T02:28:27.133Z",
  "folder": "C:\\mysolatime\\17playlist\\0UMUM",
  "slaid": [
   {
@@ -76,14 +76,6 @@
    "tajuk": "Takwim Disember 2026"
   },
   {
-   "fail": "10-12-mkslb-20261126-1-malam-mustajab-doa-imam-bertugas-1sgt1o.jpg",
-   "url": "https://masjidkslb.com/tv/10-12-mkslb-20261126-1-malam-mustajab-doa-imam-bertugas-1sgt1o.jpg",
-   "mula": "2026-11-22",
-   "tamat": "2026-11-26",
-   "tamatJam": "",
-   "tajuk": "Malam Mustajab Doa — Imam Bertugas"
-  },
-  {
    "fail": "10-12-mkslb-20261127-1-khutbah-dan-solat-jumaat-imam-fa-1f8w6g.jpg",
    "url": "https://masjidkslb.com/tv/10-12-mkslb-20261127-1-khutbah-dan-solat-jumaat-imam-fa-1f8w6g.jpg",
    "mula": "2026-11-26",
@@ -122,6 +114,14 @@
    "tamat": "",
    "tamatJam": "",
    "tajuk": "doa keluar"
+  },
+  {
+   "fail": "10-30-mkslb-20261127-1-kempen-wakaf-19wv67.jpg",
+   "url": "https://masjidkslb.com/tv/10-30-mkslb-20261127-1-kempen-wakaf-19wv67.jpg",
+   "mula": "2026-11-27",
+   "tamat": "2026-12-31",
+   "tamatJam": "",
+   "tajuk": "kempen wakaf"
   }
  ]
 }
