@@ -1,0 +1,5 @@
+{
+  "rewrites": [
+    { "source": "/suis-tv/:path*", "destination": "https://suis-tv-mkslb.madib-wasit.workers.dev/:path*" }
+  ]
+}
