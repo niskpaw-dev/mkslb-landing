@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <script>if(!/\/$/.test(location.pathname))location.replace(location.pathname+'/'+location.search+location.hash)</script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="pancawaktu-versi" content="20261128.darurat26">
+<meta name="pancawaktu-versi" content="20261128.darurat27">
 <meta name="robots" content="noindex">
 <title>PancaWaktu · Masjid Kampung Sungai Lang Baru</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -224,7 +224,7 @@ function kunci(ms) { var p = bahagian(ms); return p.y + '-' + pad(p.m) + '-' + p
 function pada(k, hhmm) { return Date.parse(k + 'T' + hhmm + ':00+08:00'); }
 function tambahHari(k, n) { return kunci(Date.parse(k + 'T12:00:00+08:00') + n * HARI_MS); }
 function jam12(ms) { var p = bahagian(ms); return (p.h % 12 || 12) + ':' + pad(p.mi); }
-function bahagianHari(ms) { var h = bahagian(ms).h; return h < 12 ? 'pagi' : h < 14 ? 'tengah hari' : h < 19 ? 'petang' : 'malam'; }
+function bahagianHari(ms) { var h = bahagian(ms).h; return h < 12 ? 'pagi' : h < 13 ? 'tengah hari' : h < 19 ? 'petang' : 'malam'; }   // Adib 28 Nov: masuk jam 1 = petang
 // Kiraan di panel: bentuk tempoh (4 jam 29 minit), bukan jam:minit:saat, supaya tidak keliru dengan jam semasa (maklum balas jemaah 26 Nov)
 function tempoh(ms) {
   var t = Math.max(0, Math.ceil(ms / 1000)), h = Math.floor(t / 3600), m = Math.floor(t % 3600 / 60), s = t % 60;
@@ -571,7 +571,7 @@ function detik() {
     else if (sg.mod === 'khutbah') { kick = ''; nama = 'Khutbah Jumaat'; nota = TETAPAN.NOTA_KHUTBAH; }
     else if (sg.mod === 'solat') { kick = ''; nama = 'Solat ' + NAMA[sg.w]; arab = ARAB.solat; }
     set('pKicker', kick); set('pNama', nama); set('pArab', sg.mod === 'khutbah' ? '' : arab); set('pKira', besar); set('pNota', nota); muat('pKira', 340);
-    set('pBawah', (p.h % 12 || 12) + ':' + pad(p.mi) + '   ·   ' + tm + (hj ? '   ·   ' + hj : ''));
+    set('pBawah', (p.h % 12 || 12) + ':' + pad(p.mi) + ' ' + bahagianHari(t) + '   ·   ' + tm   /* darurat27: "1:14 petang" supaya tidak keliru dengan kiraan */ + (hj ? '   ·   ' + hj : ''));
     pn.classList.toggle('akhir', sg.mod === 'iqamah' && baki <= MIN);
   } else {
     document.body.classList.remove('modPenuh');
