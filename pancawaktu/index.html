@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="pancawaktu-versi" content="20261128.darurat23">
+<meta name="pancawaktu-versi" content="20261128.darurat24">
 <meta name="robots" content="noindex">
 <title>PancaWaktu · Masjid Kampung Sungai Lang Baru</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -181,6 +181,7 @@ var TETAPAN = {
   SLAID_SAAT: 15,
   // Nilai lalai di bawah digantikan oleh pancawaktu/susunan.json (boleh diedit terus di GitHub, tanpa tukar versi)
   VIDEO: [ { fail: '10-20-video-al-fatihah', url: 'video/al-fatihah.mp4', tajuk: 'Al-Fatihah' } ],   // tanpa bunyi; fail tiada = dilangkau
+  GILIRAN: ['10-30'],                                               // Kedudukan bergilir: satu slaid sahaja setiap pusingan (cth Perakuan Tauliah 10-30)
   GAMBAR: [],                                                       // slaid gambar dari Git (sandaran jika Takwim bermasalah)
   KIRA_INFAQ: 160,                                                  // saiz kiraan panel bila ada blok infaq (×--kp); jam = 118
   TARIKH_SAIZ: 54,                                                  // saiz tarikh panel pada lebar asal 1296 (×--kp); 4 baris sejak darurat23
@@ -347,7 +348,7 @@ function slaidAktif(t) {
     if (videoMain !== v.url && Date.now() - (videoTerakhir[v.url] || 0) < (v.selang != null ? v.selang : TETAPAN.VIDEO_SELANG_MINIT) * MIN) return;   // 0 = setiap pusingan
     senarai.push({ fail: v.fail, url: v.url, tajuk: v.tajuk, video: true });
   });
-  return senarai.filter(function (s) {
+  return tapisGiliran(senarai.filter(function (s) {
     if (!s || !s.url || rosak[s.url]) return false;
     if (s.mula && k < s.mula) return false;
     if (s.tamat && k > s.tamat) return false;
@@ -356,7 +357,27 @@ function slaidAktif(t) {
   }).sort(function (a, b) {   // ikut Kedudukan (awalan nama fail, cth 10-09 < 10-11 < 10-12), sama seperti mySolatime
     var fa = a.fail || a.url.split('/').pop(), fb = b.fail || b.url.split('/').pop();
     return fa < fb ? -1 : fa > fb ? 1 : 0;
+  }));
+}
+/* Giliran (darurat24): bagi Kedudukan dalam TETAPAN.GILIRAN, hanya SATU slaid dipapar setiap pusingan;
+   pusingan berikutnya slaid seterusnya dalam kumpulan itu. Penunjuk disimpan (kekal selepas muat semula). */
+var giliranPtr = (function () { try { return baca('giliran') || {}; } catch (e) { return {}; } })();
+function kunciGiliran(x) {
+  var k = String(x.fail || x.url.split('/').pop()).slice(0, 5);
+  return (TETAPAN.GILIRAN || []).indexOf(k) >= 0 ? k : null;
+}
+function tapisGiliran(senarai) {
+  if (!(TETAPAN.GILIRAN || []).length) return senarai;
+  var ahli = {};
+  senarai.forEach(function (x) { var k = kunciGiliran(x); if (k) (ahli[k] = ahli[k] || []).push(x); });
+  return senarai.filter(function (x) {
+    var k = kunciGiliran(x); if (!k) return true;
+    var a = ahli[k]; return a[(giliranPtr[k] || 0) % a.length] === x;
   });
+}
+function majuGiliran() {   // dipanggil bila putaran kembali ke slaid pertama (pusingan baru)
+  (TETAPAN.GILIRAN || []).forEach(function (k) { giliranPtr[k] = ((giliranPtr[k] || 0) + 1) % 1000; });
+  try { tulis('giliran', giliranPtr); } catch (e) {}
 }
 
 /* ── susunan.json: susunan slaid dari Git (zikir harian, video, gambar sandaran).
@@ -365,6 +386,7 @@ function namaFail(u) { return String(u).split('/').pop().replace(/\.[a-z0-9]+$/i
 function terapSusunan(j) {
   if (!j || typeof j !== 'object') return false;
   if (typeof j.zikirHarian === 'string') TETAPAN.HARIAN_KEDUDUKAN = j.zikirHarian;
+  if (Array.isArray(j.giliran)) TETAPAN.GILIRAN = j.giliran.filter(function (k) { return typeof k === 'string' && /^\d\d-\d\d$/.test(k); });
   TETAPAN.INFAQ = j.infaq && (j.infaq.akaun || j.infaq.qr) ? j.infaq : null;
   terapInfaq();
   if (!q.get('lebar')) terapLebar(j.lebarPoster || 1296);
@@ -432,6 +454,7 @@ function kemaskiniSlaid(t, sg) {
     if (kini_ && kini_.video && !videoTamat) videoTerakhir[kini_.url] = Date.now();
     // slaid semasa hilang (rosak/tamat): ambil yang kini berada di kedudukan yang sama, bukan mula semula dari awal
     slaidIdx = masih < 0 ? (slaidIdx < 0 ? 0 : slaidIdx % s.length) : (masih + 1) % s.length;
+    if (masih >= 0 && slaidIdx === 0 && s.length > 1) majuGiliran();   // pusingan baru: tauliah seterusnya
     slaidSejak = Date.now();
     var item = s[slaidIdx];
     if (item.video) mainVideo(item);
