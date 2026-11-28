@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="pancawaktu-versi" content="20261128.darurat24">
+<meta name="pancawaktu-versi" content="20261128.darurat25">
 <meta name="robots" content="noindex">
 <title>PancaWaktu · Masjid Kampung Sungai Lang Baru</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -348,8 +348,10 @@ function slaidAktif(t) {
     if (videoMain !== v.url && Date.now() - (videoTerakhir[v.url] || 0) < (v.selang != null ? v.selang : TETAPAN.VIDEO_SELANG_MINIT) * MIN) return;   // 0 = setiap pusingan
     senarai.push({ fail: v.fail, url: v.url, tajuk: v.tajuk, video: true });
   });
+  var dahAda = {};   // darurat25: fail yang sama dikira sekali (cth manifest Takwim tersync dua kali selepas sync gagal)
   return tapisGiliran(senarai.filter(function (s) {
-    if (!s || !s.url || rosak[s.url]) return false;
+    if (!s || !s.url || rosak[s.url] || dahAda[s.url]) return false;
+    dahAda[s.url] = 1;
     if (s.mula && k < s.mula) return false;
     if (s.tamat && k > s.tamat) return false;
     if (s.tamat && k === s.tamat && s.tamatJam && hm >= s.tamatJam) return false;
